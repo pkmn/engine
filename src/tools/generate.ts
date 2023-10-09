@@ -353,7 +353,7 @@ const EFFECT_MAPPING: {[name: string]: string} = {
   Selfdestruct: 'Explode', ResetStats: 'Haze', Rampage: 'Thrashing', StaticDamage: 'FixedDamage',
   PoisonMultiHit: 'Twineedle', FlinchHit: 'FlinchChance', OHKOHit: 'OHKO', TrapTarget: 'Binding',
   RecoilHit: 'Recoil', DoConfuse: 'Confusion', ConfuseHit: 'ConfusionChance', DoPoison: 'Poison',
-  DoParalyze: 'Paralyze',
+  DoParalyze: 'Paralyze', AllUpHit: 'AllStatUpChance',
 };
 
 function* chunks(xs: string[], n: number) {
@@ -428,7 +428,7 @@ const doMoveFns = async (
   write('const mechanics = @import("mechanics.zig");\n');
   write('const assert = std.debug.assert;\n');
   write('const Player = common.Player;\nconst Result = common.Result;\n');
-  write('const Effectiveness = data.MEffectivenessove;\nconst Move = data.Move;\n');
+  write('const Effectiveness = data.Effectiveness;\nconst Move = data.Move;\n');
   write('const Effects = mechanics.Effects;\nconst State = mechanics.State;\n');
 
   const IMPORTS = [
@@ -465,7 +465,7 @@ const doMoveFns = async (
   ];
 
   // TODO: promote common (doturn/supereffectivetext) to functions
-  const SNIPPETS: {[command: string]: (effect: string) => void} = {
+  const SNIPPETS: {[command: string]: (effect?: string) => void} = {
     usedmovetext: () => block([
       '// usedmovetext',
       'try log.move(ident, state.move, foe_ident); // FIXME self? from?',
@@ -475,7 +475,7 @@ const doMoveFns = async (
       'const charging = false; // TODO',
       'const skip_pp = charging or state.move == .Struggle or',
       '    (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);',
-      'if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return',
+      'if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return',
       '',
     ]),
     criticaltext: () => block([
@@ -518,6 +518,7 @@ const doMoveFns = async (
     defenseup: 'Effects.boost', screen: 'Effects.screens', tristatuschance: 'Effects.triAttack',
     defrost: 'Effects.defrost', happinesspower: 'Effects.happiness', startrain: 'Effects.rainDance',
     clearhazards: 'Effects.rapidSpin', healnite: 'Effects.weatherHeal',
+    allstatsup: 'Effects.allStatUpChance',
   };
 
   const BOOST = /[^th]Up[12]?(?:Chance)?$/;
@@ -561,7 +562,7 @@ const doMoveFns = async (
         continue outer;
       }
     }
-    if (BOOST.test(name) || name === 'AllStatUpChance') {
+    if (BOOST.test(name)) {
       boosts.push(name);
       continue;
     } else if (UNBOOST.test(name)) {
@@ -574,15 +575,23 @@ const doMoveFns = async (
     write('},');
   }
 
-  for (const group of [boosts, unboosts]) {
-    const enums = group.sort().map(e => `.${e}`);
+  for (const array of [boosts, unboosts]) {
+    const enums = array.sort().map(e => `.${e}`);
     write('// zig fmt: off');
-    const k = group === boosts ? 2 : 3;
+    const boost = array === boosts;
+    const k = boost ? 2 : 3;
     for (const {chunk, done} of chunks(enums, Math.ceil(enums.length / k))) {
-      const end = done ? ' => {}, // TODO' : ',';
+      const end = done ? ' => {' : ',';
       write(`${chunk.join(', ')}${end}`);
     }
     write('// zig fmt: on');
+    indent++;
+    SNIPPETS.usedmovetext();
+    SNIPPETS.doturn();
+    if (!boost) write('try checkHit(battle, player, state, options);');
+    write(`try Effects.${boost ? 'boost' : 'unboost'}(battle, player, state, options);`);
+    indent--;
+    write('},');
   }
 
   indent--;

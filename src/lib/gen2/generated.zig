@@ -12,7 +12,7 @@ const assert = std.debug.assert;
 const Player = common.Player;
 const Result = common.Result;
 
-const Effectiveness = data.MEffectivenessove;
+const Effectiveness = data.Effectiveness;
 const Move = data.Move;
 
 const Effects = mechanics.Effects;
@@ -45,7 +45,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             const charging = false; // TODO
             const skip_pp = charging or state.move == .Struggle or
                 (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
 
             try checkCriticalHit(battle, player, state, options);
             // TODO damagestats
@@ -78,7 +78,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             const charging = false; // TODO
             const skip_pp = charging or state.move == .Struggle or
                 (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
 
             // TODO startloop
             try checkHit(battle, player, state, options);
@@ -107,7 +107,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             const charging = false; // TODO
             const skip_pp = charging or state.move == .Struggle or
                 (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
 
             try checkCriticalHit(battle, player, state, options);
             // TODO damagestats
@@ -141,7 +141,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             const charging = false; // TODO
             const skip_pp = charging or state.move == .Struggle or
                 (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
 
             try checkCriticalHit(battle, player, state, options);
             // TODO damagestats
@@ -175,7 +175,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             const charging = false; // TODO
             const skip_pp = charging or state.move == .Struggle or
                 (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
 
             try checkCriticalHit(battle, player, state, options);
             // TODO damagestats
@@ -209,7 +209,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             const charging = false; // TODO
             const skip_pp = charging or state.move == .Struggle or
                 (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
 
             try checkCriticalHit(battle, player, state, options);
             // TODO damagestats
@@ -243,7 +243,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             const charging = false; // TODO
             const skip_pp = charging or state.move == .Struggle or
                 (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
 
             try adjustDamage(battle, player, state, options);
             try Effects.ohko(battle, player, state, options);
@@ -270,7 +270,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             const charging = false; // TODO
             const skip_pp = charging or state.move == .Struggle or
                 (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
 
             // TODO charge
             // usedmovetext
@@ -306,7 +306,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             const charging = false; // TODO
             const skip_pp = charging or state.move == .Struggle or
                 (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
 
             try checkCriticalHit(battle, player, state, options);
             // TODO damagestats
@@ -339,7 +339,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             const charging = false; // TODO
             const skip_pp = charging or state.move == .Struggle or
                 (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
 
             try checkHit(battle, player, state, options);
             try Effects.forceSwitch(battle, player, state, options);
@@ -350,7 +350,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             const charging = false; // TODO
             const skip_pp = charging or state.move == .Struggle or
                 (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
 
             // TODO charge
             // usedmovetext
@@ -386,7 +386,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             const charging = false; // TODO
             const skip_pp = charging or state.move == .Struggle or
                 (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
 
             try checkHit(battle, player, state, options);
             try checkCriticalHit(battle, player, state, options);
@@ -420,7 +420,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             const charging = false; // TODO
             const skip_pp = charging or state.move == .Struggle or
                 (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
 
             try checkCriticalHit(battle, player, state, options);
             // TODO damagestats
@@ -455,7 +455,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             const charging = false; // TODO
             const skip_pp = charging or state.move == .Struggle or
                 (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
 
             try checkCriticalHit(battle, player, state, options);
             // TODO damagestats
@@ -489,7 +489,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             const charging = false; // TODO
             const skip_pp = charging or state.move == .Struggle or
                 (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
 
             try checkCriticalHit(battle, player, state, options);
             // TODO damagestats
@@ -522,7 +522,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             const charging = false; // TODO
             const skip_pp = charging or state.move == .Struggle or
                 (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
 
             // TODO rampage
             // usedmovetext
@@ -559,7 +559,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             const charging = false; // TODO
             const skip_pp = charging or state.move == .Struggle or
                 (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
 
             try checkCriticalHit(battle, player, state, options);
             // TODO damagestats
@@ -593,7 +593,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             const charging = false; // TODO
             const skip_pp = charging or state.move == .Struggle or
                 (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
 
             // TODO startloop
             try checkHit(battle, player, state, options);
@@ -624,7 +624,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             const charging = false; // TODO
             const skip_pp = charging or state.move == .Struggle or
                 (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
 
             try checkHit(battle, player, state, options);
             // TODO checksafeguard
@@ -637,7 +637,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             const charging = false; // TODO
             const skip_pp = charging or state.move == .Struggle or
                 (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
 
             try checkHit(battle, player, state, options);
             // TODO checksafeguard
@@ -650,7 +650,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             const charging = false; // TODO
             const skip_pp = charging or state.move == .Struggle or
                 (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
 
             try Effects.fixedDamage(battle, player, state, options);
             try checkHit(battle, player, state, options);
@@ -668,7 +668,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             const charging = false; // TODO
             const skip_pp = charging or state.move == .Struggle or
                 (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
 
             try checkHit(battle, player, state, options);
             try Effects.disable(battle, player, state, options);
@@ -680,7 +680,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             const charging = false; // TODO
             const skip_pp = charging or state.move == .Struggle or
                 (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
 
             try Effects.mist(battle, player, state, options);
         },
@@ -691,7 +691,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             const charging = false; // TODO
             const skip_pp = charging or state.move == .Struggle or
                 (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
 
             try checkCriticalHit(battle, player, state, options);
             // TODO damagestats
@@ -725,7 +725,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             const charging = false; // TODO
             const skip_pp = charging or state.move == .Struggle or
                 (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
 
             try checkCriticalHit(battle, player, state, options);
             // TODO damagestats
@@ -758,7 +758,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             const charging = false; // TODO
             const skip_pp = charging or state.move == .Struggle or
                 (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
 
             try Effects.counter(battle, player, state, options);
             // TODO failuretext
@@ -774,7 +774,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             const charging = false; // TODO
             const skip_pp = charging or state.move == .Struggle or
                 (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
 
             try checkCriticalHit(battle, player, state, options);
             // TODO damagestats
@@ -808,7 +808,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             const charging = false; // TODO
             const skip_pp = charging or state.move == .Struggle or
                 (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
 
             try checkHit(battle, player, state, options);
             try Effects.leechSeed(battle, player, state, options);
@@ -819,7 +819,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             const charging = false; // TODO
             const skip_pp = charging or state.move == .Struggle or
                 (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
 
             try Effects.solarBeam(battle, player, state, options);
             // TODO charge
@@ -856,7 +856,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             const charging = false; // TODO
             const skip_pp = charging or state.move == .Struggle or
                 (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
 
             try checkHit(battle, player, state, options);
             try adjustDamage(battle, player, state, options);
@@ -870,7 +870,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             const charging = false; // TODO
             const skip_pp = charging or state.move == .Struggle or
                 (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
 
             try adjustDamage(battle, player, state, options);
             try checkHit(battle, player, state, options);
@@ -884,7 +884,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             const charging = false; // TODO
             const skip_pp = charging or state.move == .Struggle or
                 (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
 
             try checkCriticalHit(battle, player, state, options);
             // TODO damagestats
@@ -919,7 +919,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             const charging = false; // TODO
             const skip_pp = charging or state.move == .Struggle or
                 (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
 
             try checkCriticalHit(battle, player, state, options);
             // TODO damagestats
@@ -953,7 +953,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             const charging = false; // TODO
             const skip_pp = charging or state.move == .Struggle or
                 (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
 
             try checkCriticalHit(battle, player, state, options);
             // TODO damagestats
@@ -991,7 +991,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             const charging = false; // TODO
             const skip_pp = charging or state.move == .Struggle or
                 (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
 
             try Effects.teleport(battle, player, state, options);
         },
@@ -1002,7 +1002,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             const charging = false; // TODO
             const skip_pp = charging or state.move == .Struggle or
                 (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
 
             try checkHit(battle, player, state, options);
             try Effects.mimic(battle, player, state, options);
@@ -1014,7 +1014,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             const charging = false; // TODO
             const skip_pp = charging or state.move == .Struggle or
                 (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
 
             try Effects.heal(battle, player, state, options);
         },
@@ -1025,7 +1025,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             const charging = false; // TODO
             const skip_pp = charging or state.move == .Struggle or
                 (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
 
             try Effects.boost(battle, player, state, options);
             try Effects.defenseCurl(battle, player, state, options);
@@ -1037,7 +1037,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             const charging = false; // TODO
             const skip_pp = charging or state.move == .Struggle or
                 (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
 
             try Effects.haze(battle, player, state, options);
         },
@@ -1048,7 +1048,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             const charging = false; // TODO
             const skip_pp = charging or state.move == .Struggle or
                 (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
 
             try Effects.screens(battle, player, state, options);
         },
@@ -1059,7 +1059,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             const charging = false; // TODO
             const skip_pp = charging or state.move == .Struggle or
                 (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
 
             try Effects.focusEnergy(battle, player, state, options);
         },
@@ -1069,7 +1069,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             const charging = false; // TODO
             const skip_pp = charging or state.move == .Struggle or
                 (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
 
             // usedmovetext
             try log.move(ident, state.move, foe_ident); // FIXME self? from?
@@ -1089,7 +1089,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             const charging = false; // TODO
             const skip_pp = charging or state.move == .Struggle or
                 (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
 
             try Effects.metronome(battle, player, state, options);
         },
@@ -1100,7 +1100,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             const charging = false; // TODO
             const skip_pp = charging or state.move == .Struggle or
                 (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
 
             try Effects.mirrorMove(battle, player, state, options);
         },
@@ -1111,7 +1111,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             const charging = false; // TODO
             const skip_pp = charging or state.move == .Struggle or
                 (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
 
             try checkCriticalHit(battle, player, state, options);
             // TODO damagestats
@@ -1144,7 +1144,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             const charging = false; // TODO
             const skip_pp = charging or state.move == .Struggle or
                 (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
 
             // TODO charge
             // usedmovetext
@@ -1181,7 +1181,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             const charging = false; // TODO
             const skip_pp = charging or state.move == .Struggle or
                 (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
 
             // TODO charge
             // usedmovetext
@@ -1219,7 +1219,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             const charging = false; // TODO
             const skip_pp = charging or state.move == .Struggle or
                 (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
 
             try Effects.transform(battle, player, state, options);
         },
@@ -1230,7 +1230,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             const charging = false; // TODO
             const skip_pp = charging or state.move == .Struggle or
                 (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
 
             try Effects.splash(battle, player, state, options);
         },
@@ -1241,7 +1241,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             const charging = false; // TODO
             const skip_pp = charging or state.move == .Struggle or
                 (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
 
             try Effects.conversion(battle, player, state, options);
         },
@@ -1252,7 +1252,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             const charging = false; // TODO
             const skip_pp = charging or state.move == .Struggle or
                 (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
 
             try checkCriticalHit(battle, player, state, options);
             // TODO damagestats
@@ -1285,7 +1285,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             const charging = false; // TODO
             const skip_pp = charging or state.move == .Struggle or
                 (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
 
             try Effects.substitute(battle, player, state, options);
         },
@@ -1296,7 +1296,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             const charging = false; // TODO
             const skip_pp = charging or state.move == .Struggle or
                 (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
 
             try Effects.sketch(battle, player, state, options);
         },
@@ -1307,7 +1307,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             const charging = false; // TODO
             const skip_pp = charging or state.move == .Struggle or
                 (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
 
             // TODO startloop
             try checkHit(battle, player, state, options);
@@ -1338,7 +1338,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             const charging = false; // TODO
             const skip_pp = charging or state.move == .Struggle or
                 (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
 
             try checkCriticalHit(battle, player, state, options);
             // TODO damagestats
@@ -1373,7 +1373,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             const charging = false; // TODO
             const skip_pp = charging or state.move == .Struggle or
                 (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
 
             try Effects.meanLook(battle, player, state, options);
         },
@@ -1384,7 +1384,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             const charging = false; // TODO
             const skip_pp = charging or state.move == .Struggle or
                 (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
 
             try checkHit(battle, player, state, options);
             try Effects.lockOn(battle, player, state, options);
@@ -1396,7 +1396,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             const charging = false; // TODO
             const skip_pp = charging or state.move == .Struggle or
                 (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
 
             try Effects.nightmare(battle, player, state, options);
         },
@@ -1407,7 +1407,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             const charging = false; // TODO
             const skip_pp = charging or state.move == .Struggle or
                 (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
 
             try checkCriticalHit(battle, player, state, options);
             // TODO damagestats
@@ -1443,7 +1443,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             const charging = false; // TODO
             const skip_pp = charging or state.move == .Struggle or
                 (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
 
             try Effects.curse(battle, player, state, options);
         },
@@ -1454,7 +1454,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             const charging = false; // TODO
             const skip_pp = charging or state.move == .Struggle or
                 (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
 
             try Effects.fixedDamage(battle, player, state, options);
             try adjustDamage(battle, player, state, options);
@@ -1481,7 +1481,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             const charging = false; // TODO
             const skip_pp = charging or state.move == .Struggle or
                 (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
 
             try checkHit(battle, player, state, options);
             try Effects.conversion2(battle, player, state, options);
@@ -1493,7 +1493,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             const charging = false; // TODO
             const skip_pp = charging or state.move == .Struggle or
                 (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
 
             try checkHit(battle, player, state, options);
             try Effects.spite(battle, player, state, options);
@@ -1505,7 +1505,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             const charging = false; // TODO
             const skip_pp = charging or state.move == .Struggle or
                 (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
 
             try Effects.protect(battle, player, state, options);
         },
@@ -1516,7 +1516,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             const charging = false; // TODO
             const skip_pp = charging or state.move == .Struggle or
                 (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
 
             try Effects.bellyDrum(battle, player, state, options);
         },
@@ -1527,7 +1527,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             const charging = false; // TODO
             const skip_pp = charging or state.move == .Struggle or
                 (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
 
             try Effects.spikes(battle, player, state, options);
         },
@@ -1538,7 +1538,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             const charging = false; // TODO
             const skip_pp = charging or state.move == .Struggle or
                 (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
 
             try checkHit(battle, player, state, options);
             try Effects.foresight(battle, player, state, options);
@@ -1550,7 +1550,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             const charging = false; // TODO
             const skip_pp = charging or state.move == .Struggle or
                 (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
 
             try Effects.destinyBond(battle, player, state, options);
         },
@@ -1561,7 +1561,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             const charging = false; // TODO
             const skip_pp = charging or state.move == .Struggle or
                 (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
 
             try Effects.perishSong(battle, player, state, options);
         },
@@ -1572,7 +1572,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             const charging = false; // TODO
             const skip_pp = charging or state.move == .Struggle or
                 (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
 
             try Effects.sandstorm(battle, player, state, options);
         },
@@ -1582,7 +1582,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             const charging = false; // TODO
             const skip_pp = charging or state.move == .Struggle or
                 (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
 
             // usedmovetext
             try log.move(ident, state.move, foe_ident); // FIXME self? from?
@@ -1618,7 +1618,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             const charging = false; // TODO
             const skip_pp = charging or state.move == .Struggle or
                 (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
 
             try checkCriticalHit(battle, player, state, options);
             // TODO damagestats
@@ -1652,7 +1652,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             const charging = false; // TODO
             const skip_pp = charging or state.move == .Struggle or
                 (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
 
             try checkHit(battle, player, state, options);
             // TODO switchturn
@@ -1670,7 +1670,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             const charging = false; // TODO
             const skip_pp = charging or state.move == .Struggle or
                 (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
 
             try checkCriticalHit(battle, player, state, options);
             // TODO damagestats
@@ -1704,7 +1704,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             const charging = false; // TODO
             const skip_pp = charging or state.move == .Struggle or
                 (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
 
             try checkHit(battle, player, state, options);
             try Effects.attract(battle, player, state, options);
@@ -1716,7 +1716,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             const charging = false; // TODO
             const skip_pp = charging or state.move == .Struggle or
                 (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
 
             try Effects.sleepTalk(battle, player, state, options);
         },
@@ -1727,7 +1727,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             const charging = false; // TODO
             const skip_pp = charging or state.move == .Struggle or
                 (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
 
             try Effects.healBell(battle, player, state, options);
         },
@@ -1738,7 +1738,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             const charging = false; // TODO
             const skip_pp = charging or state.move == .Struggle or
                 (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
 
             try checkCriticalHit(battle, player, state, options);
             // TODO damagestats
@@ -1772,7 +1772,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             const charging = false; // TODO
             const skip_pp = charging or state.move == .Struggle or
                 (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
 
             try checkHit(battle, player, state, options);
             try checkCriticalHit(battle, player, state, options);
@@ -1807,7 +1807,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             const charging = false; // TODO
             const skip_pp = charging or state.move == .Struggle or
                 (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
 
             try Effects.safeguard(battle, player, state, options);
         },
@@ -1818,7 +1818,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             const charging = false; // TODO
             const skip_pp = charging or state.move == .Struggle or
                 (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
 
             try checkHit(battle, player, state, options);
             try Effects.painSplit(battle, player, state, options);
@@ -1830,7 +1830,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             const charging = false; // TODO
             const skip_pp = charging or state.move == .Struggle or
                 (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
 
             try checkCriticalHit(battle, player, state, options);
             // TODO damagestats
@@ -1865,7 +1865,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             const charging = false; // TODO
             const skip_pp = charging or state.move == .Struggle or
                 (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
 
             try checkCriticalHit(battle, player, state, options);
             // TODO damagestats
@@ -1900,7 +1900,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             const charging = false; // TODO
             const skip_pp = charging or state.move == .Struggle or
                 (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
 
             try Effects.batonPass(battle, player, state, options);
         },
@@ -1911,7 +1911,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             const charging = false; // TODO
             const skip_pp = charging or state.move == .Struggle or
                 (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
 
             try checkHit(battle, player, state, options);
             try Effects.encore(battle, player, state, options);
@@ -1923,7 +1923,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             const charging = false; // TODO
             const skip_pp = charging or state.move == .Struggle or
                 (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
 
             try checkCriticalHit(battle, player, state, options);
             // TODO damagestats
@@ -1957,7 +1957,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             const charging = false; // TODO
             const skip_pp = charging or state.move == .Struggle or
                 (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
 
             try checkCriticalHit(battle, player, state, options);
             // TODO damagestats
@@ -1991,7 +1991,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             const charging = false; // TODO
             const skip_pp = charging or state.move == .Struggle or
                 (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
 
             try Effects.weatherHeal(battle, player, state, options);
         },
@@ -2002,7 +2002,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             const charging = false; // TODO
             const skip_pp = charging or state.move == .Struggle or
                 (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
 
             try checkCriticalHit(battle, player, state, options);
             try Effects.hiddenPower(battle, player, state, options);
@@ -2035,7 +2035,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             const charging = false; // TODO
             const skip_pp = charging or state.move == .Struggle or
                 (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
 
             try checkCriticalHit(battle, player, state, options);
             // TODO damagestats
@@ -2070,7 +2070,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             const charging = false; // TODO
             const skip_pp = charging or state.move == .Struggle or
                 (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
 
             try Effects.rainDance(battle, player, state, options);
         },
@@ -2081,7 +2081,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             const charging = false; // TODO
             const skip_pp = charging or state.move == .Struggle or
                 (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
 
             try Effects.sunnyDay(battle, player, state, options);
         },
@@ -2092,7 +2092,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             const charging = false; // TODO
             const skip_pp = charging or state.move == .Struggle or
                 (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
 
             try Effects.mirrorCoat(battle, player, state, options);
             // TODO failuretext
@@ -2108,9 +2108,43 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             const charging = false; // TODO
             const skip_pp = charging or state.move == .Struggle or
                 (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
 
             try Effects.psychUp(battle, player, state, options);
+        },
+        .AllStatUpChance => {
+            // usedmovetext
+            try log.move(ident, state.move, foe_ident); // FIXME self? from?
+            // doturn
+            const charging = false; // TODO
+            const skip_pp = charging or state.move == .Struggle or
+                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
+            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
+
+            try checkCriticalHit(battle, player, state, options);
+            // TODO damagestats
+            // TODO damagecalc
+            try adjustDamage(battle, player, state, options);
+            try randomizeDamage(battle, player, state, options);
+            try checkHit(battle, player, state, options);
+            // TODO effectchance
+            // TODO failuretext
+            try applyDamage(battle, player, state, options);
+
+            // criticaltext
+            if (state.crit) try log.crit(foe_ident);
+            // supereffectivetext
+            if (!state.immune()) {
+                if (state.effectiveness > Effectiveness.neutral) {
+                    try log.supereffective(foe_ident);
+                } else if (state.effectiveness < Effectiveness.neutral) {
+                    try log.resisted(foe_ident);
+                }
+            }
+
+            _ = try destinyBond(battle, player, state, options);
+            try buildRage(battle, player, state, options);
+            try Effects.allStatUpChance(battle, player, state, options);
         },
         .FutureSight => {
             // TODO checkfuturesight
@@ -2120,7 +2154,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             const charging = false; // TODO
             const skip_pp = charging or state.move == .Struggle or
                 (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
 
             // TODO damagestats
             // TODO damagecalc
@@ -2140,7 +2174,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             const charging = false; // TODO
             const skip_pp = charging or state.move == .Struggle or
                 (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
-            if (!skip_pp) decrementPP(side, state.move, state.mslot); // TODO if no pp return
+            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
 
             // TODO startloop
             try checkHit(battle, player, state, options);
@@ -2171,14 +2205,35 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try kingsRock(battle, player, state, options);
         },
         // zig fmt: off
-        .AllStatUpChance, .AttackUp1, .AttackUp2, .AttackUpChance, .DefenseUp1, .DefenseUp2,
-        .DefenseUpChance, .EvasionUp1, .SpAtkUp1, .SpDefUp2, .SpeedUp2 => {}, // TODO
+        .AttackUp1, .AttackUp2, .AttackUpChance, .DefenseUp1, .DefenseUp2,
+        .DefenseUpChance, .EvasionUp1, .SpAtkUp1, .SpDefUp2, .SpeedUp2 => {
         // zig fmt: on
+            // usedmovetext
+            try log.move(ident, state.move, foe_ident); // FIXME self? from?
+            // doturn
+            const charging = false; // TODO
+            const skip_pp = charging or state.move == .Struggle or
+                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
+            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
+
+            try Effects.boost(battle, player, state, options);
+        },
         // zig fmt: off
         .AccuracyDown1, .AccuracyDownChance, .AttackDown1, .AttackDown2, .AttackDownChance,
         .DefenseDown1, .DefenseDown2, .DefenseDownChance, .EvasionDown1, .SpDefDownChance,
-        .SpeedDown1, .SpeedDown2, .SpeedDownChance => {}, // TODO
+        .SpeedDown1, .SpeedDown2, .SpeedDownChance => {
         // zig fmt: on
+            // usedmovetext
+            try log.move(ident, state.move, foe_ident); // FIXME self? from?
+            // doturn
+            const charging = false; // TODO
+            const skip_pp = charging or state.move == .Struggle or
+                (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
+            if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
+
+            try checkHit(battle, player, state, options);
+            try Effects.unboost(battle, player, state, options);
+        },
     }
 
     return null;
