@@ -455,23 +455,26 @@ const doMoveFns = async (
     ['FlameWheel', 'SacredFire'],
   ];
 
-  const BOOLS = new Set<string>(['checkfaint']);
+  const SNIPPETS: {[command: string]: (effect: string) => string} = {
+    checkfaint: () => '_ = try destinyBond(battle, player, state, options);',
+  };
+
   const FNS: {[command: string]: string} = {
     checkhit: 'checkHit', critical: 'checkCriticalHit', stab: 'adjustDamage',
     damagevariation: 'randomizeDamage', applydamage: 'applyDamage', buildopponentrage: 'buildRage',
-    kingsrock: 'kingsRock', checkfaint: 'destinyBond', ragedamage: 'rageDamage',
-    burntarget: 'Effects.burnChance', freezetarget: 'Effects.freezeChance', ohko: 'Effects.ohko',
+    kingsrock: 'kingsRock', ragedamage: 'rageDamage', burntarget: 'Effects.burnChance',
+    freezetarget: 'Effects.freezeChance', ohko: 'Effects.ohko', startsun: 'Effects.sunnyDay',
     paralyzetarget: 'Effects.paralyzeChance', arenatrap: 'Effects.meanLook',
     traptarget: 'Effects.binding', flinchtarget: 'Effects.flinchChance',
-    poisontarget: 'Effects.poisonChance', sleeptarget: 'Effects.sleep',
+    poisontarget: 'Effects.poisonChance', sleeptarget: 'Effects.sleep', resetstats: 'Effects.haze',
     confuse: 'Effects.confusion', constantdamage: 'Effects.fixedDamage',
     confusetarget: 'Effects.confusionChance', selfdestruct: 'Effects.explode',
     rechargenextturn: 'Effects.hyperBeam', draintarget: 'Effects.drainHP',
-    skipsuncharge: 'Effects.solarBeam', curl: 'Effects.defenseCurl', resetstats: 'Effects.haze',
+    skipsuncharge: 'Effects.solarBeam', curl: 'Effects.defenseCurl',
     defenseup: 'Effects.boost', screen: 'Effects.screens', tristatuschance: 'Effects.triAttack',
     defrost: 'Effects.defrost', startsandstorm: 'Effects.sandstorm',
     happinesspower: 'Effects.happiness', healnite: 'Effects.weatherHeal',
-    clearhazards: 'Effects.rapidSpin', startrain: 'Effects.rainDance', startsun: 'Effects.sunnyDay',
+    clearhazards: 'Effects.rapidSpin', startrain: 'Effects.rainDance',
   };
 
   const BOOST = /[^th]Up[12]?(?:Chance)?$/;
@@ -483,9 +486,10 @@ const doMoveFns = async (
       const fn = FNS[command] ?? (command === name.toLowerCase()
         ? `Effects.${name[0].toLowerCase()}${name.slice(1)}`
         : undefined);
-      if (fn) {
-        const start = BOOLS.has(command) ? '_ = ' : '';
-        write(`${start}try ${fn}(battle, player, state, options);`);
+      if (SNIPPETS[command]) {
+        write(SNIPPETS[command](name));
+      } else if (fn) {
+        write(`try ${fn}(battle, player, state, options);`);
       } else {
         write(`// TODO ${command}`);
       }
