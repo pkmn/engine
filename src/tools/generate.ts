@@ -422,6 +422,7 @@ const doMoveFns = async (
 
   const GROUPED = [
     ['Frustration', 'Return'],
+    ['Endure', 'Protect'],
     ['Toxic', 'Poison'],
     ['AlwaysHit', 'HighCritical', 'Priority', 'JumpKick', 'None'],
     ['LightScreen', 'Reflect'],
@@ -429,28 +430,27 @@ const doMoveFns = async (
     ['DoubleHit', 'MultiHit'],
     ['MorningSun', 'Synthesis', 'Moonlight'],
     ['DreamEater', 'DrainHP'],
+    ['FlameWheel', 'SacredFire'],
   ];
 
+  const BOOLS = new Set<string>(['checkfaint']);
   const FNS: {[command: string]: string} = {
     checkhit: 'checkHit', critical: 'checkCriticalHit', stab: 'adjustDamage',
     damagevariation: 'randomizeDamage', applydamage: 'applyDamage', buildopponentrage: 'buildRage',
     kingsrock: 'kingsRock', checkfaint: 'destinyBond', ragedamage: 'rageDamage',
-    payday: 'Effects.payDay', burntarget: 'Effects.burnChance', poison: 'Effects.poison',
-    freezetarget: 'Effects.freezeChance', paralyzetarget: 'Effects.paralyzeChance',
-    ohko: 'Effects.ohko', traptarget: 'Effects.binding', flinchtarget: 'Effects.flinchChance',
-    recoil: 'Effects.recoil', poisontarget: 'Effects.poisonChance', sleeptarget: 'Effects.sleep',
-    confuse: 'Effects.confusion', constantdamage: 'Effects.fixedDamage', disable: 'Effects.disable',
-    mist: 'Effects.mist', confusetarget: 'Effects.confusionChance', counter: 'Effects.counter',
+    burntarget: 'Effects.burnChance', freezetarget: 'Effects.freezeChance', ohko: 'Effects.ohko',
+    paralyzetarget: 'Effects.paralyzeChance', arenatrap: 'Effects.meanLook',
+    traptarget: 'Effects.binding', flinchtarget: 'Effects.flinchChance',
+    poisontarget: 'Effects.poisonChance', sleeptarget: 'Effects.sleep',
+    confuse: 'Effects.confusion', constantdamage: 'Effects.fixedDamage',
+    confusetarget: 'Effects.confusionChance', selfdestruct: 'Effects.explode',
     rechargenextturn: 'Effects.hyperBeam', draintarget: 'Effects.drainHP',
-    leechseed: 'Effects.leechSeed', skipsuncharge: 'Effects.solarBeam', rage: 'Effects.rage',
-    paralyze: 'Effects.paralyze', teleport: 'Effects.teleport', mimic: 'Effects.mimic',
-    heal: 'Effects.heal', curl: 'Effects.defenseCurl', resetstats: 'Effects.haze',
-    defenseup: 'Effects.boost', screen: 'Effects.screens', focusenergy: 'Effects.focusEnergy',
-    metronome: 'Effects.metronome', mirrormove: 'Effects.mirrorMove',
-    selfdestruct: 'Effects.explode',
-
+    skipsuncharge: 'Effects.solarBeam', curl: 'Effects.defenseCurl', resetstats: 'Effects.haze',
+    defenseup: 'Effects.boost', screen: 'Effects.screens', tristatuschance: 'Effects.triAttack',
+    defrost: 'Effects.defrost', startsandstorm: 'Effects.sandstorm',
+    happinesspower: 'Effects.happiness', healnite: 'Effects.weatherHeal',
+    clearhazards: 'Effects.rapidSpin', startrain: 'Effects.rainDance', startsun: 'Effects.sunnyDay',
   };
-  const BOOLS = new Set<string>(['checkfaint']);
 
   const boosts = [];
   const unboosts = [];
@@ -461,9 +461,12 @@ const doMoveFns = async (
         write(`${group.map(e => `.${e}`).join(', ')} => {`);
         indent++;
         for (const command of effects.get(name)!) {
-          if (FNS[command]) {
+          const fn = FNS[command] ?? (command === name.toLowerCase()
+            ? `Effects.${name[0].toLowerCase()}${name.slice(1)}`
+            : undefined);
+          if (fn) {
             const start = BOOLS.has(command) ? '_ = ' : '';
-            write(`${start}try ${FNS[command]}(battle, player, state, options);`);
+            write(`${start}try ${fn}(battle, player, state, options);`);
           } else {
             write(`// TODO ${command}`);
           }
@@ -484,9 +487,12 @@ const doMoveFns = async (
     write(`.${name} => {`);
     indent++;
     for (const command of effects.get(name)!) {
-      if (FNS[command]) {
+      const fn = FNS[command] ?? (command === name.toLowerCase()
+        ? `Effects.${name[0].toLowerCase()}${name.slice(1)}`
+        : undefined);
+      if (fn) {
         const start = BOOLS.has(command) ? '_ = ' : '';
-        write(`${start}try ${FNS[command]}(battle, player, state, options);`);
+        write(`${start}try ${fn}(battle, player, state, options);`);
       } else {
         write(`// TODO ${command}`);
       }

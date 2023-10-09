@@ -190,7 +190,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             // TODO usedmovetext
             // TODO doturn
             try checkHit(battle, player, state, options);
-            // TODO forceswitch
+            try Effects.forceSwitch(battle, player, state, options);
         },
         .FlyDig => {
             // TODO checkcharge
@@ -666,17 +666,17 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
         .Transform => {
             // TODO usedmovetext
             // TODO doturn
-            // TODO transform
+            try Effects.transform(battle, player, state, options);
         },
         .Splash => {
             // TODO usedmovetext
             // TODO doturn
-            // TODO splash
+            try Effects.splash(battle, player, state, options);
         },
         .Conversion => {
             // TODO usedmovetext
             // TODO doturn
-            // TODO conversion
+            try Effects.conversion(battle, player, state, options);
         },
         .TriAttack => {
             // TODO usedmovetext
@@ -693,17 +693,17 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             // TODO supereffectivetext
             _ = try destinyBond(battle, player, state, options);
             try buildRage(battle, player, state, options);
-            // TODO tristatuschance
+            try Effects.triAttack(battle, player, state, options);
         },
         .Substitute => {
             // TODO usedmovetext
             // TODO doturn
-            // TODO substitute
+            try Effects.substitute(battle, player, state, options);
         },
         .Sketch => {
             // TODO usedmovetext
             // TODO doturn
-            // TODO sketch
+            try Effects.sketch(battle, player, state, options);
         },
         .TripleKick => {
             // TODO usedmovetext
@@ -713,7 +713,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try checkCriticalHit(battle, player, state, options);
             // TODO damagestats
             // TODO damagecalc
-            // TODO triplekick
+            try Effects.tripleKick(battle, player, state, options);
             try adjustDamage(battle, player, state, options);
             try randomizeDamage(battle, player, state, options);
             // TODO clearmissdamage
@@ -742,7 +742,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try applyDamage(battle, player, state, options);
             // TODO criticaltext
             // TODO supereffectivetext
-            // TODO thief
+            try Effects.thief(battle, player, state, options);
             _ = try destinyBond(battle, player, state, options);
             try buildRage(battle, player, state, options);
             try kingsRock(battle, player, state, options);
@@ -750,37 +750,18 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
         .MeanLook => {
             // TODO usedmovetext
             // TODO doturn
-            // TODO arenatrap
+            try Effects.meanLook(battle, player, state, options);
         },
         .LockOn => {
             // TODO usedmovetext
             // TODO doturn
             try checkHit(battle, player, state, options);
-            // TODO lockon
+            try Effects.lockOn(battle, player, state, options);
         },
         .Nightmare => {
             // TODO usedmovetext
             // TODO doturn
-            // TODO nightmare
-        },
-        .FlameWheel => {
-            // TODO usedmovetext
-            // TODO doturn
-            try checkCriticalHit(battle, player, state, options);
-            // TODO damagestats
-            // TODO damagecalc
-            try adjustDamage(battle, player, state, options);
-            try randomizeDamage(battle, player, state, options);
-            try checkHit(battle, player, state, options);
-            // TODO effectchance
-            // TODO failuretext
-            try applyDamage(battle, player, state, options);
-            // TODO criticaltext
-            // TODO supereffectivetext
-            // TODO defrost
-            _ = try destinyBond(battle, player, state, options);
-            try buildRage(battle, player, state, options);
-            try Effects.burnChance(battle, player, state, options);
+            try Effects.nightmare(battle, player, state, options);
         },
         .Snore => {
             // TODO usedmovetext
@@ -792,7 +773,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try randomizeDamage(battle, player, state, options);
             try checkHit(battle, player, state, options);
             // TODO effectchance
-            // TODO snore
+            try Effects.snore(battle, player, state, options);
             // TODO failuretext
             try applyDamage(battle, player, state, options);
             // TODO criticaltext
@@ -805,7 +786,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
         .Curse => {
             // TODO usedmovetext
             // TODO doturn
-            // TODO curse
+            try Effects.curse(battle, player, state, options);
         },
         .Reversal => {
             // TODO usedmovetext
@@ -824,54 +805,49 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             // TODO usedmovetext
             // TODO doturn
             try checkHit(battle, player, state, options);
-            // TODO conversion2
+            try Effects.conversion2(battle, player, state, options);
         },
         .Spite => {
             // TODO usedmovetext
             // TODO doturn
             try checkHit(battle, player, state, options);
-            // TODO spite
+            try Effects.spite(battle, player, state, options);
         },
-        .Protect => {
+        .Endure, .Protect => {
             // TODO usedmovetext
             // TODO doturn
-            // TODO protect
+            try Effects.protect(battle, player, state, options);
         },
         .BellyDrum => {
             // TODO usedmovetext
             // TODO doturn
-            // TODO bellydrum
+            try Effects.bellyDrum(battle, player, state, options);
         },
         .Spikes => {
             // TODO usedmovetext
             // TODO doturn
-            // TODO spikes
+            try Effects.spikes(battle, player, state, options);
         },
         .Foresight => {
             // TODO usedmovetext
             // TODO doturn
             try checkHit(battle, player, state, options);
-            // TODO foresight
+            try Effects.foresight(battle, player, state, options);
         },
         .DestinyBond => {
             // TODO usedmovetext
             // TODO doturn
-            // TODO destinybond
+            try Effects.destinyBond(battle, player, state, options);
         },
         .PerishSong => {
             // TODO usedmovetext
             // TODO doturn
-            // TODO perishsong
+            try Effects.perishSong(battle, player, state, options);
         },
         .Sandstorm => {
             // TODO usedmovetext
             // TODO doturn
-            // TODO startsandstorm
-        },
-        .Endure => {
-            // TODO usedmovetext
-            // TODO doturn
-            // TODO endure
+            try Effects.sandstorm(battle, player, state, options);
         },
         .Rollout => {
             // TODO checkcurl
@@ -900,7 +876,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             // TODO damagecalc
             try adjustDamage(battle, player, state, options);
             try randomizeDamage(battle, player, state, options);
-            // TODO falseswipe
+            try Effects.falseSwipe(battle, player, state, options);
             try checkHit(battle, player, state, options);
             // TODO failuretext
             try applyDamage(battle, player, state, options);
@@ -930,7 +906,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             // TODO damagecalc
             try adjustDamage(battle, player, state, options);
             try checkHit(battle, player, state, options);
-            // TODO furycutter
+            try Effects.furyCutter(battle, player, state, options);
             try randomizeDamage(battle, player, state, options);
             // TODO failuretext
             try applyDamage(battle, player, state, options);
@@ -944,24 +920,24 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             // TODO usedmovetext
             // TODO doturn
             try checkHit(battle, player, state, options);
-            // TODO attract
+            try Effects.attract(battle, player, state, options);
         },
         .SleepTalk => {
             // TODO usedmovetext
             // TODO doturn
-            // TODO sleeptalk
+            try Effects.sleepTalk(battle, player, state, options);
         },
         .HealBell => {
             // TODO usedmovetext
             // TODO doturn
-            // TODO healbell
+            try Effects.healBell(battle, player, state, options);
         },
         .Frustration, .Return => {
             // TODO usedmovetext
             // TODO doturn
             try checkCriticalHit(battle, player, state, options);
             // TODO damagestats
-            // TODO happinesspower
+            try Effects.happiness(battle, player, state, options);
             // TODO damagecalc
             try adjustDamage(battle, player, state, options);
             try randomizeDamage(battle, player, state, options);
@@ -980,7 +956,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try checkHit(battle, player, state, options);
             try checkCriticalHit(battle, player, state, options);
             // TODO damagestats
-            // TODO present
+            try Effects.present(battle, player, state, options);
             // TODO damagecalc
             try adjustDamage(battle, player, state, options);
             try randomizeDamage(battle, player, state, options);
@@ -996,15 +972,15 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
         .Safeguard => {
             // TODO usedmovetext
             // TODO doturn
-            // TODO safeguard
+            try Effects.safeguard(battle, player, state, options);
         },
         .PainSplit => {
             // TODO usedmovetext
             // TODO doturn
             try checkHit(battle, player, state, options);
-            // TODO painsplit
+            try Effects.painSplit(battle, player, state, options);
         },
-        .SacredFire => {
+        .FlameWheel, .SacredFire => {
             // TODO usedmovetext
             // TODO doturn
             try checkCriticalHit(battle, player, state, options);
@@ -1018,7 +994,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try applyDamage(battle, player, state, options);
             // TODO criticaltext
             // TODO supereffectivetext
-            // TODO defrost
+            try Effects.defrost(battle, player, state, options);
             _ = try destinyBond(battle, player, state, options);
             try buildRage(battle, player, state, options);
             try Effects.burnChance(battle, player, state, options);
@@ -1045,13 +1021,13 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
         .BatonPass => {
             // TODO usedmovetext
             // TODO doturn
-            // TODO batonpass
+            try Effects.batonPass(battle, player, state, options);
         },
         .Encore => {
             // TODO usedmovetext
             // TODO doturn
             try checkHit(battle, player, state, options);
-            // TODO encore
+            try Effects.encore(battle, player, state, options);
         },
         .Pursuit => {
             // TODO usedmovetext
@@ -1061,7 +1037,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             // TODO damagecalc
             try adjustDamage(battle, player, state, options);
             try randomizeDamage(battle, player, state, options);
-            // TODO pursuit
+            try Effects.pursuit(battle, player, state, options);
             try checkHit(battle, player, state, options);
             // TODO failuretext
             try applyDamage(battle, player, state, options);
@@ -1084,7 +1060,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try applyDamage(battle, player, state, options);
             // TODO criticaltext
             // TODO supereffectivetext
-            // TODO clearhazards
+            try Effects.rapidSpin(battle, player, state, options);
             _ = try destinyBond(battle, player, state, options);
             try buildRage(battle, player, state, options);
             try kingsRock(battle, player, state, options);
@@ -1092,13 +1068,13 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
         .MorningSun, .Synthesis, .Moonlight => {
             // TODO usedmovetext
             // TODO doturn
-            // TODO healnite
+            try Effects.weatherHeal(battle, player, state, options);
         },
         .HiddenPower => {
             // TODO usedmovetext
             // TODO doturn
             try checkCriticalHit(battle, player, state, options);
-            // TODO hiddenpower
+            try Effects.hiddenPower(battle, player, state, options);
             // TODO damagecalc
             try adjustDamage(battle, player, state, options);
             try randomizeDamage(battle, player, state, options);
@@ -1133,17 +1109,17 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
         .RainDance => {
             // TODO usedmovetext
             // TODO doturn
-            // TODO startrain
+            try Effects.rainDance(battle, player, state, options);
         },
         .SunnyDay => {
             // TODO usedmovetext
             // TODO doturn
-            // TODO startsun
+            try Effects.sunnyDay(battle, player, state, options);
         },
         .MirrorCoat => {
             // TODO usedmovetext
             // TODO doturn
-            // TODO mirrorcoat
+            try Effects.mirrorCoat(battle, player, state, options);
             // TODO failuretext
             try applyDamage(battle, player, state, options);
             _ = try destinyBond(battle, player, state, options);
@@ -1153,7 +1129,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
         .PsychUp => {
             // TODO usedmovetext
             // TODO doturn
-            // TODO psychup
+            try Effects.psychUp(battle, player, state, options);
         },
         .FutureSight => {
             // TODO checkfuturesight
@@ -1161,7 +1137,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             // TODO doturn
             // TODO damagestats
             // TODO damagecalc
-            // TODO futuresight
+            try Effects.futureSight(battle, player, state, options);
             try randomizeDamage(battle, player, state, options);
             try checkHit(battle, player, state, options);
             // TODO failuretext
@@ -1176,7 +1152,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             // TODO startloop
             try checkHit(battle, player, state, options);
             try checkCriticalHit(battle, player, state, options);
-            // TODO beatup
+            try Effects.beatUp(battle, player, state, options);
             // TODO damagecalc
             try randomizeDamage(battle, player, state, options);
             // TODO clearmissdamage

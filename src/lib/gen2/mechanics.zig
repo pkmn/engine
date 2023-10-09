@@ -389,7 +389,6 @@ fn executeMove(
 
     // FIXME: need damage from doTurn
     var state: State = .{ .move = move, .mslot = mslot, .first = first };
-    _ = try TODO(battle, player, &state, options);
     return generated.doMove(battle, player, &state, options);
 }
 
@@ -564,37 +563,6 @@ pub fn decrementPP(side: *Side, move: Move, mslot: u4) bool {
     assert(active.move(mslot).pp == side.stored().move(mslot).pp);
 
     return true;
-}
-
-fn TODO(battle: anytype, player: Player, state: *State, options: anytype) !?Result {
-    try Effects.attract(battle, player, state, options);
-    try Effects.boost(battle, player, state, options);
-    try Effects.burnChance(battle, player, state, options);
-    try Effects.conversion(battle, player, state, options);
-    try Effects.conversion2(battle, player, state, options);
-    try Effects.defrost(battle, player, state, options);
-    try Effects.destinyBond(battle, player, state, options);
-    try Effects.disable(battle, player, state, options);
-    try Effects.drainHP(battle, player, state, options);
-    try Effects.encore(battle, player, state, options);
-    try Effects.falseSwipe(battle, player, state, options);
-    try Effects.fixedDamage(battle, player, state, options);
-    try Effects.focusEnergy(battle, player, state, options);
-    try Effects.forceSwitch(battle, player, state, options);
-    try Effects.foresight(battle, player, state, options);
-    try Effects.freezeChance(battle, player, state, options);
-    try Effects.happiness(battle, player, state, options);
-    try Effects.paralyzeChance(battle, player, state, options);
-    try Effects.poison(battle, player, state, options);
-    try Effects.poisonChance(battle, player, state, options);
-    try Effects.protect(battle, player, state, options);
-    try Effects.rage(battle, player, state, options);
-    try Effects.reversal(battle, player, state, options);
-    try Effects.sleep(battle, player, state, options);
-    try Effects.unboost(battle, player, state, options);
-    try Effects.weatherHeal(battle, player, state, options);
-
-    return null;
 }
 
 pub fn checkCriticalHit(battle: anytype, player: Player, state: *State, options: anytype) !void {
@@ -1273,6 +1241,10 @@ pub const Effects = struct {
         _ = .{ battle, player, state, options }; // TODO
     }
 
+    pub fn confusionChance(battle: anytype, player: Player, state: *State, options: anytype) !void {
+        _ = .{ battle, player, state, options }; // TODO
+    }
+
     pub fn conversion(battle: anytype, player: Player, _: *State, options: anytype) !void {
         var side = battle.side(player);
 
@@ -1937,6 +1909,10 @@ pub const Effects = struct {
     }
 
     pub fn transform(battle: anytype, player: Player, state: *State, options: anytype) !void {
+        _ = .{ battle, player, state, options }; // TODO
+    }
+
+    pub fn triAttack(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
     }
 
