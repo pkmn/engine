@@ -363,6 +363,23 @@ function* chunks(xs: string[], n: number) {
   }
 }
 
+const levenshtein = (s: string[], t: string[]) => {
+  if (!s.length) return t.length;
+  if (!t.length) return s.length;
+  const arr = [];
+  for (let i = 0; i <= t.length; i++) {
+    arr[i] = [i];
+    for (let j = 1; j <= s.length; j++) {
+      arr[i][j] = i === 0 ? j : Math.min(
+        arr[i - 1][j] + 1,
+        arr[i][j - 1] + 1,
+        arr[i - 1][j - 1] + (s[j - 1] === t[i - 1] ? 0 : 1)
+      );
+    }
+  }
+  return arr[t.length][s.length];
+};
+
 const doMoveFns = async (
   gen: Generation, dirs: { out: string; cache: string },
   update: boolean, pret: string, names: Set<string>,
@@ -481,7 +498,16 @@ const doMoveFns = async (
   outer: for (const name of ['None', ...names]) {
     for (const group of GROUPED) {
       if (group.includes(name)) {
-        if (group[group.length - 1] !== name) continue outer;
+        const canonical = group[group.length - 1];
+        if (canonical !== name) {
+          const commands = effects.get(name);
+          // FIXME: DreamEater doesn't proc kingsrock
+          const n = name === 'DreamEater' ? 2 : 1;
+          if (commands && levenshtein(commands, effects.get(canonical)!) > n) {
+            throw new Error(`Invalid grouping of effects: '${name}' and '${canonical}'`);
+          }
+          continue outer;
+        }
         write(`${group.map(e => `.${e}`).join(', ')} => {`);
         writeCommands(name);
         write('},');
