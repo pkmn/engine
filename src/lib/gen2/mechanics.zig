@@ -567,17 +567,6 @@ pub fn decrementPP(side: *Side, move: Move, mslot: u4) bool {
 }
 
 fn TODO(battle: anytype, player: Player, state: *State, options: anytype) !?Result {
-    try checkHit(battle, player, state, options);
-    try checkCriticalHit(battle, player, state, options);
-    try calcDamage(battle, player, state, options);
-    try adjustDamage(battle, player, state, options);
-    try randomizeDamage(battle, player, state, options);
-    try applyDamage(battle, player, state, options);
-    try buildRage(battle, player, state, options);
-    try rageDamage(battle, player, state, options);
-    try kingsRock(battle, player, state, options);
-    _ = try destinyBond(battle, player, state, options);
-
     try Effects.attract(battle, player, state, options);
     try Effects.boost(battle, player, state, options);
     try Effects.burnChance(battle, player, state, options);

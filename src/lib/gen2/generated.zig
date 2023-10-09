@@ -31,165 +31,165 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
         .AlwaysHit, .HighCritical, .Priority, .JumpKick, .None => {
             // TODO usedmovetext
             // TODO doturn
-            // TODO critical
+            try checkCriticalHit(battle, player, state, options);
             // TODO damagestats
             // TODO damagecalc
-            // TODO stab
-            // TODO damagevariation
-            // TODO checkhit
+            try adjustDamage(battle, player, state, options);
+            try randomizeDamage(battle, player, state, options);
+            try checkHit(battle, player, state, options);
             // TODO failuretext
-            // TODO applydamage
+            try applyDamage(battle, player, state, options);
             // TODO criticaltext
             // TODO supereffectivetext
-            // TODO checkfaint
-            // TODO buildopponentrage
-            // TODO kingsrock
+            _ = try destinyBond(battle, player, state, options);
+            try buildRage(battle, player, state, options);
+            try kingsRock(battle, player, state, options);
         },
         .DoubleHit, .MultiHit => {
             // TODO usedmovetext
             // TODO doturn
             // TODO startloop
-            // TODO checkhit
-            // TODO critical
+            try checkHit(battle, player, state, options);
+            try checkCriticalHit(battle, player, state, options);
             // TODO damagestats
             // TODO damagecalc
-            // TODO stab
-            // TODO damagevariation
+            try adjustDamage(battle, player, state, options);
+            try randomizeDamage(battle, player, state, options);
             // TODO clearmissdamage
             // TODO failuretext
-            // TODO applydamage
+            try applyDamage(battle, player, state, options);
             // TODO criticaltext
             // TODO cleartext
             // TODO supereffectivelooptext
-            // TODO checkfaint
-            // TODO buildopponentrage
+            _ = try destinyBond(battle, player, state, options);
+            try buildRage(battle, player, state, options);
             // TODO endloop
-            // TODO kingsrock
+            try kingsRock(battle, player, state, options);
         },
         .PayDay => {
             // TODO usedmovetext
             // TODO doturn
-            // TODO critical
+            try checkCriticalHit(battle, player, state, options);
             // TODO damagestats
             // TODO damagecalc
-            // TODO stab
-            // TODO damagevariation
-            // TODO checkhit
+            try adjustDamage(battle, player, state, options);
+            try randomizeDamage(battle, player, state, options);
+            try checkHit(battle, player, state, options);
             // TODO failuretext
-            // TODO applydamage
+            try applyDamage(battle, player, state, options);
             // TODO criticaltext
             // TODO supereffectivetext
             // TODO payday
-            // TODO checkfaint
-            // TODO buildopponentrage
-            // TODO kingsrock
+            _ = try destinyBond(battle, player, state, options);
+            try buildRage(battle, player, state, options);
+            try kingsRock(battle, player, state, options);
         },
         .BurnChance => {
             // TODO usedmovetext
             // TODO doturn
-            // TODO critical
+            try checkCriticalHit(battle, player, state, options);
             // TODO damagestats
             // TODO damagecalc
-            // TODO stab
-            // TODO damagevariation
-            // TODO checkhit
+            try adjustDamage(battle, player, state, options);
+            try randomizeDamage(battle, player, state, options);
+            try checkHit(battle, player, state, options);
             // TODO effectchance
             // TODO failuretext
-            // TODO applydamage
+            try applyDamage(battle, player, state, options);
             // TODO criticaltext
             // TODO supereffectivetext
-            // TODO checkfaint
-            // TODO buildopponentrage
+            _ = try destinyBond(battle, player, state, options);
+            try buildRage(battle, player, state, options);
             // TODO burntarget
         },
         .FreezeChance => {
             // TODO usedmovetext
             // TODO doturn
-            // TODO critical
+            try checkCriticalHit(battle, player, state, options);
             // TODO damagestats
             // TODO damagecalc
-            // TODO stab
-            // TODO damagevariation
-            // TODO checkhit
+            try adjustDamage(battle, player, state, options);
+            try randomizeDamage(battle, player, state, options);
+            try checkHit(battle, player, state, options);
             // TODO effectchance
             // TODO failuretext
-            // TODO applydamage
+            try applyDamage(battle, player, state, options);
             // TODO criticaltext
             // TODO supereffectivetext
-            // TODO checkfaint
-            // TODO buildopponentrage
+            _ = try destinyBond(battle, player, state, options);
+            try buildRage(battle, player, state, options);
             // TODO freezetarget
         },
         .ParalyzeChance => {
             // TODO usedmovetext
             // TODO doturn
-            // TODO critical
+            try checkCriticalHit(battle, player, state, options);
             // TODO damagestats
             // TODO damagecalc
-            // TODO stab
-            // TODO damagevariation
-            // TODO checkhit
+            try adjustDamage(battle, player, state, options);
+            try randomizeDamage(battle, player, state, options);
+            try checkHit(battle, player, state, options);
             // TODO effectchance
             // TODO failuretext
-            // TODO applydamage
+            try applyDamage(battle, player, state, options);
             // TODO criticaltext
             // TODO supereffectivetext
-            // TODO checkfaint
-            // TODO buildopponentrage
+            _ = try destinyBond(battle, player, state, options);
+            try buildRage(battle, player, state, options);
             // TODO paralyzetarget
         },
         .OHKO => {
             // TODO usedmovetext
             // TODO doturn
-            // TODO stab
+            try adjustDamage(battle, player, state, options);
             // TODO ohko
             // TODO failuretext
-            // TODO applydamage
+            try applyDamage(battle, player, state, options);
             // TODO criticaltext
             // TODO supereffectivetext
-            // TODO checkfaint
-            // TODO buildopponentrage
+            _ = try destinyBond(battle, player, state, options);
+            try buildRage(battle, player, state, options);
         },
         .RazorWind => {
             // TODO checkcharge
             // TODO doturn
             // TODO charge
             // TODO usedmovetext
-            // TODO critical
+            try checkCriticalHit(battle, player, state, options);
             // TODO damagestats
             // TODO damagecalc
-            // TODO stab
-            // TODO damagevariation
-            // TODO checkhit
+            try adjustDamage(battle, player, state, options);
+            try randomizeDamage(battle, player, state, options);
+            try checkHit(battle, player, state, options);
             // TODO failuretext
-            // TODO applydamage
+            try applyDamage(battle, player, state, options);
             // TODO criticaltext
             // TODO supereffectivetext
-            // TODO checkfaint
-            // TODO buildopponentrage
-            // TODO kingsrock
+            _ = try destinyBond(battle, player, state, options);
+            try buildRage(battle, player, state, options);
+            try kingsRock(battle, player, state, options);
         },
         .Gust => {
             // TODO usedmovetext
             // TODO doturn
-            // TODO critical
+            try checkCriticalHit(battle, player, state, options);
             // TODO damagestats
             // TODO damagecalc
-            // TODO stab
-            // TODO damagevariation
+            try adjustDamage(battle, player, state, options);
+            try randomizeDamage(battle, player, state, options);
             // TODO doubleflyingdamage
-            // TODO checkhit
+            try checkHit(battle, player, state, options);
             // TODO failuretext
-            // TODO applydamage
+            try applyDamage(battle, player, state, options);
             // TODO criticaltext
             // TODO supereffectivetext
-            // TODO checkfaint
-            // TODO buildopponentrage
+            _ = try destinyBond(battle, player, state, options);
+            try buildRage(battle, player, state, options);
         },
         .ForceSwitch => {
             // TODO usedmovetext
             // TODO doturn
-            // TODO checkhit
+            try checkHit(battle, player, state, options);
             // TODO forceswitch
         },
         .FlyDig => {
@@ -197,165 +197,165 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             // TODO doturn
             // TODO charge
             // TODO usedmovetext
-            // TODO critical
+            try checkCriticalHit(battle, player, state, options);
             // TODO damagestats
             // TODO damagecalc
-            // TODO stab
-            // TODO damagevariation
-            // TODO checkhit
+            try adjustDamage(battle, player, state, options);
+            try randomizeDamage(battle, player, state, options);
+            try checkHit(battle, player, state, options);
             // TODO failuretext
-            // TODO applydamage
+            try applyDamage(battle, player, state, options);
             // TODO criticaltext
             // TODO supereffectivetext
-            // TODO checkfaint
-            // TODO buildopponentrage
-            // TODO kingsrock
+            _ = try destinyBond(battle, player, state, options);
+            try buildRage(battle, player, state, options);
+            try kingsRock(battle, player, state, options);
         },
         .Binding => {
             // TODO usedmovetext
             // TODO doturn
-            // TODO checkhit
-            // TODO critical
+            try checkHit(battle, player, state, options);
+            try checkCriticalHit(battle, player, state, options);
             // TODO damagestats
             // TODO damagecalc
-            // TODO stab
-            // TODO damagevariation
+            try adjustDamage(battle, player, state, options);
+            try randomizeDamage(battle, player, state, options);
             // TODO clearmissdamage
             // TODO failuretext
-            // TODO applydamage
+            try applyDamage(battle, player, state, options);
             // TODO criticaltext
             // TODO supereffectivetext
-            // TODO checkfaint
-            // TODO buildopponentrage
+            _ = try destinyBond(battle, player, state, options);
+            try buildRage(battle, player, state, options);
             // TODO traptarget
         },
         .Stomp => {
             // TODO usedmovetext
             // TODO doturn
-            // TODO critical
+            try checkCriticalHit(battle, player, state, options);
             // TODO damagestats
             // TODO damagecalc
-            // TODO stab
-            // TODO damagevariation
+            try adjustDamage(battle, player, state, options);
+            try randomizeDamage(battle, player, state, options);
             // TODO doubleminimizedamage
-            // TODO checkhit
+            try checkHit(battle, player, state, options);
             // TODO effectchance
             // TODO failuretext
-            // TODO applydamage
+            try applyDamage(battle, player, state, options);
             // TODO criticaltext
             // TODO supereffectivetext
-            // TODO checkfaint
-            // TODO buildopponentrage
+            _ = try destinyBond(battle, player, state, options);
+            try buildRage(battle, player, state, options);
             // TODO flinchtarget
         },
         .FlinchChance => {
             // TODO usedmovetext
             // TODO doturn
-            // TODO critical
+            try checkCriticalHit(battle, player, state, options);
             // TODO damagestats
             // TODO damagecalc
-            // TODO stab
-            // TODO damagevariation
-            // TODO checkhit
+            try adjustDamage(battle, player, state, options);
+            try randomizeDamage(battle, player, state, options);
+            try checkHit(battle, player, state, options);
             // TODO effectchance
             // TODO failuretext
-            // TODO applydamage
+            try applyDamage(battle, player, state, options);
             // TODO criticaltext
             // TODO supereffectivetext
-            // TODO checkfaint
-            // TODO buildopponentrage
+            _ = try destinyBond(battle, player, state, options);
+            try buildRage(battle, player, state, options);
             // TODO flinchtarget
         },
         .Recoil => {
             // TODO usedmovetext
             // TODO doturn
-            // TODO critical
+            try checkCriticalHit(battle, player, state, options);
             // TODO damagestats
             // TODO damagecalc
-            // TODO stab
-            // TODO damagevariation
-            // TODO checkhit
+            try adjustDamage(battle, player, state, options);
+            try randomizeDamage(battle, player, state, options);
+            try checkHit(battle, player, state, options);
             // TODO failuretext
-            // TODO applydamage
+            try applyDamage(battle, player, state, options);
             // TODO criticaltext
             // TODO supereffectivetext
             // TODO recoil
-            // TODO checkfaint
-            // TODO buildopponentrage
-            // TODO kingsrock
+            _ = try destinyBond(battle, player, state, options);
+            try buildRage(battle, player, state, options);
+            try kingsRock(battle, player, state, options);
         },
         .Thrashing => {
             // TODO checkrampage
             // TODO doturn
             // TODO rampage
             // TODO usedmovetext
-            // TODO checkhit
-            // TODO critical
+            try checkHit(battle, player, state, options);
+            try checkCriticalHit(battle, player, state, options);
             // TODO damagestats
             // TODO damagecalc
-            // TODO stab
-            // TODO damagevariation
+            try adjustDamage(battle, player, state, options);
+            try randomizeDamage(battle, player, state, options);
             // TODO clearmissdamage
             // TODO failuretext
-            // TODO applydamage
+            try applyDamage(battle, player, state, options);
             // TODO criticaltext
             // TODO supereffectivetext
-            // TODO checkfaint
-            // TODO buildopponentrage
-            // TODO kingsrock
+            _ = try destinyBond(battle, player, state, options);
+            try buildRage(battle, player, state, options);
+            try kingsRock(battle, player, state, options);
         },
         .PoisonChance => {
             // TODO usedmovetext
             // TODO doturn
-            // TODO critical
+            try checkCriticalHit(battle, player, state, options);
             // TODO damagestats
             // TODO damagecalc
-            // TODO stab
-            // TODO damagevariation
-            // TODO checkhit
+            try adjustDamage(battle, player, state, options);
+            try randomizeDamage(battle, player, state, options);
+            try checkHit(battle, player, state, options);
             // TODO effectchance
             // TODO failuretext
-            // TODO applydamage
+            try applyDamage(battle, player, state, options);
             // TODO criticaltext
             // TODO supereffectivetext
-            // TODO checkfaint
-            // TODO buildopponentrage
+            _ = try destinyBond(battle, player, state, options);
+            try buildRage(battle, player, state, options);
             // TODO poisontarget
         },
         .Twineedle => {
             // TODO usedmovetext
             // TODO doturn
             // TODO startloop
-            // TODO checkhit
+            try checkHit(battle, player, state, options);
             // TODO effectchance
-            // TODO critical
+            try checkCriticalHit(battle, player, state, options);
             // TODO damagestats
             // TODO damagecalc
-            // TODO stab
-            // TODO damagevariation
+            try adjustDamage(battle, player, state, options);
+            try randomizeDamage(battle, player, state, options);
             // TODO clearmissdamage
             // TODO failuretext
-            // TODO applydamage
+            try applyDamage(battle, player, state, options);
             // TODO criticaltext
             // TODO cleartext
             // TODO supereffectivelooptext
-            // TODO checkfaint
-            // TODO buildopponentrage
+            _ = try destinyBond(battle, player, state, options);
+            try buildRage(battle, player, state, options);
             // TODO endloop
-            // TODO kingsrock
+            try kingsRock(battle, player, state, options);
             // TODO poisontarget
         },
         .Sleep => {
             // TODO usedmovetext
             // TODO doturn
-            // TODO checkhit
+            try checkHit(battle, player, state, options);
             // TODO checksafeguard
             // TODO sleeptarget
         },
         .Confusion => {
             // TODO usedmovetext
             // TODO doturn
-            // TODO checkhit
+            try checkHit(battle, player, state, options);
             // TODO checksafeguard
             // TODO confuse
         },
@@ -363,18 +363,18 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             // TODO usedmovetext
             // TODO doturn
             // TODO constantdamage
-            // TODO checkhit
+            try checkHit(battle, player, state, options);
             // TODO resettypematchup
             // TODO failuretext
-            // TODO applydamage
-            // TODO checkfaint
-            // TODO buildopponentrage
-            // TODO kingsrock
+            try applyDamage(battle, player, state, options);
+            _ = try destinyBond(battle, player, state, options);
+            try buildRage(battle, player, state, options);
+            try kingsRock(battle, player, state, options);
         },
         .Disable => {
             // TODO usedmovetext
             // TODO doturn
-            // TODO checkhit
+            try checkHit(battle, player, state, options);
             // TODO disable
         },
         .Mist => {
@@ -385,70 +385,70 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
         .ConfusionChance => {
             // TODO usedmovetext
             // TODO doturn
-            // TODO critical
+            try checkCriticalHit(battle, player, state, options);
             // TODO damagestats
             // TODO damagecalc
-            // TODO stab
-            // TODO damagevariation
-            // TODO checkhit
+            try adjustDamage(battle, player, state, options);
+            try randomizeDamage(battle, player, state, options);
+            try checkHit(battle, player, state, options);
             // TODO effectchance
             // TODO failuretext
-            // TODO applydamage
+            try applyDamage(battle, player, state, options);
             // TODO criticaltext
             // TODO supereffectivetext
-            // TODO checkfaint
-            // TODO buildopponentrage
+            _ = try destinyBond(battle, player, state, options);
+            try buildRage(battle, player, state, options);
             // TODO confusetarget
         },
         .HyperBeam => {
             // TODO usedmovetext
             // TODO doturn
-            // TODO critical
+            try checkCriticalHit(battle, player, state, options);
             // TODO damagestats
             // TODO damagecalc
-            // TODO stab
-            // TODO damagevariation
-            // TODO checkhit
+            try adjustDamage(battle, player, state, options);
+            try randomizeDamage(battle, player, state, options);
+            try checkHit(battle, player, state, options);
             // TODO failuretext
-            // TODO applydamage
+            try applyDamage(battle, player, state, options);
             // TODO criticaltext
             // TODO supereffectivetext
             // TODO rechargenextturn
-            // TODO checkfaint
-            // TODO buildopponentrage
+            _ = try destinyBond(battle, player, state, options);
+            try buildRage(battle, player, state, options);
         },
         .Counter => {
             // TODO usedmovetext
             // TODO doturn
             // TODO counter
             // TODO failuretext
-            // TODO applydamage
-            // TODO checkfaint
-            // TODO buildopponentrage
-            // TODO kingsrock
+            try applyDamage(battle, player, state, options);
+            _ = try destinyBond(battle, player, state, options);
+            try buildRage(battle, player, state, options);
+            try kingsRock(battle, player, state, options);
         },
         .DrainHP => {
             // TODO usedmovetext
             // TODO doturn
-            // TODO critical
+            try checkCriticalHit(battle, player, state, options);
             // TODO damagestats
             // TODO damagecalc
-            // TODO stab
-            // TODO damagevariation
-            // TODO checkhit
+            try adjustDamage(battle, player, state, options);
+            try randomizeDamage(battle, player, state, options);
+            try checkHit(battle, player, state, options);
             // TODO failuretext
-            // TODO applydamage
+            try applyDamage(battle, player, state, options);
             // TODO criticaltext
             // TODO supereffectivetext
             // TODO draintarget
-            // TODO checkfaint
-            // TODO buildopponentrage
-            // TODO kingsrock
+            _ = try destinyBond(battle, player, state, options);
+            try buildRage(battle, player, state, options);
+            try kingsRock(battle, player, state, options);
         },
         .LeechSeed => {
             // TODO usedmovetext
             // TODO doturn
-            // TODO checkhit
+            try checkHit(battle, player, state, options);
             // TODO leechseed
         },
         .Solarbeam => {
@@ -457,91 +457,91 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             // TODO skipsuncharge
             // TODO charge
             // TODO usedmovetext
-            // TODO critical
+            try checkCriticalHit(battle, player, state, options);
             // TODO damagestats
             // TODO damagecalc
-            // TODO stab
-            // TODO damagevariation
-            // TODO checkhit
+            try adjustDamage(battle, player, state, options);
+            try randomizeDamage(battle, player, state, options);
+            try checkHit(battle, player, state, options);
             // TODO failuretext
-            // TODO applydamage
+            try applyDamage(battle, player, state, options);
             // TODO criticaltext
             // TODO supereffectivetext
-            // TODO checkfaint
-            // TODO buildopponentrage
-            // TODO kingsrock
+            _ = try destinyBond(battle, player, state, options);
+            try buildRage(battle, player, state, options);
+            try kingsRock(battle, player, state, options);
         },
         .Toxic, .Poison => {
             // TODO usedmovetext
             // TODO doturn
-            // TODO checkhit
-            // TODO stab
+            try checkHit(battle, player, state, options);
+            try adjustDamage(battle, player, state, options);
             // TODO checksafeguard
             // TODO poison
         },
         .Paralyze => {
             // TODO usedmovetext
             // TODO doturn
-            // TODO stab
-            // TODO checkhit
+            try adjustDamage(battle, player, state, options);
+            try checkHit(battle, player, state, options);
             // TODO checksafeguard
             // TODO paralyze
         },
         .Thunder => {
             // TODO usedmovetext
             // TODO doturn
-            // TODO critical
+            try checkCriticalHit(battle, player, state, options);
             // TODO damagestats
             // TODO damagecalc
             // TODO thunderaccuracy
-            // TODO checkhit
+            try checkHit(battle, player, state, options);
             // TODO effectchance
-            // TODO stab
-            // TODO damagevariation
+            try adjustDamage(battle, player, state, options);
+            try randomizeDamage(battle, player, state, options);
             // TODO failuretext
-            // TODO applydamage
+            try applyDamage(battle, player, state, options);
             // TODO criticaltext
             // TODO supereffectivetext
-            // TODO checkfaint
-            // TODO buildopponentrage
+            _ = try destinyBond(battle, player, state, options);
+            try buildRage(battle, player, state, options);
             // TODO paralyzetarget
         },
         .Earthquake => {
             // TODO usedmovetext
             // TODO doturn
-            // TODO critical
+            try checkCriticalHit(battle, player, state, options);
             // TODO damagestats
             // TODO damagecalc
-            // TODO stab
-            // TODO damagevariation
+            try adjustDamage(battle, player, state, options);
+            try randomizeDamage(battle, player, state, options);
             // TODO doubleundergrounddamage
-            // TODO checkhit
+            try checkHit(battle, player, state, options);
             // TODO effectchance
             // TODO failuretext
-            // TODO applydamage
+            try applyDamage(battle, player, state, options);
             // TODO criticaltext
             // TODO supereffectivetext
-            // TODO checkfaint
-            // TODO buildopponentrage
+            _ = try destinyBond(battle, player, state, options);
+            try buildRage(battle, player, state, options);
         },
         .Rage => {
             // TODO usedmovetext
             // TODO doturn
-            // TODO critical
+            try checkCriticalHit(battle, player, state, options);
             // TODO damagestats
             // TODO damagecalc
-            // TODO stab
-            // TODO checkhit
-            // TODO ragedamage
-            // TODO damagevariation
+            try adjustDamage(battle, player, state, options);
+            try checkHit(battle, player, state, options);
+            try rageDamage(battle, player, state, options);
+            try randomizeDamage(battle, player, state, options);
             // TODO failuretext
             // TODO rage
-            // TODO applydamage
+            try applyDamage(battle, player, state, options);
             // TODO criticaltext
             // TODO supereffectivetext
-            // TODO checkfaint
-            // TODO buildopponentrage
-            // TODO kingsrock
+            _ = try destinyBond(battle, player, state, options);
+            try buildRage(battle, player, state, options);
+            try kingsRock(battle, player, state, options);
         },
         .Teleport => {
             // TODO usedmovetext
@@ -551,7 +551,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
         .Mimic => {
             // TODO usedmovetext
             // TODO doturn
-            // TODO checkhit
+            try checkHit(battle, player, state, options);
             // TODO mimic
         },
         .Heal => {
@@ -589,12 +589,12 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             // TODO usedmovetext
             // TODO unleashenergy
             // TODO resettypematchup
-            // TODO checkhit
+            try checkHit(battle, player, state, options);
             // TODO bidefailtext
-            // TODO applydamage
-            // TODO checkfaint
-            // TODO buildopponentrage
-            // TODO kingsrock
+            try applyDamage(battle, player, state, options);
+            _ = try destinyBond(battle, player, state, options);
+            try buildRage(battle, player, state, options);
+            try kingsRock(battle, player, state, options);
         },
         .Metronome => {
             // TODO usedmovetext
@@ -609,39 +609,39 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
         .Explode => {
             // TODO usedmovetext
             // TODO doturn
-            // TODO critical
+            try checkCriticalHit(battle, player, state, options);
             // TODO damagestats
             // TODO damagecalc
-            // TODO stab
-            // TODO damagevariation
-            // TODO checkhit
+            try adjustDamage(battle, player, state, options);
+            try randomizeDamage(battle, player, state, options);
+            try checkHit(battle, player, state, options);
             // TODO selfdestruct
             // TODO failuretext
-            // TODO applydamage
+            try applyDamage(battle, player, state, options);
             // TODO criticaltext
             // TODO supereffectivetext
-            // TODO checkfaint
-            // TODO buildopponentrage
-            // TODO kingsrock
+            _ = try destinyBond(battle, player, state, options);
+            try buildRage(battle, player, state, options);
+            try kingsRock(battle, player, state, options);
         },
         .SkullBash => {
             // TODO checkcharge
             // TODO doturn
             // TODO charge
             // TODO usedmovetext
-            // TODO critical
+            try checkCriticalHit(battle, player, state, options);
             // TODO damagestats
             // TODO damagecalc
-            // TODO stab
-            // TODO damagevariation
-            // TODO checkhit
+            try adjustDamage(battle, player, state, options);
+            try randomizeDamage(battle, player, state, options);
+            try checkHit(battle, player, state, options);
             // TODO failuretext
-            // TODO applydamage
+            try applyDamage(battle, player, state, options);
             // TODO criticaltext
             // TODO supereffectivetext
-            // TODO checkfaint
-            // TODO buildopponentrage
-            // TODO kingsrock
+            _ = try destinyBond(battle, player, state, options);
+            try buildRage(battle, player, state, options);
+            try kingsRock(battle, player, state, options);
             // TODO endturn
             // TODO defenseup
             // TODO statupmessage
@@ -649,40 +649,40 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
         .DreamEater => {
             // TODO usedmovetext
             // TODO doturn
-            // TODO critical
+            try checkCriticalHit(battle, player, state, options);
             // TODO damagestats
             // TODO damagecalc
-            // TODO stab
-            // TODO damagevariation
-            // TODO checkhit
+            try adjustDamage(battle, player, state, options);
+            try randomizeDamage(battle, player, state, options);
+            try checkHit(battle, player, state, options);
             // TODO failuretext
-            // TODO applydamage
+            try applyDamage(battle, player, state, options);
             // TODO criticaltext
             // TODO supereffectivetext
             // TODO eatdream
-            // TODO checkfaint
-            // TODO buildopponentrage
+            _ = try destinyBond(battle, player, state, options);
+            try buildRage(battle, player, state, options);
         },
         .SkyAttack => {
             // TODO checkcharge
             // TODO doturn
             // TODO charge
             // TODO usedmovetext
-            // TODO critical
+            try checkCriticalHit(battle, player, state, options);
             // TODO damagestats
             // TODO damagecalc
-            // TODO stab
-            // TODO damagevariation
-            // TODO checkhit
+            try adjustDamage(battle, player, state, options);
+            try randomizeDamage(battle, player, state, options);
+            try checkHit(battle, player, state, options);
             // TODO effectchance
             // TODO failuretext
-            // TODO applydamage
+            try applyDamage(battle, player, state, options);
             // TODO criticaltext
             // TODO supereffectivetext
-            // TODO checkfaint
-            // TODO buildopponentrage
+            _ = try destinyBond(battle, player, state, options);
+            try buildRage(battle, player, state, options);
             // TODO flinchtarget
-            // TODO kingsrock
+            try kingsRock(battle, player, state, options);
         },
         .Transform => {
             // TODO usedmovetext
@@ -702,18 +702,18 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
         .TriAttack => {
             // TODO usedmovetext
             // TODO doturn
-            // TODO critical
+            try checkCriticalHit(battle, player, state, options);
             // TODO damagestats
             // TODO damagecalc
-            // TODO stab
-            // TODO damagevariation
-            // TODO checkhit
+            try adjustDamage(battle, player, state, options);
+            try randomizeDamage(battle, player, state, options);
+            try checkHit(battle, player, state, options);
             // TODO failuretext
-            // TODO applydamage
+            try applyDamage(battle, player, state, options);
             // TODO criticaltext
             // TODO supereffectivetext
-            // TODO checkfaint
-            // TODO buildopponentrage
+            _ = try destinyBond(battle, player, state, options);
+            try buildRage(battle, player, state, options);
             // TODO tristatuschance
         },
         .Substitute => {
@@ -730,43 +730,43 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             // TODO usedmovetext
             // TODO doturn
             // TODO startloop
-            // TODO checkhit
-            // TODO critical
+            try checkHit(battle, player, state, options);
+            try checkCriticalHit(battle, player, state, options);
             // TODO damagestats
             // TODO damagecalc
             // TODO triplekick
-            // TODO stab
-            // TODO damagevariation
+            try adjustDamage(battle, player, state, options);
+            try randomizeDamage(battle, player, state, options);
             // TODO clearmissdamage
             // TODO failuretext
-            // TODO applydamage
+            try applyDamage(battle, player, state, options);
             // TODO criticaltext
             // TODO cleartext
             // TODO supereffectivelooptext
-            // TODO checkfaint
-            // TODO buildopponentrage
+            _ = try destinyBond(battle, player, state, options);
+            try buildRage(battle, player, state, options);
             // TODO kickcounter
             // TODO endloop
-            // TODO kingsrock
+            try kingsRock(battle, player, state, options);
         },
         .Thief => {
             // TODO usedmovetext
             // TODO doturn
-            // TODO critical
+            try checkCriticalHit(battle, player, state, options);
             // TODO damagestats
             // TODO damagecalc
-            // TODO stab
-            // TODO damagevariation
-            // TODO checkhit
+            try adjustDamage(battle, player, state, options);
+            try randomizeDamage(battle, player, state, options);
+            try checkHit(battle, player, state, options);
             // TODO effectchance
             // TODO failuretext
-            // TODO applydamage
+            try applyDamage(battle, player, state, options);
             // TODO criticaltext
             // TODO supereffectivetext
             // TODO thief
-            // TODO checkfaint
-            // TODO buildopponentrage
-            // TODO kingsrock
+            _ = try destinyBond(battle, player, state, options);
+            try buildRage(battle, player, state, options);
+            try kingsRock(battle, player, state, options);
         },
         .MeanLook => {
             // TODO usedmovetext
@@ -776,7 +776,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
         .LockOn => {
             // TODO usedmovetext
             // TODO doturn
-            // TODO checkhit
+            try checkHit(battle, player, state, options);
             // TODO lockon
         },
         .Nightmare => {
@@ -787,41 +787,41 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
         .FlameWheel => {
             // TODO usedmovetext
             // TODO doturn
-            // TODO critical
+            try checkCriticalHit(battle, player, state, options);
             // TODO damagestats
             // TODO damagecalc
-            // TODO stab
-            // TODO damagevariation
-            // TODO checkhit
+            try adjustDamage(battle, player, state, options);
+            try randomizeDamage(battle, player, state, options);
+            try checkHit(battle, player, state, options);
             // TODO effectchance
             // TODO failuretext
-            // TODO applydamage
+            try applyDamage(battle, player, state, options);
             // TODO criticaltext
             // TODO supereffectivetext
             // TODO defrost
-            // TODO checkfaint
-            // TODO buildopponentrage
+            _ = try destinyBond(battle, player, state, options);
+            try buildRage(battle, player, state, options);
             // TODO burntarget
         },
         .Snore => {
             // TODO usedmovetext
             // TODO doturn
-            // TODO critical
+            try checkCriticalHit(battle, player, state, options);
             // TODO damagestats
             // TODO damagecalc
-            // TODO stab
-            // TODO damagevariation
-            // TODO checkhit
+            try adjustDamage(battle, player, state, options);
+            try randomizeDamage(battle, player, state, options);
+            try checkHit(battle, player, state, options);
             // TODO effectchance
             // TODO snore
             // TODO failuretext
-            // TODO applydamage
+            try applyDamage(battle, player, state, options);
             // TODO criticaltext
             // TODO supereffectivetext
-            // TODO checkfaint
-            // TODO buildopponentrage
+            _ = try destinyBond(battle, player, state, options);
+            try buildRage(battle, player, state, options);
             // TODO flinchtarget
-            // TODO kingsrock
+            try kingsRock(battle, player, state, options);
         },
         .Curse => {
             // TODO usedmovetext
@@ -832,25 +832,25 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             // TODO usedmovetext
             // TODO doturn
             // TODO constantdamage
-            // TODO stab
-            // TODO checkhit
+            try adjustDamage(battle, player, state, options);
+            try checkHit(battle, player, state, options);
             // TODO failuretext
-            // TODO applydamage
+            try applyDamage(battle, player, state, options);
             // TODO supereffectivetext
-            // TODO checkfaint
-            // TODO buildopponentrage
-            // TODO kingsrock
+            _ = try destinyBond(battle, player, state, options);
+            try buildRage(battle, player, state, options);
+            try kingsRock(battle, player, state, options);
         },
         .Conversion2 => {
             // TODO usedmovetext
             // TODO doturn
-            // TODO checkhit
+            try checkHit(battle, player, state, options);
             // TODO conversion2
         },
         .Spite => {
             // TODO usedmovetext
             // TODO doturn
-            // TODO checkhit
+            try checkHit(battle, player, state, options);
             // TODO spite
         },
         .Protect => {
@@ -871,7 +871,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
         .Foresight => {
             // TODO usedmovetext
             // TODO doturn
-            // TODO checkhit
+            try checkHit(battle, player, state, options);
             // TODO foresight
         },
         .DestinyBond => {
@@ -898,43 +898,43 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             // TODO checkcurl
             // TODO doturn
             // TODO usedmovetext
-            // TODO critical
+            try checkCriticalHit(battle, player, state, options);
             // TODO damagestats
             // TODO damagecalc
-            // TODO stab
-            // TODO checkhit
+            try adjustDamage(battle, player, state, options);
+            try checkHit(battle, player, state, options);
             // TODO rolloutpower
-            // TODO damagevariation
+            try randomizeDamage(battle, player, state, options);
             // TODO failuretext
-            // TODO applydamage
+            try applyDamage(battle, player, state, options);
             // TODO criticaltext
             // TODO supereffectivetext
-            // TODO checkfaint
-            // TODO buildopponentrage
-            // TODO kingsrock
+            _ = try destinyBond(battle, player, state, options);
+            try buildRage(battle, player, state, options);
+            try kingsRock(battle, player, state, options);
         },
         .FalseSwipe => {
             // TODO usedmovetext
             // TODO doturn
-            // TODO critical
+            try checkCriticalHit(battle, player, state, options);
             // TODO damagestats
             // TODO damagecalc
-            // TODO stab
-            // TODO damagevariation
+            try adjustDamage(battle, player, state, options);
+            try randomizeDamage(battle, player, state, options);
             // TODO falseswipe
-            // TODO checkhit
+            try checkHit(battle, player, state, options);
             // TODO failuretext
-            // TODO applydamage
+            try applyDamage(battle, player, state, options);
             // TODO criticaltext
             // TODO supereffectivetext
-            // TODO checkfaint
-            // TODO buildopponentrage
-            // TODO kingsrock
+            _ = try destinyBond(battle, player, state, options);
+            try buildRage(battle, player, state, options);
+            try kingsRock(battle, player, state, options);
         },
         .Swagger => {
             // TODO usedmovetext
             // TODO doturn
-            // TODO checkhit
+            try checkHit(battle, player, state, options);
             // TODO switchturn
             // TODO attackup2
             // TODO switchturn
@@ -948,25 +948,25 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
         .FuryCutter => {
             // TODO usedmovetext
             // TODO doturn
-            // TODO critical
+            try checkCriticalHit(battle, player, state, options);
             // TODO damagestats
             // TODO damagecalc
-            // TODO stab
-            // TODO checkhit
+            try adjustDamage(battle, player, state, options);
+            try checkHit(battle, player, state, options);
             // TODO furycutter
-            // TODO damagevariation
+            try randomizeDamage(battle, player, state, options);
             // TODO failuretext
-            // TODO applydamage
+            try applyDamage(battle, player, state, options);
             // TODO criticaltext
             // TODO supereffectivetext
-            // TODO checkfaint
-            // TODO buildopponentrage
-            // TODO kingsrock
+            _ = try destinyBond(battle, player, state, options);
+            try buildRage(battle, player, state, options);
+            try kingsRock(battle, player, state, options);
         },
         .Attract => {
             // TODO usedmovetext
             // TODO doturn
-            // TODO checkhit
+            try checkHit(battle, player, state, options);
             // TODO attract
         },
         .SleepTalk => {
@@ -982,39 +982,39 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
         .Frustration, .Return => {
             // TODO usedmovetext
             // TODO doturn
-            // TODO critical
+            try checkCriticalHit(battle, player, state, options);
             // TODO damagestats
             // TODO happinesspower
             // TODO damagecalc
-            // TODO stab
-            // TODO damagevariation
-            // TODO checkhit
+            try adjustDamage(battle, player, state, options);
+            try randomizeDamage(battle, player, state, options);
+            try checkHit(battle, player, state, options);
             // TODO failuretext
-            // TODO applydamage
+            try applyDamage(battle, player, state, options);
             // TODO criticaltext
             // TODO supereffectivetext
-            // TODO checkfaint
-            // TODO buildopponentrage
-            // TODO kingsrock
+            _ = try destinyBond(battle, player, state, options);
+            try buildRage(battle, player, state, options);
+            try kingsRock(battle, player, state, options);
         },
         .Present => {
             // TODO usedmovetext
             // TODO doturn
-            // TODO checkhit
-            // TODO critical
+            try checkHit(battle, player, state, options);
+            try checkCriticalHit(battle, player, state, options);
             // TODO damagestats
             // TODO present
             // TODO damagecalc
-            // TODO stab
-            // TODO damagevariation
+            try adjustDamage(battle, player, state, options);
+            try randomizeDamage(battle, player, state, options);
             // TODO clearmissdamage
             // TODO failuretext
-            // TODO applydamage
+            try applyDamage(battle, player, state, options);
             // TODO criticaltext
             // TODO supereffectivetext
-            // TODO checkfaint
-            // TODO buildopponentrage
-            // TODO kingsrock
+            _ = try destinyBond(battle, player, state, options);
+            try buildRage(battle, player, state, options);
+            try kingsRock(battle, player, state, options);
         },
         .Safeguard => {
             // TODO usedmovetext
@@ -1024,46 +1024,46 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
         .PainSplit => {
             // TODO usedmovetext
             // TODO doturn
-            // TODO checkhit
+            try checkHit(battle, player, state, options);
             // TODO painsplit
         },
         .SacredFire => {
             // TODO usedmovetext
             // TODO doturn
-            // TODO critical
+            try checkCriticalHit(battle, player, state, options);
             // TODO damagestats
             // TODO damagecalc
-            // TODO stab
-            // TODO damagevariation
-            // TODO checkhit
+            try adjustDamage(battle, player, state, options);
+            try randomizeDamage(battle, player, state, options);
+            try checkHit(battle, player, state, options);
             // TODO effectchance
             // TODO failuretext
-            // TODO applydamage
+            try applyDamage(battle, player, state, options);
             // TODO criticaltext
             // TODO supereffectivetext
             // TODO defrost
-            // TODO checkfaint
-            // TODO buildopponentrage
+            _ = try destinyBond(battle, player, state, options);
+            try buildRage(battle, player, state, options);
             // TODO burntarget
         },
         .Magnitude => {
             // TODO usedmovetext
             // TODO doturn
-            // TODO critical
+            try checkCriticalHit(battle, player, state, options);
             // TODO damagestats
             // TODO getmagnitude
             // TODO damagecalc
-            // TODO stab
-            // TODO damagevariation
-            // TODO checkhit
+            try adjustDamage(battle, player, state, options);
+            try randomizeDamage(battle, player, state, options);
+            try checkHit(battle, player, state, options);
             // TODO doubleundergrounddamage
             // TODO failuretext
-            // TODO applydamage
+            try applyDamage(battle, player, state, options);
             // TODO criticaltext
             // TODO supereffectivetext
-            // TODO checkfaint
-            // TODO buildopponentrage
-            // TODO kingsrock
+            _ = try destinyBond(battle, player, state, options);
+            try buildRage(battle, player, state, options);
+            try kingsRock(battle, player, state, options);
         },
         .BatonPass => {
             // TODO usedmovetext
@@ -1073,44 +1073,44 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
         .Encore => {
             // TODO usedmovetext
             // TODO doturn
-            // TODO checkhit
+            try checkHit(battle, player, state, options);
             // TODO encore
         },
         .Pursuit => {
             // TODO usedmovetext
             // TODO doturn
-            // TODO critical
+            try checkCriticalHit(battle, player, state, options);
             // TODO damagestats
             // TODO damagecalc
-            // TODO stab
-            // TODO damagevariation
+            try adjustDamage(battle, player, state, options);
+            try randomizeDamage(battle, player, state, options);
             // TODO pursuit
-            // TODO checkhit
+            try checkHit(battle, player, state, options);
             // TODO failuretext
-            // TODO applydamage
+            try applyDamage(battle, player, state, options);
             // TODO criticaltext
             // TODO supereffectivetext
-            // TODO checkfaint
-            // TODO buildopponentrage
-            // TODO kingsrock
+            _ = try destinyBond(battle, player, state, options);
+            try buildRage(battle, player, state, options);
+            try kingsRock(battle, player, state, options);
         },
         .RapidSpin => {
             // TODO usedmovetext
             // TODO doturn
-            // TODO critical
+            try checkCriticalHit(battle, player, state, options);
             // TODO damagestats
             // TODO damagecalc
-            // TODO stab
-            // TODO damagevariation
-            // TODO checkhit
+            try adjustDamage(battle, player, state, options);
+            try randomizeDamage(battle, player, state, options);
+            try checkHit(battle, player, state, options);
             // TODO failuretext
-            // TODO applydamage
+            try applyDamage(battle, player, state, options);
             // TODO criticaltext
             // TODO supereffectivetext
             // TODO clearhazards
-            // TODO checkfaint
-            // TODO buildopponentrage
-            // TODO kingsrock
+            _ = try destinyBond(battle, player, state, options);
+            try buildRage(battle, player, state, options);
+            try kingsRock(battle, player, state, options);
         },
         .MorningSun => {
             // TODO usedmovetext
@@ -1130,37 +1130,37 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
         .HiddenPower => {
             // TODO usedmovetext
             // TODO doturn
-            // TODO critical
+            try checkCriticalHit(battle, player, state, options);
             // TODO hiddenpower
             // TODO damagecalc
-            // TODO stab
-            // TODO damagevariation
-            // TODO checkhit
+            try adjustDamage(battle, player, state, options);
+            try randomizeDamage(battle, player, state, options);
+            try checkHit(battle, player, state, options);
             // TODO failuretext
-            // TODO applydamage
+            try applyDamage(battle, player, state, options);
             // TODO criticaltext
             // TODO supereffectivetext
-            // TODO checkfaint
-            // TODO buildopponentrage
-            // TODO kingsrock
+            _ = try destinyBond(battle, player, state, options);
+            try buildRage(battle, player, state, options);
+            try kingsRock(battle, player, state, options);
         },
         .Twister => {
             // TODO usedmovetext
             // TODO doturn
-            // TODO critical
+            try checkCriticalHit(battle, player, state, options);
             // TODO damagestats
             // TODO damagecalc
-            // TODO stab
-            // TODO damagevariation
+            try adjustDamage(battle, player, state, options);
+            try randomizeDamage(battle, player, state, options);
             // TODO doubleflyingdamage
-            // TODO checkhit
+            try checkHit(battle, player, state, options);
             // TODO effectchance
             // TODO failuretext
-            // TODO applydamage
+            try applyDamage(battle, player, state, options);
             // TODO criticaltext
             // TODO supereffectivetext
-            // TODO checkfaint
-            // TODO buildopponentrage
+            _ = try destinyBond(battle, player, state, options);
+            try buildRage(battle, player, state, options);
             // TODO flinchtarget
         },
         .RainDance => {
@@ -1178,10 +1178,10 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             // TODO doturn
             // TODO mirrorcoat
             // TODO failuretext
-            // TODO applydamage
-            // TODO checkfaint
-            // TODO buildopponentrage
-            // TODO kingsrock
+            try applyDamage(battle, player, state, options);
+            _ = try destinyBond(battle, player, state, options);
+            try buildRage(battle, player, state, options);
+            try kingsRock(battle, player, state, options);
         },
         .PsychUp => {
             // TODO usedmovetext
@@ -1195,34 +1195,34 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             // TODO damagestats
             // TODO damagecalc
             // TODO futuresight
-            // TODO damagevariation
-            // TODO checkhit
+            try randomizeDamage(battle, player, state, options);
+            try checkHit(battle, player, state, options);
             // TODO failuretext
-            // TODO applydamage
-            // TODO checkfaint
-            // TODO buildopponentrage
+            try applyDamage(battle, player, state, options);
+            _ = try destinyBond(battle, player, state, options);
+            try buildRage(battle, player, state, options);
         },
         .BeatUp => {
             // TODO usedmovetext
             // TODO movedelay
             // TODO doturn
             // TODO startloop
-            // TODO checkhit
-            // TODO critical
+            try checkHit(battle, player, state, options);
+            try checkCriticalHit(battle, player, state, options);
             // TODO beatup
             // TODO damagecalc
-            // TODO damagevariation
+            try randomizeDamage(battle, player, state, options);
             // TODO clearmissdamage
             // TODO failuretext
-            // TODO applydamage
+            try applyDamage(battle, player, state, options);
             // TODO criticaltext
             // TODO cleartext
             // TODO supereffectivetext
-            // TODO checkfaint
-            // TODO buildopponentrage
+            _ = try destinyBond(battle, player, state, options);
+            try buildRage(battle, player, state, options);
             // TODO endloop
             // TODO beatupfailtext
-            // TODO kingsrock
+            try kingsRock(battle, player, state, options);
         },
         // zig fmt: off
         .AllStatUpChance, .AttackUp1, .AttackUp2, .AttackUpChance, .DefenseUp1,

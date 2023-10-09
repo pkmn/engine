@@ -428,6 +428,13 @@ const doMoveFns = async (
     {effects: ['DoubleHit', 'MultiHit'], key: 'Multi', fn: 'none'},
   ];
 
+  const FNS: {[command: string]: string} = {
+    checkhit: 'checkHit', critical: 'checkCriticalHit', stab: 'adjustDamage',
+    damagevariation: 'randomizeDamage', applydamage: 'applyDamage', buildopponentrage: 'buildRage',
+    kingsrock: 'kingsRock', checkfaint: 'destinyBond', ragedamage: 'rageDamage',
+  };
+  const BOOLS = new Set<string>(['checkfaint']);
+
   const boosts = [];
   const unboosts = [];
   outer: for (const name of ['None', ...names]) {
@@ -437,7 +444,12 @@ const doMoveFns = async (
         write(`${group.effects.map(e => `.${e}`).join(', ')} => {`);
         indent++;
         for (const command of effects.get(name)!) {
-          write(`// TODO ${command}`);
+          if (FNS[command]) {
+            const start = BOOLS.has(command) ? '_ = ' : '';
+            write(`${start}try ${FNS[command]}(battle, player, state, options);`);
+          } else {
+            write(`// TODO ${command}`);
+          }
         }
         indent--;
         write('},');
@@ -455,7 +467,12 @@ const doMoveFns = async (
     write(`.${name} => {`);
     indent++;
     for (const command of effects.get(name)!) {
-      write(`// TODO ${command}`);
+      if (FNS[command]) {
+        const start = BOOLS.has(command) ? '_ = ' : '';
+        write(`${start}try ${FNS[command]}(battle, player, state, options);`);
+      } else {
+        write(`// TODO ${command}`);
+      }
     }
     indent--;
     write('},');
