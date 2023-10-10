@@ -21,6 +21,7 @@ const State = mechanics.State;
 const canMove = mechanics.canMove;
 const canCharge = mechanics.canCharge;
 const decrementPP = mechanics.decrementPP;
+const doMove = mechanics.doMove;
 const checkHit = mechanics.checkHit;
 const checkCriticalHit = mechanics.checkCriticalHit;
 const calcDamage = mechanics.calcDamage;
@@ -28,9 +29,14 @@ const adjustDamage = mechanics.adjustDamage;
 const randomizeDamage = mechanics.randomizeDamage;
 const applyDamage = mechanics.applyDamage;
 const reportOutcome = mechanics.reportOutcome;
+const effectChance = mechanics.effectChance;
+const afterMove = mechanics.afterMove;
 const buildRage = mechanics.buildRage;
 const kingsRock = mechanics.kingsRock;
 const destinyBond = mechanics.destinyBond;
+
+const SECONDARY = true;
+const KINGS = true;
 
 pub fn runMove(battle: anytype, player: Player, state: *State, options: anytype) !void {
     var log = options.log;
@@ -45,16 +51,8 @@ pub fn runMove(battle: anytype, player: Player, state: *State, options: anytype)
     switch (effect) {
         .AlwaysHit, .HighCritical, .Priority, .JumpKick, .None => {
             if (!try canMove(battle, player, state, options)) return;
-            try checkCriticalHit(battle, player, state, options);
-            try calcDamage(battle, player, state, options);
-            try adjustDamage(battle, player, state, options);
-            try randomizeDamage(battle, player, state, options);
-            try checkHit(battle, player, state, options);
-            try applyDamage(battle, player, state, options);
-            try reportOutcome(battle, player, state, options);
-            if (try destinyBond(battle, player, state, options)) return;
-            try buildRage(battle, player, state, options);
-            try kingsRock(battle, player, state, options);
+            if (!try doMove(!SECONDARY, battle, player, state, options)) return;
+            _ = try afterMove(KINGS, battle, player, state, options);
         },
         .DoubleHit, .MultiHit => {
             if (!try canMove(battle, player, state, options)) return;
@@ -67,65 +65,32 @@ pub fn runMove(battle: anytype, player: Player, state: *State, options: anytype)
             // TODO clearmissdamage
             try applyDamage(battle, player, state, options);
             // TODO critsupereffectivelooptext
-            if (try destinyBond(battle, player, state, options)) return;
-            try buildRage(battle, player, state, options);
+            if (!try afterMove(!KINGS, battle, player, state, options)) return;
             // TODO endloop
             try kingsRock(battle, player, state, options);
         },
         .PayDay => {
             if (!try canMove(battle, player, state, options)) return;
-            try checkCriticalHit(battle, player, state, options);
-            try calcDamage(battle, player, state, options);
-            try adjustDamage(battle, player, state, options);
-            try randomizeDamage(battle, player, state, options);
-            try checkHit(battle, player, state, options);
-            try applyDamage(battle, player, state, options);
-            try reportOutcome(battle, player, state, options);
+            if (!try doMove(!SECONDARY, battle, player, state, options)) return;
             try Effects.payDay(battle, player, state, options);
-            if (try destinyBond(battle, player, state, options)) return;
-            try buildRage(battle, player, state, options);
-            try kingsRock(battle, player, state, options);
+            _ = try afterMove(KINGS, battle, player, state, options);
         },
         .BurnChance => {
             if (!try canMove(battle, player, state, options)) return;
-            try checkCriticalHit(battle, player, state, options);
-            try calcDamage(battle, player, state, options);
-            try adjustDamage(battle, player, state, options);
-            try randomizeDamage(battle, player, state, options);
-            try checkHit(battle, player, state, options);
-            // TODO effectchance
-            try applyDamage(battle, player, state, options);
-            try reportOutcome(battle, player, state, options);
-            if (try destinyBond(battle, player, state, options)) return;
-            try buildRage(battle, player, state, options);
+            if (!try doMove(SECONDARY, battle, player, state, options)) return;
+            if (!try afterMove(!KINGS, battle, player, state, options)) return;
             try Effects.burnChance(battle, player, state, options);
         },
         .FreezeChance => {
             if (!try canMove(battle, player, state, options)) return;
-            try checkCriticalHit(battle, player, state, options);
-            try calcDamage(battle, player, state, options);
-            try adjustDamage(battle, player, state, options);
-            try randomizeDamage(battle, player, state, options);
-            try checkHit(battle, player, state, options);
-            // TODO effectchance
-            try applyDamage(battle, player, state, options);
-            try reportOutcome(battle, player, state, options);
-            if (try destinyBond(battle, player, state, options)) return;
-            try buildRage(battle, player, state, options);
+            if (!try doMove(SECONDARY, battle, player, state, options)) return;
+            if (!try afterMove(!KINGS, battle, player, state, options)) return;
             try Effects.freezeChance(battle, player, state, options);
         },
         .ParalyzeChance => {
             if (!try canMove(battle, player, state, options)) return;
-            try checkCriticalHit(battle, player, state, options);
-            try calcDamage(battle, player, state, options);
-            try adjustDamage(battle, player, state, options);
-            try randomizeDamage(battle, player, state, options);
-            try checkHit(battle, player, state, options);
-            // TODO effectchance
-            try applyDamage(battle, player, state, options);
-            try reportOutcome(battle, player, state, options);
-            if (try destinyBond(battle, player, state, options)) return;
-            try buildRage(battle, player, state, options);
+            if (!try doMove(SECONDARY, battle, player, state, options)) return;
+            if (!try afterMove(!KINGS, battle, player, state, options)) return;
             try Effects.paralyzeChance(battle, player, state, options);
         },
         .OHKO => {
@@ -134,8 +99,7 @@ pub fn runMove(battle: anytype, player: Player, state: *State, options: anytype)
             try Effects.ohko(battle, player, state, options);
             try applyDamage(battle, player, state, options);
             try reportOutcome(battle, player, state, options);
-            if (try destinyBond(battle, player, state, options)) return;
-            try buildRage(battle, player, state, options);
+            _ = try afterMove(!KINGS, battle, player, state, options);
         },
         .Gust => {
             if (!try canMove(battle, player, state, options)) return;
@@ -147,8 +111,7 @@ pub fn runMove(battle: anytype, player: Player, state: *State, options: anytype)
             try checkHit(battle, player, state, options);
             try applyDamage(battle, player, state, options);
             try reportOutcome(battle, player, state, options);
-            if (try destinyBond(battle, player, state, options)) return;
-            try buildRage(battle, player, state, options);
+            _ = try afterMove(!KINGS, battle, player, state, options);
         },
         .ForceSwitch => {
             if (!try canMove(battle, player, state, options)) return;
@@ -157,16 +120,8 @@ pub fn runMove(battle: anytype, player: Player, state: *State, options: anytype)
         },
         .RazorWind, .FlyDig => {
             if (!try canCharge(battle, player, state, options)) return;
-            try checkCriticalHit(battle, player, state, options);
-            try calcDamage(battle, player, state, options);
-            try adjustDamage(battle, player, state, options);
-            try randomizeDamage(battle, player, state, options);
-            try checkHit(battle, player, state, options);
-            try applyDamage(battle, player, state, options);
-            try reportOutcome(battle, player, state, options);
-            if (try destinyBond(battle, player, state, options)) return;
-            try buildRage(battle, player, state, options);
-            try kingsRock(battle, player, state, options);
+            if (!try doMove(!SECONDARY, battle, player, state, options)) return;
+            _ = try afterMove(KINGS, battle, player, state, options);
         },
         .Binding => {
             if (!try canMove(battle, player, state, options)) return;
@@ -178,8 +133,7 @@ pub fn runMove(battle: anytype, player: Player, state: *State, options: anytype)
             // TODO clearmissdamage
             try applyDamage(battle, player, state, options);
             try reportOutcome(battle, player, state, options);
-            if (try destinyBond(battle, player, state, options)) return;
-            try buildRage(battle, player, state, options);
+            if (!try afterMove(!KINGS, battle, player, state, options)) return;
             try Effects.binding(battle, player, state, options);
         },
         .Stomp => {
@@ -190,40 +144,23 @@ pub fn runMove(battle: anytype, player: Player, state: *State, options: anytype)
             try randomizeDamage(battle, player, state, options);
             // TODO doubleminimizedamage
             try checkHit(battle, player, state, options);
-            // TODO effectchance
+            try effectChance(battle, player, state, options);
             try applyDamage(battle, player, state, options);
             try reportOutcome(battle, player, state, options);
-            if (try destinyBond(battle, player, state, options)) return;
-            try buildRage(battle, player, state, options);
+            if (!try afterMove(!KINGS, battle, player, state, options)) return;
             try Effects.flinchChance(battle, player, state, options);
         },
         .FlinchChance => {
             if (!try canMove(battle, player, state, options)) return;
-            try checkCriticalHit(battle, player, state, options);
-            try calcDamage(battle, player, state, options);
-            try adjustDamage(battle, player, state, options);
-            try randomizeDamage(battle, player, state, options);
-            try checkHit(battle, player, state, options);
-            // TODO effectchance
-            try applyDamage(battle, player, state, options);
-            try reportOutcome(battle, player, state, options);
-            if (try destinyBond(battle, player, state, options)) return;
-            try buildRage(battle, player, state, options);
+            if (!try doMove(SECONDARY, battle, player, state, options)) return;
+            if (!try afterMove(!KINGS, battle, player, state, options)) return;
             try Effects.flinchChance(battle, player, state, options);
         },
         .Recoil => {
             if (!try canMove(battle, player, state, options)) return;
-            try checkCriticalHit(battle, player, state, options);
-            try calcDamage(battle, player, state, options);
-            try adjustDamage(battle, player, state, options);
-            try randomizeDamage(battle, player, state, options);
-            try checkHit(battle, player, state, options);
-            try applyDamage(battle, player, state, options);
-            try reportOutcome(battle, player, state, options);
+            if (!try doMove(!SECONDARY, battle, player, state, options)) return;
             try Effects.recoil(battle, player, state, options);
-            if (try destinyBond(battle, player, state, options)) return;
-            try buildRage(battle, player, state, options);
-            try kingsRock(battle, player, state, options);
+            _ = try afterMove(KINGS, battle, player, state, options);
         },
         .Thrashing => {
             // TODO checkrampage
@@ -243,29 +180,19 @@ pub fn runMove(battle: anytype, player: Player, state: *State, options: anytype)
             // TODO clearmissdamage
             try applyDamage(battle, player, state, options);
             try reportOutcome(battle, player, state, options);
-            if (try destinyBond(battle, player, state, options)) return;
-            try buildRage(battle, player, state, options);
-            try kingsRock(battle, player, state, options);
+            _ = try afterMove(KINGS, battle, player, state, options);
         },
         .PoisonChance => {
             if (!try canMove(battle, player, state, options)) return;
-            try checkCriticalHit(battle, player, state, options);
-            try calcDamage(battle, player, state, options);
-            try adjustDamage(battle, player, state, options);
-            try randomizeDamage(battle, player, state, options);
-            try checkHit(battle, player, state, options);
-            // TODO effectchance
-            try applyDamage(battle, player, state, options);
-            try reportOutcome(battle, player, state, options);
-            if (try destinyBond(battle, player, state, options)) return;
-            try buildRage(battle, player, state, options);
+            if (!try doMove(SECONDARY, battle, player, state, options)) return;
+            if (!try afterMove(!KINGS, battle, player, state, options)) return;
             try Effects.poisonChance(battle, player, state, options);
         },
         .Twineedle => {
             if (!try canMove(battle, player, state, options)) return;
             // TODO startloop
             try checkHit(battle, player, state, options);
-            // TODO effectchance
+            try effectChance(battle, player, state, options);
             try checkCriticalHit(battle, player, state, options);
             try calcDamage(battle, player, state, options);
             try adjustDamage(battle, player, state, options);
@@ -273,8 +200,7 @@ pub fn runMove(battle: anytype, player: Player, state: *State, options: anytype)
             // TODO clearmissdamage
             try applyDamage(battle, player, state, options);
             // TODO critsupereffectivelooptext
-            if (try destinyBond(battle, player, state, options)) return;
-            try buildRage(battle, player, state, options);
+            if (!try afterMove(!KINGS, battle, player, state, options)) return;
             // TODO endloop
             try kingsRock(battle, player, state, options);
             try Effects.poisonChance(battle, player, state, options);
@@ -297,9 +223,7 @@ pub fn runMove(battle: anytype, player: Player, state: *State, options: anytype)
             try checkHit(battle, player, state, options);
             // TODO resettypematchup
             try applyDamage(battle, player, state, options);
-            if (try destinyBond(battle, player, state, options)) return;
-            try buildRage(battle, player, state, options);
-            try kingsRock(battle, player, state, options);
+            _ = try afterMove(KINGS, battle, player, state, options);
         },
         .Disable => {
             if (!try canMove(battle, player, state, options)) return;
@@ -312,52 +236,27 @@ pub fn runMove(battle: anytype, player: Player, state: *State, options: anytype)
         },
         .ConfusionChance => {
             if (!try canMove(battle, player, state, options)) return;
-            try checkCriticalHit(battle, player, state, options);
-            try calcDamage(battle, player, state, options);
-            try adjustDamage(battle, player, state, options);
-            try randomizeDamage(battle, player, state, options);
-            try checkHit(battle, player, state, options);
-            // TODO effectchance
-            try applyDamage(battle, player, state, options);
-            try reportOutcome(battle, player, state, options);
-            if (try destinyBond(battle, player, state, options)) return;
-            try buildRage(battle, player, state, options);
+            if (!try doMove(SECONDARY, battle, player, state, options)) return;
+            if (!try afterMove(!KINGS, battle, player, state, options)) return;
             try Effects.confusionChance(battle, player, state, options);
         },
         .HyperBeam => {
             if (!try canMove(battle, player, state, options)) return;
-            try checkCriticalHit(battle, player, state, options);
-            try calcDamage(battle, player, state, options);
-            try adjustDamage(battle, player, state, options);
-            try randomizeDamage(battle, player, state, options);
-            try checkHit(battle, player, state, options);
-            try applyDamage(battle, player, state, options);
-            try reportOutcome(battle, player, state, options);
+            if (!try doMove(!SECONDARY, battle, player, state, options)) return;
             try Effects.hyperBeam(battle, player, state, options);
-            if (try destinyBond(battle, player, state, options)) return;
-            try buildRage(battle, player, state, options);
+            _ = try afterMove(!KINGS, battle, player, state, options);
         },
         .Counter => {
             if (!try canMove(battle, player, state, options)) return;
             try Effects.counter(battle, player, state, options);
             try applyDamage(battle, player, state, options);
-            if (try destinyBond(battle, player, state, options)) return;
-            try buildRage(battle, player, state, options);
-            try kingsRock(battle, player, state, options);
+            _ = try afterMove(KINGS, battle, player, state, options);
         },
         .DreamEater, .DrainHP => {
             if (!try canMove(battle, player, state, options)) return;
-            try checkCriticalHit(battle, player, state, options);
-            try calcDamage(battle, player, state, options);
-            try adjustDamage(battle, player, state, options);
-            try randomizeDamage(battle, player, state, options);
-            try checkHit(battle, player, state, options);
-            try applyDamage(battle, player, state, options);
-            try reportOutcome(battle, player, state, options);
+            if (!try doMove(!SECONDARY, battle, player, state, options)) return;
             try Effects.drainHP(battle, player, state, options);
-            if (try destinyBond(battle, player, state, options)) return;
-            try buildRage(battle, player, state, options);
-            if (state.move != .DreamEater) try kingsRock(battle, player, state, options);
+            _ = try afterMove(KINGS, battle, player, state, options);
         },
         .LeechSeed => {
             if (!try canMove(battle, player, state, options)) return;
@@ -366,16 +265,8 @@ pub fn runMove(battle: anytype, player: Player, state: *State, options: anytype)
         },
         .Solarbeam => {
             if (!try canCharge(battle, player, state, options)) return;
-            try checkCriticalHit(battle, player, state, options);
-            try calcDamage(battle, player, state, options);
-            try adjustDamage(battle, player, state, options);
-            try randomizeDamage(battle, player, state, options);
-            try checkHit(battle, player, state, options);
-            try applyDamage(battle, player, state, options);
-            try reportOutcome(battle, player, state, options);
-            if (try destinyBond(battle, player, state, options)) return;
-            try buildRage(battle, player, state, options);
-            try kingsRock(battle, player, state, options);
+            if (!try doMove(!SECONDARY, battle, player, state, options)) return;
+            _ = try afterMove(KINGS, battle, player, state, options);
         },
         .Toxic, .Poison => {
             if (!try canMove(battle, player, state, options)) return;
@@ -397,13 +288,12 @@ pub fn runMove(battle: anytype, player: Player, state: *State, options: anytype)
             try calcDamage(battle, player, state, options);
             // TODO thunderaccuracy
             try checkHit(battle, player, state, options);
-            // TODO effectchance
+            try effectChance(battle, player, state, options);
             try adjustDamage(battle, player, state, options);
             try randomizeDamage(battle, player, state, options);
             try applyDamage(battle, player, state, options);
             try reportOutcome(battle, player, state, options);
-            if (try destinyBond(battle, player, state, options)) return;
-            try buildRage(battle, player, state, options);
+            if (!try afterMove(!KINGS, battle, player, state, options)) return;
             try Effects.paralyzeChance(battle, player, state, options);
         },
         .Earthquake => {
@@ -414,11 +304,10 @@ pub fn runMove(battle: anytype, player: Player, state: *State, options: anytype)
             try randomizeDamage(battle, player, state, options);
             // TODO doubleundergrounddamage
             try checkHit(battle, player, state, options);
-            // TODO effectchance
+            try effectChance(battle, player, state, options);
             try applyDamage(battle, player, state, options);
             try reportOutcome(battle, player, state, options);
-            if (try destinyBond(battle, player, state, options)) return;
-            try buildRage(battle, player, state, options);
+            _ = try afterMove(!KINGS, battle, player, state, options);
         },
         .Rage => {
             if (!try canMove(battle, player, state, options)) return;
@@ -436,9 +325,7 @@ pub fn runMove(battle: anytype, player: Player, state: *State, options: anytype)
             try Effects.rage(battle, player, state, options);
             try applyDamage(battle, player, state, options);
             try reportOutcome(battle, player, state, options);
-            if (try destinyBond(battle, player, state, options)) return;
-            try buildRage(battle, player, state, options);
-            try kingsRock(battle, player, state, options);
+            _ = try afterMove(KINGS, battle, player, state, options);
         },
         .Teleport => {
             if (!try canMove(battle, player, state, options)) return;
@@ -479,9 +366,7 @@ pub fn runMove(battle: anytype, player: Player, state: *State, options: anytype)
             try checkHit(battle, player, state, options);
             // TODO bidefailtext
             try applyDamage(battle, player, state, options);
-            if (try destinyBond(battle, player, state, options)) return;
-            try buildRage(battle, player, state, options);
-            try kingsRock(battle, player, state, options);
+            _ = try afterMove(KINGS, battle, player, state, options);
         },
         .Metronome => {
             if (!try canMove(battle, player, state, options)) return;
@@ -501,37 +386,19 @@ pub fn runMove(battle: anytype, player: Player, state: *State, options: anytype)
             try Effects.explode(battle, player, state, options);
             try applyDamage(battle, player, state, options);
             try reportOutcome(battle, player, state, options);
-            if (try destinyBond(battle, player, state, options)) return;
-            try buildRage(battle, player, state, options);
-            try kingsRock(battle, player, state, options);
+            _ = try afterMove(KINGS, battle, player, state, options);
         },
         .SkullBash => {
             if (!try canCharge(battle, player, state, options)) return;
-            try checkCriticalHit(battle, player, state, options);
-            try calcDamage(battle, player, state, options);
-            try adjustDamage(battle, player, state, options);
-            try randomizeDamage(battle, player, state, options);
-            try checkHit(battle, player, state, options);
-            try applyDamage(battle, player, state, options);
-            try reportOutcome(battle, player, state, options);
-            if (try destinyBond(battle, player, state, options)) return;
-            try buildRage(battle, player, state, options);
-            try kingsRock(battle, player, state, options);
+            if (!try doMove(!SECONDARY, battle, player, state, options)) return;
+            if (!try afterMove(KINGS, battle, player, state, options)) return;
             // TODO endturn
             try Effects.boost(battle, player, state, options);
         },
         .SkyAttack => {
             if (!try canCharge(battle, player, state, options)) return;
-            try checkCriticalHit(battle, player, state, options);
-            try calcDamage(battle, player, state, options);
-            try adjustDamage(battle, player, state, options);
-            try randomizeDamage(battle, player, state, options);
-            try checkHit(battle, player, state, options);
-            // TODO effectchance
-            try applyDamage(battle, player, state, options);
-            try reportOutcome(battle, player, state, options);
-            if (try destinyBond(battle, player, state, options)) return;
-            try buildRage(battle, player, state, options);
+            if (!try doMove(SECONDARY, battle, player, state, options)) return;
+            if (!try afterMove(!KINGS, battle, player, state, options)) return;
             try Effects.flinchChance(battle, player, state, options);
             try kingsRock(battle, player, state, options);
         },
@@ -549,15 +416,8 @@ pub fn runMove(battle: anytype, player: Player, state: *State, options: anytype)
         },
         .TriAttack => {
             if (!try canMove(battle, player, state, options)) return;
-            try checkCriticalHit(battle, player, state, options);
-            try calcDamage(battle, player, state, options);
-            try adjustDamage(battle, player, state, options);
-            try randomizeDamage(battle, player, state, options);
-            try checkHit(battle, player, state, options);
-            try applyDamage(battle, player, state, options);
-            try reportOutcome(battle, player, state, options);
-            if (try destinyBond(battle, player, state, options)) return;
-            try buildRage(battle, player, state, options);
+            if (!try doMove(!SECONDARY, battle, player, state, options)) return;
+            if (!try afterMove(!KINGS, battle, player, state, options)) return;
             try Effects.triAttack(battle, player, state, options);
         },
         .Substitute => {
@@ -580,26 +440,16 @@ pub fn runMove(battle: anytype, player: Player, state: *State, options: anytype)
             // TODO clearmissdamage
             try applyDamage(battle, player, state, options);
             // TODO critsupereffectivelooptext
-            if (try destinyBond(battle, player, state, options)) return;
-            try buildRage(battle, player, state, options);
+            if (!try afterMove(!KINGS, battle, player, state, options)) return;
             // TODO kickcounter
             // TODO endloop
             try kingsRock(battle, player, state, options);
         },
         .Thief => {
             if (!try canMove(battle, player, state, options)) return;
-            try checkCriticalHit(battle, player, state, options);
-            try calcDamage(battle, player, state, options);
-            try adjustDamage(battle, player, state, options);
-            try randomizeDamage(battle, player, state, options);
-            try checkHit(battle, player, state, options);
-            // TODO effectchance
-            try applyDamage(battle, player, state, options);
-            try reportOutcome(battle, player, state, options);
+            if (!try doMove(SECONDARY, battle, player, state, options)) return;
             try Effects.thief(battle, player, state, options);
-            if (try destinyBond(battle, player, state, options)) return;
-            try buildRage(battle, player, state, options);
-            try kingsRock(battle, player, state, options);
+            _ = try afterMove(KINGS, battle, player, state, options);
         },
         .MeanLook => {
             if (!try canMove(battle, player, state, options)) return;
@@ -621,12 +471,11 @@ pub fn runMove(battle: anytype, player: Player, state: *State, options: anytype)
             try adjustDamage(battle, player, state, options);
             try randomizeDamage(battle, player, state, options);
             try checkHit(battle, player, state, options);
-            // TODO effectchance
+            try effectChance(battle, player, state, options);
             try Effects.snore(battle, player, state, options);
             try applyDamage(battle, player, state, options);
             try reportOutcome(battle, player, state, options);
-            if (try destinyBond(battle, player, state, options)) return;
-            try buildRage(battle, player, state, options);
+            if (!try afterMove(!KINGS, battle, player, state, options)) return;
             try Effects.flinchChance(battle, player, state, options);
             try kingsRock(battle, player, state, options);
         },
@@ -641,9 +490,7 @@ pub fn runMove(battle: anytype, player: Player, state: *State, options: anytype)
             try checkHit(battle, player, state, options);
             try applyDamage(battle, player, state, options);
             // TODO reversalsupereffectivetext
-            if (try destinyBond(battle, player, state, options)) return;
-            try buildRage(battle, player, state, options);
-            try kingsRock(battle, player, state, options);
+            _ = try afterMove(KINGS, battle, player, state, options);
         },
         .Conversion2 => {
             if (!try canMove(battle, player, state, options)) return;
@@ -701,9 +548,7 @@ pub fn runMove(battle: anytype, player: Player, state: *State, options: anytype)
             try randomizeDamage(battle, player, state, options);
             try applyDamage(battle, player, state, options);
             try reportOutcome(battle, player, state, options);
-            if (try destinyBond(battle, player, state, options)) return;
-            try buildRage(battle, player, state, options);
-            try kingsRock(battle, player, state, options);
+            _ = try afterMove(KINGS, battle, player, state, options);
         },
         .FalseSwipe => {
             if (!try canMove(battle, player, state, options)) return;
@@ -715,9 +560,7 @@ pub fn runMove(battle: anytype, player: Player, state: *State, options: anytype)
             try checkHit(battle, player, state, options);
             try applyDamage(battle, player, state, options);
             try reportOutcome(battle, player, state, options);
-            if (try destinyBond(battle, player, state, options)) return;
-            try buildRage(battle, player, state, options);
-            try kingsRock(battle, player, state, options);
+            _ = try afterMove(KINGS, battle, player, state, options);
         },
         .Swagger => {
             if (!try canMove(battle, player, state, options)) return;
@@ -740,9 +583,7 @@ pub fn runMove(battle: anytype, player: Player, state: *State, options: anytype)
             try randomizeDamage(battle, player, state, options);
             try applyDamage(battle, player, state, options);
             try reportOutcome(battle, player, state, options);
-            if (try destinyBond(battle, player, state, options)) return;
-            try buildRage(battle, player, state, options);
-            try kingsRock(battle, player, state, options);
+            _ = try afterMove(KINGS, battle, player, state, options);
         },
         .Attract => {
             if (!try canMove(battle, player, state, options)) return;
@@ -767,9 +608,7 @@ pub fn runMove(battle: anytype, player: Player, state: *State, options: anytype)
             try checkHit(battle, player, state, options);
             try applyDamage(battle, player, state, options);
             try reportOutcome(battle, player, state, options);
-            if (try destinyBond(battle, player, state, options)) return;
-            try buildRage(battle, player, state, options);
-            try kingsRock(battle, player, state, options);
+            _ = try afterMove(KINGS, battle, player, state, options);
         },
         .Present => {
             if (!try canMove(battle, player, state, options)) return;
@@ -782,9 +621,7 @@ pub fn runMove(battle: anytype, player: Player, state: *State, options: anytype)
             // TODO clearmissdamage
             try applyDamage(battle, player, state, options);
             try reportOutcome(battle, player, state, options);
-            if (try destinyBond(battle, player, state, options)) return;
-            try buildRage(battle, player, state, options);
-            try kingsRock(battle, player, state, options);
+            _ = try afterMove(KINGS, battle, player, state, options);
         },
         .Safeguard => {
             if (!try canMove(battle, player, state, options)) return;
@@ -797,17 +634,9 @@ pub fn runMove(battle: anytype, player: Player, state: *State, options: anytype)
         },
         .FlameWheel, .SacredFire => {
             if (!try canMove(battle, player, state, options)) return;
-            try checkCriticalHit(battle, player, state, options);
-            try calcDamage(battle, player, state, options);
-            try adjustDamage(battle, player, state, options);
-            try randomizeDamage(battle, player, state, options);
-            try checkHit(battle, player, state, options);
-            // TODO effectchance
-            try applyDamage(battle, player, state, options);
-            try reportOutcome(battle, player, state, options);
+            if (!try doMove(SECONDARY, battle, player, state, options)) return;
             try Effects.defrost(battle, player, state, options);
-            if (try destinyBond(battle, player, state, options)) return;
-            try buildRage(battle, player, state, options);
+            if (!try afterMove(!KINGS, battle, player, state, options)) return;
             try Effects.burnChance(battle, player, state, options);
         },
         .Magnitude => {
@@ -821,9 +650,7 @@ pub fn runMove(battle: anytype, player: Player, state: *State, options: anytype)
             // TODO doubleundergrounddamage
             try applyDamage(battle, player, state, options);
             try reportOutcome(battle, player, state, options);
-            if (try destinyBond(battle, player, state, options)) return;
-            try buildRage(battle, player, state, options);
-            try kingsRock(battle, player, state, options);
+            _ = try afterMove(KINGS, battle, player, state, options);
         },
         .BatonPass => {
             if (!try canMove(battle, player, state, options)) return;
@@ -844,23 +671,13 @@ pub fn runMove(battle: anytype, player: Player, state: *State, options: anytype)
             try checkHit(battle, player, state, options);
             try applyDamage(battle, player, state, options);
             try reportOutcome(battle, player, state, options);
-            if (try destinyBond(battle, player, state, options)) return;
-            try buildRage(battle, player, state, options);
-            try kingsRock(battle, player, state, options);
+            _ = try afterMove(KINGS, battle, player, state, options);
         },
         .RapidSpin => {
             if (!try canMove(battle, player, state, options)) return;
-            try checkCriticalHit(battle, player, state, options);
-            try calcDamage(battle, player, state, options);
-            try adjustDamage(battle, player, state, options);
-            try randomizeDamage(battle, player, state, options);
-            try checkHit(battle, player, state, options);
-            try applyDamage(battle, player, state, options);
-            try reportOutcome(battle, player, state, options);
+            if (!try doMove(!SECONDARY, battle, player, state, options)) return;
             try Effects.rapidSpin(battle, player, state, options);
-            if (try destinyBond(battle, player, state, options)) return;
-            try buildRage(battle, player, state, options);
-            try kingsRock(battle, player, state, options);
+            _ = try afterMove(KINGS, battle, player, state, options);
         },
         .MorningSun, .Synthesis, .Moonlight => {
             if (!try canMove(battle, player, state, options)) return;
@@ -876,9 +693,7 @@ pub fn runMove(battle: anytype, player: Player, state: *State, options: anytype)
             try checkHit(battle, player, state, options);
             try applyDamage(battle, player, state, options);
             try reportOutcome(battle, player, state, options);
-            if (try destinyBond(battle, player, state, options)) return;
-            try buildRage(battle, player, state, options);
-            try kingsRock(battle, player, state, options);
+            _ = try afterMove(KINGS, battle, player, state, options);
         },
         .Twister => {
             if (!try canMove(battle, player, state, options)) return;
@@ -888,11 +703,10 @@ pub fn runMove(battle: anytype, player: Player, state: *State, options: anytype)
             try randomizeDamage(battle, player, state, options);
             // TODO doubleflyingdamage
             try checkHit(battle, player, state, options);
-            // TODO effectchance
+            try effectChance(battle, player, state, options);
             try applyDamage(battle, player, state, options);
             try reportOutcome(battle, player, state, options);
-            if (try destinyBond(battle, player, state, options)) return;
-            try buildRage(battle, player, state, options);
+            if (!try afterMove(!KINGS, battle, player, state, options)) return;
             try Effects.flinchChance(battle, player, state, options);
         },
         .RainDance => {
@@ -907,9 +721,7 @@ pub fn runMove(battle: anytype, player: Player, state: *State, options: anytype)
             if (!try canMove(battle, player, state, options)) return;
             try Effects.mirrorCoat(battle, player, state, options);
             try applyDamage(battle, player, state, options);
-            if (try destinyBond(battle, player, state, options)) return;
-            try buildRage(battle, player, state, options);
-            try kingsRock(battle, player, state, options);
+            _ = try afterMove(KINGS, battle, player, state, options);
         },
         .PsychUp => {
             if (!try canMove(battle, player, state, options)) return;
@@ -917,16 +729,8 @@ pub fn runMove(battle: anytype, player: Player, state: *State, options: anytype)
         },
         .AllStatUpChance => {
             if (!try canMove(battle, player, state, options)) return;
-            try checkCriticalHit(battle, player, state, options);
-            try calcDamage(battle, player, state, options);
-            try adjustDamage(battle, player, state, options);
-            try randomizeDamage(battle, player, state, options);
-            try checkHit(battle, player, state, options);
-            // TODO effectchance
-            try applyDamage(battle, player, state, options);
-            try reportOutcome(battle, player, state, options);
-            if (try destinyBond(battle, player, state, options)) return;
-            try buildRage(battle, player, state, options);
+            if (!try doMove(SECONDARY, battle, player, state, options)) return;
+            if (!try afterMove(!KINGS, battle, player, state, options)) return;
             try Effects.allStatUpChance(battle, player, state, options);
         },
         .FutureSight => {
@@ -937,8 +741,7 @@ pub fn runMove(battle: anytype, player: Player, state: *State, options: anytype)
             try randomizeDamage(battle, player, state, options);
             try checkHit(battle, player, state, options);
             try applyDamage(battle, player, state, options);
-            if (try destinyBond(battle, player, state, options)) return;
-            try buildRage(battle, player, state, options);
+            _ = try afterMove(!KINGS, battle, player, state, options);
         },
         .BeatUp => {
             if (!try canMove(battle, player, state, options)) return;
@@ -950,8 +753,7 @@ pub fn runMove(battle: anytype, player: Player, state: *State, options: anytype)
             // TODO clearmissdamage
             try applyDamage(battle, player, state, options);
             try reportOutcome(battle, player, state, options);
-            if (try destinyBond(battle, player, state, options)) return;
-            try buildRage(battle, player, state, options);
+            if (!try afterMove(!KINGS, battle, player, state, options)) return;
             // TODO endloop
             // TODO beatupfailtext
             try kingsRock(battle, player, state, options);
@@ -966,16 +768,8 @@ pub fn runMove(battle: anytype, player: Player, state: *State, options: anytype)
         },
         .AttackUpChance, .DefenseUpChance => {
             _ = try canMove(battle, player, state, options);
-            try checkCriticalHit(battle, player, state, options);
-            try calcDamage(battle, player, state, options);
-            try adjustDamage(battle, player, state, options);
-            try randomizeDamage(battle, player, state, options);
-            try checkHit(battle, player, state, options);
-            // TODO effectchance
-            try applyDamage(battle, player, state, options);
-            try reportOutcome(battle, player, state, options);
-            if (try destinyBond(battle, player, state, options)) return;
-            try buildRage(battle, player, state, options);
+            if (!try doMove(SECONDARY, battle, player, state, options)) return;
+            if (!try afterMove(!KINGS, battle, player, state, options)) return;
             try Effects.boost(battle, player, state, options);
         },
         // zig fmt: off
@@ -991,17 +785,10 @@ pub fn runMove(battle: anytype, player: Player, state: *State, options: anytype)
         .SpDefDownChance, .SpeedDownChance => {
         // zig fmt: on
             _ = try canMove(battle, player, state, options);
-            try checkCriticalHit(battle, player, state, options);
-            try calcDamage(battle, player, state, options);
-            try adjustDamage(battle, player, state, options);
-            try randomizeDamage(battle, player, state, options);
-            try checkHit(battle, player, state, options);
-            // TODO effectchance
-            try applyDamage(battle, player, state, options);
-            try reportOutcome(battle, player, state, options);
-            if (try destinyBond(battle, player, state, options)) return;
-            try buildRage(battle, player, state, options);
-            // TODO if (effect == .DefenseDownChance) effectchance
+            if (!try doMove(SECONDARY, battle, player, state, options)) return;
+            if (!try afterMove(!KINGS, battle, player, state, options)) return;
+            // GLITCH: moves that lower Defense can do so after breaking a Substitute
+            if (effect == .DefenseDownChance) try effectChance(battle, player, state, options);
             try Effects.unboost(battle, player, state, options);
         },
     }

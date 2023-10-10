@@ -493,6 +493,30 @@ const moveFns = async (
         }
       }
     },
+    // (critical, damagecalc, stab, damagevariation, checkhit, applydamage, checkhit) -> domove*
+    commands => {
+      const index = commands.indexOf('critical');
+      if (index === -1) return;
+      let i = index;
+      for (const command of ['critical', 'damagecalc', 'stab', 'damagevariation', 'checkhit']) {
+        if (commands[i++] !== command) return;
+      }
+      // effectchance is optionally included as well
+      if (commands[i] === 'effectchance') i++;
+      if (commands[i++] !== 'applydamage') return;
+      if (commands[i] !== 'reportoutcome') return;
+      commands.splice(index, i - 1);
+      commands[index] = `domove${i === 7 ? '' : 'secondary'}`;
+    },
+    // (checkfaint, buildopponentrage, kingsrock?) -> aftermove*
+    commands => {
+      const index = commands.indexOf('checkfaint');
+      if (index === -1) return;
+      if (commands[index + 1] !== 'buildopponentrage') return;
+      const replacement = commands[index + 2] === 'kingsrock' ? 'aftermovekings' : 'aftermove';
+      commands.splice(index, replacement === 'aftermove' ? 1 : 2);
+      commands[index] = `${index === commands.length - 1 ? '' : 'if'}${replacement}`;
+    },
   ];
 
   for (const [effect, commands] of effects.entries()) {
@@ -519,17 +543,16 @@ const moveFns = async (
   write('const Effects = mechanics.Effects;\nconst State = mechanics.State;\n');
 
   const IMPORTS = [
-    'canMove', 'canCharge', 'decrementPP', 'checkHit', 'checkCriticalHit', 'calcDamage',
-    'adjustDamage', 'randomizeDamage', 'applyDamage', 'reportOutcome', 'buildRage', 'kingsRock',
-    'destinyBond',
+    'canMove', 'canCharge', 'decrementPP', 'doMove', 'checkHit', 'checkCriticalHit', 'calcDamage',
+    'adjustDamage', 'randomizeDamage', 'applyDamage', 'reportOutcome', 'effectChance', 'afterMove',
+    'buildRage', 'kingsRock', 'destinyBond',
   ];
   for (const command of IMPORTS) {
     write(`const ${command} = mechanics.${command};`);
   }
 
-  write(
-    '\npub fn runMove(battle: anytype, player: Player, state: *State, options: anytype) !void {'
-  );
+  write('\nconst SECONDARY = true;\nconst KINGS = true;\n');
+  write('pub fn runMove(battle: anytype, player: Player, state: *State, options: anytype) !void {');
   indent++;
   write('var log = options.log;\n');
   write('var side = battle.side(player);');
@@ -568,6 +591,9 @@ const moveFns = async (
       '    (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);',
       'if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return',
     ]),
+    domove: () => write('if (!try doMove(!SECONDARY, battle, player, state, options)) return;'),
+    domovesecondary: () =>
+      write('if (!try doMove(SECONDARY, battle, player, state, options)) return;'),
     checkfaint: () => write('if (try destinyBond(battle, player, state, options)) return;'),
     ragedamage: () => block([
       '',
@@ -579,12 +605,17 @@ const moveFns = async (
     kingsrock: n => n === 'DrainHP'
       ? write('if (state.move != .DreamEater) try kingsRock(battle, player, state, options);')
       : write('try kingsRock(battle, player, state, options);'),
+    aftermove: () => write('_ = try afterMove(!KINGS, battle, player, state, options);'),
+    ifaftermove: () => write('if (!try afterMove(!KINGS, battle, player, state, options)) return;'),
+    aftermovekings: () => write('_ = try afterMove(KINGS, battle, player, state, options);'),
+    ifaftermovekings: () =>
+      write('if (!try afterMove(KINGS, battle, player, state, options)) return;'),
   };
 
   const FNS: {[command: string]: string} = {
-    reportoutcome: 'reportOutcome',
     checkhit: 'checkHit', critical: 'checkCriticalHit', stab: 'adjustDamage',
     damagecalc: 'calcDamage', damagevariation: 'randomizeDamage', applydamage: 'applyDamage',
+    effectchance: 'effectChance', reportoutcome: 'reportOutcome',
     buildopponentrage: 'buildRage', burntarget: 'Effects.burnChance',
     freezetarget: 'Effects.freezeChance', ohko: 'Effects.ohko', startsun: 'Effects.sunnyDay',
     startsandstorm: 'Effects.sandstorm', paralyzetarget: 'Effects.paralyzeChance',
@@ -667,22 +698,17 @@ const moveFns = async (
     if (k > 1) write('// zig fmt: on');
     indent++;
     write('_ = try canMove(battle, player, state, options);');
-    if (array === boostChances || array === unboostChances) {
-      write('try checkCriticalHit(battle, player, state, options);');
-      write('try calcDamage(battle, player, state, options);');
-      write('try adjustDamage(battle, player, state, options);');
-      write('try randomizeDamage(battle, player, state, options);');
-    }
-    if (array !== boosts) write('try checkHit(battle, player, state, options);');
-    if (array === boostChances || array === unboostChances) {
-      write('// TODO effectchance');
-      write('try applyDamage(battle, player, state, options);');
-      write('try reportOutcome(battle, player, state, options);');
-      SNIPPETS.checkfaint();
-      write('try buildRage(battle, player, state, options);');
-    }
-    if (array === unboostChances) {
-      write('// TODO if (effect == .DefenseDownChance) effectchance');
+    if (array === unboosts) {
+      write('try checkHit(battle, player, state, options);');
+    } else if (array === boostChances || array === unboostChances) {
+      write('if (!try doMove(SECONDARY, battle, player, state, options)) return;');
+      write('if (!try afterMove(!KINGS, battle, player, state, options)) return;');
+      if (array === unboostChances) {
+        block([
+          '// GLITCH: moves that lower Defense can do so after breaking a Substitute',
+          'if (effect == .DefenseDownChance) try effectChance(battle, player, state, options);',
+        ]);
+      }
     }
     const fn = array === boosts || array === boostChances ? 'boost' : 'unboost';
     write(`try Effects.${fn}(battle, player, state, options);`);

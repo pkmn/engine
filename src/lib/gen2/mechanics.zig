@@ -390,7 +390,7 @@ fn executeMove(
 
     // FIXME: need damage from doTurn
     var state: State = .{ .move = move, .mslot = mslot, .first = first };
-    generated.runMove(battle, player, &state, options);
+    try generated.runMove(battle, player, &state, options);
     return null;
 }
 
@@ -582,6 +582,40 @@ pub fn decrementPP(side: *Side, move: Move, mslot: u4) bool {
     move_slot.pp = @as(u6, @intCast(move_slot.pp)) -% 1;
     assert(active.move(mslot).pp == side.stored().move(mslot).pp);
 
+    return true;
+}
+
+pub fn doMove(
+    comptime secondary: bool,
+    battle: anytype,
+    player: Player,
+    state: *State,
+    options: anytype,
+) !bool {
+    try checkCriticalHit(battle, player, state, options);
+    try calcDamage(battle, player, state, options);
+    try adjustDamage(battle, player, state, options);
+    try randomizeDamage(battle, player, state, options);
+    try checkHit(battle, player, state, options);
+    if (secondary) try effectChance(battle, player, state, options);
+    try applyDamage(battle, player, state, options);
+    try reportOutcome(battle, player, state, options);
+    if (try destinyBond(battle, player, state, options)) return false;
+    try buildRage(battle, player, state, options);
+    try kingsRock(battle, player, state, options);
+    return true;
+}
+
+pub fn afterMove(
+    comptime kings: bool,
+    battle: anytype,
+    player: Player,
+    state: *State,
+    options: anytype,
+) !bool {
+    if (try destinyBond(battle, player, state, options)) return false;
+    try buildRage(battle, player, state, options);
+    if (kings) try kingsRock(battle, player, state, options);
     return true;
 }
 
@@ -833,6 +867,10 @@ pub fn reportOutcome(battle: anytype, player: Player, state: *State, options: an
             try options.log.resisted(foe_ident);
         }
     }
+}
+
+pub fn effectChance(battle: anytype, player: Player, state: *State, options: anytype) !void {
+    _ = .{ battle, player, state, options }; // TODO
 }
 
 fn handleResidual(battle: anytype, player: Player, options: anytype) !bool {
