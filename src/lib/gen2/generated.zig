@@ -367,7 +367,26 @@ pub fn runMove(battle: anytype, player: Player, state: *State, options: anytype)
             try Effects.focusEnergy(battle, player, state, options);
         },
         .Bide => {
-            // TODO storeenergy
+            if (!volatiles.Bide) return;
+
+            assert(volatiles.attacks > 0);
+            // if (options.calc.modify(player, .attacking)) |extend| {
+            //     if (!extend) volatiles.attacks = 0;
+            // } else {
+            volatiles.attacks -= 1;
+            // }
+            try options.chance.attacking(player, volatiles.attacks);
+
+            if (volatiles.attacks != 0) return try options.log.activate(ident, .Bide);
+
+            volatiles.Bide = false;
+            try options.log.end(ident, .Bide);
+
+            state.damage = volatiles.bide *% 2;
+            volatiles.bide = 0;
+
+            if (state.damage == 0) state.miss = true;
+
             // doturn
             const charging = false; // TODO
             const skip_pp = charging or state.move == .Struggle or

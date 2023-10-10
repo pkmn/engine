@@ -623,6 +623,28 @@ const moveFns = async (
         '    state.miss = true;',
         '}',
         'state.effectiveness = Effectiveness.neutral;'),
+    storeenergy: () => block(
+      'if (!volatiles.Bide) return;',
+      '',
+      'assert(volatiles.attacks > 0);',
+      '// if (options.calc.modify(player, .attacking)) |extend| {',
+      '//     if (!extend) volatiles.attacks = 0;',
+      '// } else {',
+      'volatiles.attacks -= 1;',
+      '// }',
+      'try options.chance.attacking(player, volatiles.attacks);',
+      '',
+      'if (volatiles.attacks != 0) return try options.log.activate(ident, .Bide);',
+      '',
+      'volatiles.Bide = false;',
+      'try options.log.end(ident, .Bide);',
+      '',
+      'state.damage = volatiles.bide *% 2;',
+      'volatiles.bide = 0;',
+      '',
+      'if (state.damage == 0) state.miss = true;',
+      '',
+    ),
   };
 
   const FNS: {[command: string]: string} = {
