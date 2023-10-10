@@ -870,7 +870,11 @@ pub fn reportOutcome(battle: anytype, player: Player, state: *State, options: an
 }
 
 pub fn effectChance(battle: anytype, player: Player, state: *State, options: anytype) !void {
-    _ = .{ battle, player, state, options }; // TODO
+    const rate = Move.get(state.move).chance;
+    assert(rate > 0);
+    // FIXME: only commit secondary chance roll if effect actually is successful (doesn't fail)
+    state.proc = !battle.foe(player).active.volatiles.Substitute and
+        try Rolls.secondaryChance(battle, player, rate, options);
 }
 
 fn handleResidual(battle: anytype, player: Player, options: anytype) !bool {
@@ -1294,8 +1298,8 @@ pub const Effects = struct {
         }
         if (!state.proc) return;
         if (foe.conditions.Safeguard) return;
-        // No need to check for immunity because nothing is immune to Fire-type
-        assert(!state.immune());
+        // Nothing is immune to Fire-type, but Ghosts are immune to burnChance called by Tri Attack
+        if (state.immune()) return;
         if (foe.active.types.includes(Move.get(state.move).type)) return;
 
         foe_stored.status = Status.init(.BRN);
@@ -1558,8 +1562,7 @@ pub const Effects = struct {
         if (foe.active.volatiles.Substitute) return;
         if (Status.any(foe_stored.status)) return;
 
-        // No need to check for immunity because nothing is immune to Ice-type
-        assert(!state.immune());
+        // Nothing is immune to Ice-type, but Ghosts are immune to freezeChance called by Tri Attack
         if (battle.field.weather == .Sun) return;
         if (foe.active.types.includes(Move.get(state.move).type)) return;
         if (!state.proc) return;
@@ -1977,7 +1980,15 @@ pub const Effects = struct {
     }
 
     pub fn triAttack(battle: anytype, player: Player, state: *State, options: anytype) !void {
-        _ = .{ battle, player, state, options }; // TODO
+        // FIXME only commit effectchance and triattack rolls if actually does something...
+        try effectChance(battle, player, state, options);
+        if (state.proc) {
+            try switch (try Rolls.triAttack(battle, player, options)) {
+                .PAR => paralyzeChance(battle, player, state, options),
+                .FRZ => freezeChance(battle, player, state, options),
+                .BRN => burnChance(battle, player, state, options),
+            };
+        } else if (!showdown and pkmn.options.advance) _ = battle.rng.next();
     }
 
     pub fn tripleKick(battle: anytype, player: Player, state: *State, options: anytype) !void {
@@ -2369,20 +2380,20 @@ pub const Rolls = struct {
         return proc;
     }
 
-    inline fn triAttack(battle: anytype, player: Player, options: anytype) !u8 {
+    inline fn triAttack(battle: anytype, player: Player, options: anytype) !TriAttack {
         const status: TriAttack = if (options.calc.overridden(player, .tri_attack)) |val|
-            val
+            @enumFromInt(@intFromEnum(val) - 1)
         else if (showdown)
-            @enumFromInt(battle.rng.range(u8, 0, 2))
+            @enumFromInt(battle.rng.range(u2, 0, 2))
         else loop: {
             while (true) {
-                const r = std.math.rotr(u8, std.battle.rng.next(), 4) & 3;
+                const r = std.math.rotr(u8, battle.rng.next(), 4) & 3;
                 if (r != 0) break :loop @enumFromInt(r - 1);
             }
         };
 
         try options.chance.triAttack(player, status);
-        return status.status();
+        return status;
     }
 
     inline fn present(battle: anytype, player: Player, options: anytype) !u8 {
