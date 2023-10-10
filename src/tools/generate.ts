@@ -415,6 +415,7 @@ const doMoveFns = async (
   }
 
   const BASE_POWER_CALLBACK = ['Return', 'Frustration', 'Present', 'Magnitude'];
+  const SPECIAL_FAILURE = ['Rage', 'Swagger', 'FakeOut'];
 
   for (const [effect, commands] of effects.entries()) {
     let index = commands.indexOf('usedmovetext');
@@ -424,6 +425,17 @@ const doMoveFns = async (
     } else if (commands[index - 1] === 'charge') {
       commands.splice(0, index);
       commands[0] = 'cancharge';
+    }
+
+    index = commands.indexOf('failuretext');
+    if (index !== -1) {
+      if (commands[index + 1] !== 'applydamage') {
+        if (!SPECIAL_FAILURE.includes(effect)) {
+          throw new Error(`Unexpected ordering of failure commands found in ${effect}`);
+        }
+      } else {
+        commands.splice(index, 1);
+      }
     }
 
     index = commands.indexOf('damagestats');
@@ -537,6 +549,7 @@ const doMoveFns = async (
     ]),
     checkfaint: () => write('_ = try destinyBond(battle, player, state, options);'),
     ragedamage: () => block([
+      '',
       '// ragedamage',
       'assert(volatiles.Rage);',
       'state.damage *|= (volatiles.rage +| 1);',
@@ -642,7 +655,6 @@ const doMoveFns = async (
     if (array !== boosts) write('try checkHit(battle, player, state, options);');
     if (array === boostChances || array === unboostChances) {
       write('// TODO effectchance');
-      write('// TODO failuretxt');
       write('try applyDamage(battle, player, state, options);');
       write('try TODOcritsuper(battle, player, state, options);');
       SNIPPETS.checkfaint();

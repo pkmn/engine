@@ -50,7 +50,6 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try adjustDamage(battle, player, state, options);
             try randomizeDamage(battle, player, state, options);
             try checkHit(battle, player, state, options);
-            // TODO failuretext
             try applyDamage(battle, player, state, options);
             try TODOcritsuper(battle, player, state, options);
             _ = try destinyBond(battle, player, state, options);
@@ -66,7 +65,6 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try adjustDamage(battle, player, state, options);
             try randomizeDamage(battle, player, state, options);
             // TODO clearmissdamage
-            // TODO failuretext
             try applyDamage(battle, player, state, options);
             // TODO critsupereffectivelooptext
             _ = try destinyBond(battle, player, state, options);
@@ -81,7 +79,6 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try adjustDamage(battle, player, state, options);
             try randomizeDamage(battle, player, state, options);
             try checkHit(battle, player, state, options);
-            // TODO failuretext
             try applyDamage(battle, player, state, options);
             try TODOcritsuper(battle, player, state, options);
             try Effects.payDay(battle, player, state, options);
@@ -97,7 +94,6 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try randomizeDamage(battle, player, state, options);
             try checkHit(battle, player, state, options);
             // TODO effectchance
-            // TODO failuretext
             try applyDamage(battle, player, state, options);
             try TODOcritsuper(battle, player, state, options);
             _ = try destinyBond(battle, player, state, options);
@@ -112,7 +108,6 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try randomizeDamage(battle, player, state, options);
             try checkHit(battle, player, state, options);
             // TODO effectchance
-            // TODO failuretext
             try applyDamage(battle, player, state, options);
             try TODOcritsuper(battle, player, state, options);
             _ = try destinyBond(battle, player, state, options);
@@ -127,7 +122,6 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try randomizeDamage(battle, player, state, options);
             try checkHit(battle, player, state, options);
             // TODO effectchance
-            // TODO failuretext
             try applyDamage(battle, player, state, options);
             try TODOcritsuper(battle, player, state, options);
             _ = try destinyBond(battle, player, state, options);
@@ -138,7 +132,6 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             _ = try canMove(battle, player, state, options);
             try adjustDamage(battle, player, state, options);
             try Effects.ohko(battle, player, state, options);
-            // TODO failuretext
             try applyDamage(battle, player, state, options);
             try TODOcritsuper(battle, player, state, options);
             _ = try destinyBond(battle, player, state, options);
@@ -151,7 +144,6 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try adjustDamage(battle, player, state, options);
             try randomizeDamage(battle, player, state, options);
             try checkHit(battle, player, state, options);
-            // TODO failuretext
             try applyDamage(battle, player, state, options);
             try TODOcritsuper(battle, player, state, options);
             _ = try destinyBond(battle, player, state, options);
@@ -166,7 +158,6 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try randomizeDamage(battle, player, state, options);
             // TODO doubleflyingdamage
             try checkHit(battle, player, state, options);
-            // TODO failuretext
             try applyDamage(battle, player, state, options);
             try TODOcritsuper(battle, player, state, options);
             _ = try destinyBond(battle, player, state, options);
@@ -184,7 +175,6 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try adjustDamage(battle, player, state, options);
             try randomizeDamage(battle, player, state, options);
             try checkHit(battle, player, state, options);
-            // TODO failuretext
             try applyDamage(battle, player, state, options);
             try TODOcritsuper(battle, player, state, options);
             _ = try destinyBond(battle, player, state, options);
@@ -199,7 +189,6 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try adjustDamage(battle, player, state, options);
             try randomizeDamage(battle, player, state, options);
             // TODO clearmissdamage
-            // TODO failuretext
             try applyDamage(battle, player, state, options);
             try TODOcritsuper(battle, player, state, options);
             _ = try destinyBond(battle, player, state, options);
@@ -215,7 +204,6 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             // TODO doubleminimizedamage
             try checkHit(battle, player, state, options);
             // TODO effectchance
-            // TODO failuretext
             try applyDamage(battle, player, state, options);
             try TODOcritsuper(battle, player, state, options);
             _ = try destinyBond(battle, player, state, options);
@@ -230,7 +218,6 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try randomizeDamage(battle, player, state, options);
             try checkHit(battle, player, state, options);
             // TODO effectchance
-            // TODO failuretext
             try applyDamage(battle, player, state, options);
             try TODOcritsuper(battle, player, state, options);
             _ = try destinyBond(battle, player, state, options);
@@ -244,7 +231,6 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try adjustDamage(battle, player, state, options);
             try randomizeDamage(battle, player, state, options);
             try checkHit(battle, player, state, options);
-            // TODO failuretext
             try applyDamage(battle, player, state, options);
             try TODOcritsuper(battle, player, state, options);
             try Effects.recoil(battle, player, state, options);
@@ -268,7 +254,6 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try adjustDamage(battle, player, state, options);
             try randomizeDamage(battle, player, state, options);
             // TODO clearmissdamage
-            // TODO failuretext
             try applyDamage(battle, player, state, options);
             try TODOcritsuper(battle, player, state, options);
             _ = try destinyBond(battle, player, state, options);
@@ -283,7 +268,6 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try randomizeDamage(battle, player, state, options);
             try checkHit(battle, player, state, options);
             // TODO effectchance
-            // TODO failuretext
             try applyDamage(battle, player, state, options);
             try TODOcritsuper(battle, player, state, options);
             _ = try destinyBond(battle, player, state, options);
@@ -300,7 +284,6 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try adjustDamage(battle, player, state, options);
             try randomizeDamage(battle, player, state, options);
             // TODO clearmissdamage
-            // TODO failuretext
             try applyDamage(battle, player, state, options);
             // TODO critsupereffectivelooptext
             _ = try destinyBond(battle, player, state, options);
@@ -326,7 +309,6 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try Effects.fixedDamage(battle, player, state, options);
             try checkHit(battle, player, state, options);
             // TODO resettypematchup
-            // TODO failuretext
             try applyDamage(battle, player, state, options);
             _ = try destinyBond(battle, player, state, options);
             try buildRage(battle, player, state, options);
@@ -349,7 +331,6 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try randomizeDamage(battle, player, state, options);
             try checkHit(battle, player, state, options);
             // TODO effectchance
-            // TODO failuretext
             try applyDamage(battle, player, state, options);
             try TODOcritsuper(battle, player, state, options);
             _ = try destinyBond(battle, player, state, options);
@@ -363,7 +344,6 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try adjustDamage(battle, player, state, options);
             try randomizeDamage(battle, player, state, options);
             try checkHit(battle, player, state, options);
-            // TODO failuretext
             try applyDamage(battle, player, state, options);
             try TODOcritsuper(battle, player, state, options);
             try Effects.hyperBeam(battle, player, state, options);
@@ -373,7 +353,6 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
         .Counter => {
             _ = try canMove(battle, player, state, options);
             try Effects.counter(battle, player, state, options);
-            // TODO failuretext
             try applyDamage(battle, player, state, options);
             _ = try destinyBond(battle, player, state, options);
             try buildRage(battle, player, state, options);
@@ -386,7 +365,6 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try adjustDamage(battle, player, state, options);
             try randomizeDamage(battle, player, state, options);
             try checkHit(battle, player, state, options);
-            // TODO failuretext
             try applyDamage(battle, player, state, options);
             try TODOcritsuper(battle, player, state, options);
             try Effects.drainHP(battle, player, state, options);
@@ -406,7 +384,6 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try adjustDamage(battle, player, state, options);
             try randomizeDamage(battle, player, state, options);
             try checkHit(battle, player, state, options);
-            // TODO failuretext
             try applyDamage(battle, player, state, options);
             try TODOcritsuper(battle, player, state, options);
             _ = try destinyBond(battle, player, state, options);
@@ -436,7 +413,6 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             // TODO effectchance
             try adjustDamage(battle, player, state, options);
             try randomizeDamage(battle, player, state, options);
-            // TODO failuretext
             try applyDamage(battle, player, state, options);
             try TODOcritsuper(battle, player, state, options);
             _ = try destinyBond(battle, player, state, options);
@@ -452,7 +428,6 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             // TODO doubleundergrounddamage
             try checkHit(battle, player, state, options);
             // TODO effectchance
-            // TODO failuretext
             try applyDamage(battle, player, state, options);
             try TODOcritsuper(battle, player, state, options);
             _ = try destinyBond(battle, player, state, options);
@@ -464,6 +439,7 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try calcDamage(battle, player, state, options);
             try adjustDamage(battle, player, state, options);
             try checkHit(battle, player, state, options);
+
             // ragedamage
             assert(volatiles.Rage);
             state.damage *|= (volatiles.rage +| 1);
@@ -536,7 +512,6 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try randomizeDamage(battle, player, state, options);
             try checkHit(battle, player, state, options);
             try Effects.explode(battle, player, state, options);
-            // TODO failuretext
             try applyDamage(battle, player, state, options);
             try TODOcritsuper(battle, player, state, options);
             _ = try destinyBond(battle, player, state, options);
@@ -550,7 +525,6 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try adjustDamage(battle, player, state, options);
             try randomizeDamage(battle, player, state, options);
             try checkHit(battle, player, state, options);
-            // TODO failuretext
             try applyDamage(battle, player, state, options);
             try TODOcritsuper(battle, player, state, options);
             _ = try destinyBond(battle, player, state, options);
@@ -567,7 +541,6 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try randomizeDamage(battle, player, state, options);
             try checkHit(battle, player, state, options);
             // TODO effectchance
-            // TODO failuretext
             try applyDamage(battle, player, state, options);
             try TODOcritsuper(battle, player, state, options);
             _ = try destinyBond(battle, player, state, options);
@@ -594,7 +567,6 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try adjustDamage(battle, player, state, options);
             try randomizeDamage(battle, player, state, options);
             try checkHit(battle, player, state, options);
-            // TODO failuretext
             try applyDamage(battle, player, state, options);
             try TODOcritsuper(battle, player, state, options);
             _ = try destinyBond(battle, player, state, options);
@@ -619,7 +591,6 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try adjustDamage(battle, player, state, options);
             try randomizeDamage(battle, player, state, options);
             // TODO clearmissdamage
-            // TODO failuretext
             try applyDamage(battle, player, state, options);
             // TODO critsupereffectivelooptext
             _ = try destinyBond(battle, player, state, options);
@@ -636,7 +607,6 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try randomizeDamage(battle, player, state, options);
             try checkHit(battle, player, state, options);
             // TODO effectchance
-            // TODO failuretext
             try applyDamage(battle, player, state, options);
             try TODOcritsuper(battle, player, state, options);
             try Effects.thief(battle, player, state, options);
@@ -666,7 +636,6 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try checkHit(battle, player, state, options);
             // TODO effectchance
             try Effects.snore(battle, player, state, options);
-            // TODO failuretext
             try applyDamage(battle, player, state, options);
             try TODOcritsuper(battle, player, state, options);
             _ = try destinyBond(battle, player, state, options);
@@ -683,7 +652,6 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try Effects.reversal(battle, player, state, options);
             try adjustDamage(battle, player, state, options);
             try checkHit(battle, player, state, options);
-            // TODO failuretext
             try applyDamage(battle, player, state, options);
             // TODO reversalsupereffectivetext
             _ = try destinyBond(battle, player, state, options);
@@ -744,7 +712,6 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try checkHit(battle, player, state, options);
             // TODO rolloutpower
             try randomizeDamage(battle, player, state, options);
-            // TODO failuretext
             try applyDamage(battle, player, state, options);
             try TODOcritsuper(battle, player, state, options);
             _ = try destinyBond(battle, player, state, options);
@@ -759,7 +726,6 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try randomizeDamage(battle, player, state, options);
             try Effects.falseSwipe(battle, player, state, options);
             try checkHit(battle, player, state, options);
-            // TODO failuretext
             try applyDamage(battle, player, state, options);
             try TODOcritsuper(battle, player, state, options);
             _ = try destinyBond(battle, player, state, options);
@@ -785,7 +751,6 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try checkHit(battle, player, state, options);
             try Effects.furyCutter(battle, player, state, options);
             try randomizeDamage(battle, player, state, options);
-            // TODO failuretext
             try applyDamage(battle, player, state, options);
             try TODOcritsuper(battle, player, state, options);
             _ = try destinyBond(battle, player, state, options);
@@ -813,7 +778,6 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try adjustDamage(battle, player, state, options);
             try randomizeDamage(battle, player, state, options);
             try checkHit(battle, player, state, options);
-            // TODO failuretext
             try applyDamage(battle, player, state, options);
             try TODOcritsuper(battle, player, state, options);
             _ = try destinyBond(battle, player, state, options);
@@ -829,7 +793,6 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try adjustDamage(battle, player, state, options);
             try randomizeDamage(battle, player, state, options);
             // TODO clearmissdamage
-            // TODO failuretext
             try applyDamage(battle, player, state, options);
             try TODOcritsuper(battle, player, state, options);
             _ = try destinyBond(battle, player, state, options);
@@ -853,7 +816,6 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try randomizeDamage(battle, player, state, options);
             try checkHit(battle, player, state, options);
             // TODO effectchance
-            // TODO failuretext
             try applyDamage(battle, player, state, options);
             try TODOcritsuper(battle, player, state, options);
             try Effects.defrost(battle, player, state, options);
@@ -870,7 +832,6 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try randomizeDamage(battle, player, state, options);
             try checkHit(battle, player, state, options);
             // TODO doubleundergrounddamage
-            // TODO failuretext
             try applyDamage(battle, player, state, options);
             try TODOcritsuper(battle, player, state, options);
             _ = try destinyBond(battle, player, state, options);
@@ -894,7 +855,6 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try randomizeDamage(battle, player, state, options);
             try Effects.pursuit(battle, player, state, options);
             try checkHit(battle, player, state, options);
-            // TODO failuretext
             try applyDamage(battle, player, state, options);
             try TODOcritsuper(battle, player, state, options);
             _ = try destinyBond(battle, player, state, options);
@@ -908,7 +868,6 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try adjustDamage(battle, player, state, options);
             try randomizeDamage(battle, player, state, options);
             try checkHit(battle, player, state, options);
-            // TODO failuretext
             try applyDamage(battle, player, state, options);
             try TODOcritsuper(battle, player, state, options);
             try Effects.rapidSpin(battle, player, state, options);
@@ -928,7 +887,6 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try adjustDamage(battle, player, state, options);
             try randomizeDamage(battle, player, state, options);
             try checkHit(battle, player, state, options);
-            // TODO failuretext
             try applyDamage(battle, player, state, options);
             try TODOcritsuper(battle, player, state, options);
             _ = try destinyBond(battle, player, state, options);
@@ -944,7 +902,6 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             // TODO doubleflyingdamage
             try checkHit(battle, player, state, options);
             // TODO effectchance
-            // TODO failuretext
             try applyDamage(battle, player, state, options);
             try TODOcritsuper(battle, player, state, options);
             _ = try destinyBond(battle, player, state, options);
@@ -962,7 +919,6 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
         .MirrorCoat => {
             _ = try canMove(battle, player, state, options);
             try Effects.mirrorCoat(battle, player, state, options);
-            // TODO failuretext
             try applyDamage(battle, player, state, options);
             _ = try destinyBond(battle, player, state, options);
             try buildRage(battle, player, state, options);
@@ -980,7 +936,6 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try randomizeDamage(battle, player, state, options);
             try checkHit(battle, player, state, options);
             // TODO effectchance
-            // TODO failuretext
             try applyDamage(battle, player, state, options);
             try TODOcritsuper(battle, player, state, options);
             _ = try destinyBond(battle, player, state, options);
@@ -994,7 +949,6 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try Effects.futureSight(battle, player, state, options);
             try randomizeDamage(battle, player, state, options);
             try checkHit(battle, player, state, options);
-            // TODO failuretext
             try applyDamage(battle, player, state, options);
             _ = try destinyBond(battle, player, state, options);
             try buildRage(battle, player, state, options);
@@ -1007,7 +961,6 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try Effects.beatUp(battle, player, state, options);
             try randomizeDamage(battle, player, state, options);
             // TODO clearmissdamage
-            // TODO failuretext
             try applyDamage(battle, player, state, options);
             try TODOcritsuper(battle, player, state, options);
             _ = try destinyBond(battle, player, state, options);
@@ -1032,7 +985,6 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try randomizeDamage(battle, player, state, options);
             try checkHit(battle, player, state, options);
             // TODO effectchance
-            // TODO failuretxt
             try applyDamage(battle, player, state, options);
             try TODOcritsuper(battle, player, state, options);
             _ = try destinyBond(battle, player, state, options);
@@ -1058,7 +1010,6 @@ pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) 
             try randomizeDamage(battle, player, state, options);
             try checkHit(battle, player, state, options);
             // TODO effectchance
-            // TODO failuretxt
             try applyDamage(battle, player, state, options);
             try TODOcritsuper(battle, player, state, options);
             _ = try destinyBond(battle, player, state, options);

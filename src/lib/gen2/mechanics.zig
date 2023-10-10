@@ -682,6 +682,7 @@ pub fn applyDamage(
     state: *State,
     options: anytype,
 ) !void {
+    // TODO failuretext (if not Bide) + applydamage
     _ = battle;
     _ = player;
     _ = state;
