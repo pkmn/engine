@@ -598,7 +598,6 @@ const moveFns = async (
     checkfaint: () => write('if (try destinyBond(battle, player, state, options)) return;'),
     ragedamage: () => block([
       '',
-      '// ragedamage',
       'assert(volatiles.Rage);',
       'state.damage *|= (volatiles.rage +| 1);',
       '',
@@ -611,6 +610,16 @@ const moveFns = async (
     aftermovekings: () => write('_ = try afterMove(KINGS, battle, player, state, options);'),
     ifaftermovekings: () =>
       write('if (!try afterMove(KINGS, battle, player, state, options)) return;'),
+    doubleflyingdamage: () => block([
+      '',
+      'if (battle.foe(player).active.volatiles.Flying) state.damage *|= 2;',
+      '',
+    ]),
+    doubleundergrounddamage: () => block([
+      '',
+      'if (battle.foe(player).active.volatiles.Underground) state.damage *|= 2;',
+      '',
+    ]),
   };
 
   const FNS: {[command: string]: string} = {

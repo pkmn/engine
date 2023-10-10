@@ -107,7 +107,9 @@ pub fn runMove(battle: anytype, player: Player, state: *State, options: anytype)
             try calcDamage(battle, player, state, options);
             try adjustDamage(battle, player, state, options);
             try randomizeDamage(battle, player, state, options);
-            // TODO doubleflyingdamage
+
+            if (battle.foe(player).active.volatiles.Flying) state.damage *|= 2;
+
             try checkHit(battle, player, state, options);
             try applyDamage(battle, player, state, options);
             try reportOutcome(battle, player, state, options);
@@ -297,7 +299,9 @@ pub fn runMove(battle: anytype, player: Player, state: *State, options: anytype)
             try calcDamage(battle, player, state, options);
             try adjustDamage(battle, player, state, options);
             try randomizeDamage(battle, player, state, options);
-            // TODO doubleundergrounddamage
+
+            if (battle.foe(player).active.volatiles.Underground) state.damage *|= 2;
+
             try checkHit(battle, player, state, options);
             try effectChance(battle, player, state, options);
             try applyDamage(battle, player, state, options);
@@ -311,7 +315,6 @@ pub fn runMove(battle: anytype, player: Player, state: *State, options: anytype)
             try adjustDamage(battle, player, state, options);
             try checkHit(battle, player, state, options);
 
-            // ragedamage
             assert(volatiles.Rage);
             state.damage *|= (volatiles.rage +| 1);
 
@@ -642,7 +645,9 @@ pub fn runMove(battle: anytype, player: Player, state: *State, options: anytype)
             try adjustDamage(battle, player, state, options);
             try randomizeDamage(battle, player, state, options);
             try checkHit(battle, player, state, options);
-            // TODO doubleundergrounddamage
+
+            if (battle.foe(player).active.volatiles.Underground) state.damage *|= 2;
+
             try applyDamage(battle, player, state, options);
             try reportOutcome(battle, player, state, options);
             _ = try afterMove(KINGS, battle, player, state, options);
@@ -696,7 +701,9 @@ pub fn runMove(battle: anytype, player: Player, state: *State, options: anytype)
             try calcDamage(battle, player, state, options);
             try adjustDamage(battle, player, state, options);
             try randomizeDamage(battle, player, state, options);
-            // TODO doubleflyingdamage
+
+            if (battle.foe(player).active.volatiles.Flying) state.damage *|= 2;
+
             try checkHit(battle, player, state, options);
             try effectChance(battle, player, state, options);
             try applyDamage(battle, player, state, options);
