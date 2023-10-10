@@ -137,19 +137,6 @@ pub fn runMove(battle: anytype, player: Player, state: *State, options: anytype)
             if (try destinyBond(battle, player, state, options)) return;
             try buildRage(battle, player, state, options);
         },
-        .RazorWind => {
-            if (!try canCharge(battle, player, state, options)) return;
-            try checkCriticalHit(battle, player, state, options);
-            try calcDamage(battle, player, state, options);
-            try adjustDamage(battle, player, state, options);
-            try randomizeDamage(battle, player, state, options);
-            try checkHit(battle, player, state, options);
-            try applyDamage(battle, player, state, options);
-            try reportOutcome(battle, player, state, options);
-            if (try destinyBond(battle, player, state, options)) return;
-            try buildRage(battle, player, state, options);
-            try kingsRock(battle, player, state, options);
-        },
         .Gust => {
             if (!try canMove(battle, player, state, options)) return;
             try checkCriticalHit(battle, player, state, options);
@@ -168,7 +155,7 @@ pub fn runMove(battle: anytype, player: Player, state: *State, options: anytype)
             try checkHit(battle, player, state, options);
             try Effects.forceSwitch(battle, player, state, options);
         },
-        .FlyDig => {
+        .RazorWind, .FlyDig => {
             if (!try canCharge(battle, player, state, options)) return;
             try checkCriticalHit(battle, player, state, options);
             try calcDamage(battle, player, state, options);

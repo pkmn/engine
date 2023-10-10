@@ -531,6 +531,7 @@ const moveFns = async (
     ['MorningSun', 'Synthesis', 'Moonlight'],
     ['DreamEater', 'DrainHP'],
     ['FlameWheel', 'SacredFire'],
+    ['RazorWind', 'FlyDig'],
   ];
 
   const SNIPPETS: {[command: string]: (effect?: string) => void} = {
