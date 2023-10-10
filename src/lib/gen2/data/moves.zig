@@ -938,7 +938,7 @@ pub const Move = enum(u8) {
         },
         // SolarBeam
         .{
-            .effect = .Solarbeam,
+            .effect = .SolarBeam,
             .bp = 120,
             .type = .Grass,
             .accuracy = percent(100),
@@ -2529,7 +2529,7 @@ pub const Move = enum(u8) {
         Sleep,
         SleepTalk,
         Snore,
-        Solarbeam,
+        SolarBeam,
         SpAtkUp1,
         SpDefDownChance,
         SpDefUp2,

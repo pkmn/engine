@@ -109,6 +109,7 @@ const NAMES: { [constant: string]: string } = {
   EFFECT_SP_ATK_UP: 'SpAtkUp1', EFFECT_SP_DEF_DOWN_HIT: 'SpDefDownChance',
   EFFECT_SPEED_DOWN: 'SpeedDown1', EFFECT_SPEED_DOWN_HIT: 'SpeedDownChance',
   EFFECT_TRAP_TARGET: 'Binding', EFFECT_RESET_STATS: 'Haze', EFFECT_FLY: 'FlyDig',
+  EFFECT_SOLARBEAM: 'SolarBeam',
 };
 
 const STAT_DOWN = [
@@ -574,7 +575,7 @@ const moveFns = async (
     ['MorningSun', 'Synthesis', 'Moonlight'],
     ['DreamEater', 'DrainHP'],
     ['FlameWheel', 'SacredFire'],
-    ['RazorWind', 'FlyDig'],
+    ['RazorWind', 'SolarBeam', 'FlyDig'],
   ];
 
   const SNIPPETS: {[command: string]: (effect?: string) => void} = {

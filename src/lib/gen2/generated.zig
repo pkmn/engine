@@ -118,7 +118,7 @@ pub fn runMove(battle: anytype, player: Player, state: *State, options: anytype)
             try checkHit(battle, player, state, options);
             try Effects.forceSwitch(battle, player, state, options);
         },
-        .RazorWind, .FlyDig => {
+        .RazorWind, .SolarBeam, .FlyDig => {
             if (!try canCharge(battle, player, state, options)) return;
             if (!try doMove(!SECONDARY, battle, player, state, options)) return;
             _ = try afterMove(KINGS, battle, player, state, options);
@@ -262,11 +262,6 @@ pub fn runMove(battle: anytype, player: Player, state: *State, options: anytype)
             if (!try canMove(battle, player, state, options)) return;
             try checkHit(battle, player, state, options);
             try Effects.leechSeed(battle, player, state, options);
-        },
-        .Solarbeam => {
-            if (!try canCharge(battle, player, state, options)) return;
-            if (!try doMove(!SECONDARY, battle, player, state, options)) return;
-            _ = try afterMove(KINGS, battle, player, state, options);
         },
         .Toxic, .Poison => {
             if (!try canMove(battle, player, state, options)) return;
