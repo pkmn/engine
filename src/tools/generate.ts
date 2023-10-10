@@ -401,6 +401,7 @@ const moveFns = async (
     'checkobedience', 'lowersub', 'raisesub', 'moveanim', 'moveanimnosub', 'endmove',
     'statupanim', 'statupmessage', 'statupfailtext', 'movedelay', 'cleartext',
   ]);
+
   const effects = new Map<string, string[]>();
   let last = '';
   for (const line of raw) {
@@ -417,67 +418,86 @@ const moveFns = async (
   const BASE_POWER_CALLBACK = ['Return', 'Frustration', 'Present', 'Magnitude'];
   const SPECIAL_FAILURE = ['Rage', 'Swagger', 'FakeOut'];
 
-  for (const [effect, commands] of effects.entries()) {
-    let index = commands.indexOf('usedmovetext');
-    if (commands[index + 1] === 'doturn') {
-      commands.splice(index, 1);
-      commands[index] = 'canmove';
-    } else if (commands[index - 1] === 'charge') {
-      commands.splice(0, index);
-      commands[0] = 'cancharge';
-    }
-
-    index = commands.indexOf('failuretext');
-    if (index !== -1) {
-      if (commands[index + 1] !== 'applydamage') {
-        if (!SPECIAL_FAILURE.includes(effect)) {
-          throw new Error(`Unexpected ordering of failure commands found in ${effect}`);
-        }
-      } else {
+  const OPTIMIZATIONS: Array<(commands: string[], effect: string) => void> = [
+    commands => {
+      const index = commands.indexOf('usedmovetext');
+      // (usedmovetext, doturn) -> canMove
+      if (commands[index + 1] === 'doturn') {
         commands.splice(index, 1);
+        commands[index] = 'canmove';
+      // (..., charge, doturn) -> canCharge
+      } else if (commands[index - 1] === 'charge') {
+        commands.splice(0, index);
+        commands[0] = 'cancharge';
       }
-    }
-
-    index = commands.indexOf('damagestats');
-    if (index === -1) {
-      index = commands.indexOf('damagecalc');
+    },
+    // (failuretext, applydamage) -> applydamage
+    (commands, effect) => {
+      const index = commands.indexOf('failuretext');
       if (index !== -1) {
-        if (effect === 'BeatUp') {
+        if (commands[index + 1] !== 'applydamage') {
+          if (!SPECIAL_FAILURE.includes(effect)) {
+            throw new Error(`Unexpected ordering of failure commands found in ${effect}`);
+          }
+        } else {
           commands.splice(index, 1);
-        } else if (effect !== 'HiddenPower') {
-          throw new Error(`Unexpected damagecalc command found in ${effect}`);
         }
       }
-    } else {
-      if (commands[index + 1] !== 'damagecalc' && !BASE_POWER_CALLBACK.includes(effect)) {
-        throw new Error(`Unexpected ordering of damage calc commands found in ${effect}`);
+    },
+    // (damagestats, damagecalc) -> damagecalc
+    (commands, effect) => {
+      let index = commands.indexOf('damagestats');
+      if (index === -1) {
+        index = commands.indexOf('damagecalc');
+        if (index !== -1) {
+          if (effect === 'BeatUp') {
+            commands.splice(index, 1);
+          } else if (effect !== 'HiddenPower') {
+            throw new Error(`Unexpected damagecalc command found in ${effect}`);
+          }
+        }
       } else {
-        commands.splice(index, 1);
+        // NB: move to include base power callback *before* damagestats if we pass in BP to calc
+        if (commands[index + 1] !== 'damagecalc' && !BASE_POWER_CALLBACK.includes(effect)) {
+          throw new Error(`Unexpected ordering of damage calc commands found in ${effect}`);
+        } else {
+          commands.splice(index, 1);
+        }
       }
-    }
-
-    if (effect === 'Reversal') {
-      index = commands.indexOf('constantdamage');
-      commands[index] = 'reversal';
-      index = commands.indexOf('supereffectivetext');
-      commands[index] = 'reversalsupereffectivetext';
-      continue;
-    }
-
-    index = commands.indexOf('criticaltext');
-    if (index === -1) {
-      if (commands.includes('supereffectivetext')) {
-        throw new Error(`Unexpected supereffectivetext command found in ${effect}`);
+    },
+    // (crittext, supereffectivetext) -> reportoutcome
+    (commands, effect) => {
+      // Reversal is special and needs to be rewritten
+      if (effect === 'Reversal') {
+        let index = commands.indexOf('constantdamage');
+        commands[index] = 'reversal';
+        index = commands.indexOf('supereffectivetext');
+        commands[index] = 'reversalsupereffectivetext';
+        return;
       }
-    } else {
-      if (!/supereffective(?:loop)?text/.test(commands[index + 1])) {
-        throw new Error(`Unexpected ordering of post-hit commands found in ${effect}`);
+
+      const index = commands.indexOf('criticaltext');
+      if (index === -1) {
+        if (commands.includes('supereffectivetext')) {
+          throw new Error(`Unexpected supereffectivetext command found in ${effect}`);
+        }
       } else {
-        commands.splice(index, 1);
-        commands[index] = commands[index].includes('loop')
-          ? 'critsupereffectivelooptext'
-          : 'reportoutcome';
+        if (!/supereffective(?:loop)?text/.test(commands[index + 1])) {
+          throw new Error(`Unexpected ordering of post-hit commands found in ${effect}`);
+        } else {
+          commands.splice(index, 1);
+          // (crittext, supereffectivelooptext) -> critsupereffectivelooptext
+          commands[index] = commands[index].includes('loop')
+            ? 'critsupereffectivelooptext'
+            : 'reportoutcome';
+        }
       }
+    },
+  ];
+
+  for (const [effect, commands] of effects.entries()) {
+    for (const optimization of OPTIMIZATIONS) {
+      optimization(commands, effect);
     }
   }
 
