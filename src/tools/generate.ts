@@ -476,7 +476,7 @@ const doMoveFns = async (
         commands.splice(index, 1);
         commands[index] = commands[index].includes('loop')
           ? 'critsupereffectivelooptext'
-          : 'critsupereffectivetext';
+          : 'reportoutcome';
       }
     }
   }
@@ -500,7 +500,7 @@ const doMoveFns = async (
 
   const IMPORTS = [
     'canMove', 'canCharge', 'decrementPP', 'checkHit', 'checkCriticalHit', 'calcDamage',
-    'adjustDamage', 'randomizeDamage', 'applyDamage', 'TODOcritsuper', 'buildRage', 'kingsRock',
+    'adjustDamage', 'randomizeDamage', 'applyDamage', 'reportOutcome', 'buildRage', 'kingsRock',
     'destinyBond',
   ];
   for (const command of IMPORTS) {
@@ -561,7 +561,7 @@ const doMoveFns = async (
   };
 
   const FNS: {[command: string]: string} = {
-    critsupereffectivetext: 'TODOcritsuper',
+    reportoutcome: 'reportOutcome',
     checkhit: 'checkHit', critical: 'checkCriticalHit', stab: 'adjustDamage',
     damagecalc: 'calcDamage', damagevariation: 'randomizeDamage', applydamage: 'applyDamage',
     buildopponentrage: 'buildRage', burntarget: 'Effects.burnChance',
@@ -656,7 +656,7 @@ const doMoveFns = async (
     if (array === boostChances || array === unboostChances) {
       write('// TODO effectchance');
       write('try applyDamage(battle, player, state, options);');
-      write('try TODOcritsuper(battle, player, state, options);');
+      write('try reportOutcome(battle, player, state, options);');
       SNIPPETS.checkfaint();
       write('try buildRage(battle, player, state, options);');
     }

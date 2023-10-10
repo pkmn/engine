@@ -821,7 +821,8 @@ fn faint(battle: anytype, player: Player, done: bool, options: anytype) !void {
     options.calc.capped(player);
 }
 
-pub fn TODOcritsuper(battle: anytype, player: Player, state: *State, options: anytype) !void {
+// TODO: see if we can move *before* applyDamage and include failuretext logic
+pub fn reportOutcome(battle: anytype, player: Player, state: *State, options: anytype) !void {
     const foe_ident = battle.active(player.foe());
     if (state.crit) try options.log.crit(foe_ident);
     if (!state.immune()) {
