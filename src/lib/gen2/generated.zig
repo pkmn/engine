@@ -62,7 +62,9 @@ pub fn runMove(battle: anytype, player: Player, state: *State, options: anytype)
             try calcDamage(battle, player, state, options);
             try adjustDamage(battle, player, state, options);
             try randomizeDamage(battle, player, state, options);
-            // TODO clearmissdamage
+
+            if (state.miss) state.damage = 0;
+
             try applyDamage(battle, player, state, options);
             // TODO critsupereffectivelooptext
             if (!try afterMove(!KINGS, battle, player, state, options)) return;
@@ -132,7 +134,9 @@ pub fn runMove(battle: anytype, player: Player, state: *State, options: anytype)
             try calcDamage(battle, player, state, options);
             try adjustDamage(battle, player, state, options);
             try randomizeDamage(battle, player, state, options);
-            // TODO clearmissdamage
+
+            if (state.miss) state.damage = 0;
+
             try applyDamage(battle, player, state, options);
             try reportOutcome(battle, player, state, options);
             if (!try afterMove(!KINGS, battle, player, state, options)) return;
@@ -181,7 +185,9 @@ pub fn runMove(battle: anytype, player: Player, state: *State, options: anytype)
             try calcDamage(battle, player, state, options);
             try adjustDamage(battle, player, state, options);
             try randomizeDamage(battle, player, state, options);
-            // TODO clearmissdamage
+
+            if (state.miss) state.damage = 0;
+
             try applyDamage(battle, player, state, options);
             try reportOutcome(battle, player, state, options);
             _ = try afterMove(KINGS, battle, player, state, options);
@@ -201,7 +207,9 @@ pub fn runMove(battle: anytype, player: Player, state: *State, options: anytype)
             try calcDamage(battle, player, state, options);
             try adjustDamage(battle, player, state, options);
             try randomizeDamage(battle, player, state, options);
-            // TODO clearmissdamage
+
+            if (state.miss) state.damage = 0;
+
             try applyDamage(battle, player, state, options);
             // TODO critsupereffectivelooptext
             if (!try afterMove(!KINGS, battle, player, state, options)) return;
@@ -225,7 +233,13 @@ pub fn runMove(battle: anytype, player: Player, state: *State, options: anytype)
             if (!try canMove(battle, player, state, options)) return;
             try Effects.fixedDamage(battle, player, state, options);
             try checkHit(battle, player, state, options);
-            // TODO resettypematchup
+
+            if (state.immune()) {
+                state.damage = 0;
+                state.miss = true;
+            }
+            state.effectiveness = Effectiveness.neutral;
+
             try applyDamage(battle, player, state, options);
             _ = try afterMove(KINGS, battle, player, state, options);
         },
@@ -362,7 +376,13 @@ pub fn runMove(battle: anytype, player: Player, state: *State, options: anytype)
             // usedmovetext
             try log.move(ident, state.move, foe_ident); // FIXME self? from?
             // TODO unleashenergy
-            // TODO resettypematchup
+
+            if (state.immune()) {
+                state.damage = 0;
+                state.miss = true;
+            }
+            state.effectiveness = Effectiveness.neutral;
+
             try checkHit(battle, player, state, options);
             // TODO bidefailtext
             try applyDamage(battle, player, state, options);
@@ -437,7 +457,9 @@ pub fn runMove(battle: anytype, player: Player, state: *State, options: anytype)
             try Effects.tripleKick(battle, player, state, options);
             try adjustDamage(battle, player, state, options);
             try randomizeDamage(battle, player, state, options);
-            // TODO clearmissdamage
+
+            if (state.miss) state.damage = 0;
+
             try applyDamage(battle, player, state, options);
             // TODO critsupereffectivelooptext
             if (!try afterMove(!KINGS, battle, player, state, options)) return;
@@ -618,7 +640,9 @@ pub fn runMove(battle: anytype, player: Player, state: *State, options: anytype)
             try calcDamage(battle, player, state, options);
             try adjustDamage(battle, player, state, options);
             try randomizeDamage(battle, player, state, options);
-            // TODO clearmissdamage
+
+            if (state.miss) state.damage = 0;
+
             try applyDamage(battle, player, state, options);
             try reportOutcome(battle, player, state, options);
             _ = try afterMove(KINGS, battle, player, state, options);
@@ -754,7 +778,9 @@ pub fn runMove(battle: anytype, player: Player, state: *State, options: anytype)
             try checkCriticalHit(battle, player, state, options);
             try Effects.beatUp(battle, player, state, options);
             try randomizeDamage(battle, player, state, options);
-            // TODO clearmissdamage
+
+            if (state.miss) state.damage = 0;
+
             try applyDamage(battle, player, state, options);
             try reportOutcome(battle, player, state, options);
             if (!try afterMove(!KINGS, battle, player, state, options)) return;

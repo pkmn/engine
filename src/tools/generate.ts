@@ -615,6 +615,14 @@ const moveFns = async (
       sblock('if (battle.foe(player).active.volatiles.Underground) state.damage *|= 2;'),
     doubleminimizedamage: () =>
       sblock('if (battle.foe(player).active.volatiles.minimized) state.damage *|= 2;'),
+    clearmissdamage: () =>
+      sblock('if (state.miss) state.damage = 0;'),
+    resettypematchup: () =>
+      sblock('if (state.immune()) {',
+        '    state.damage = 0;',
+        '    state.miss = true;',
+        '}',
+        'state.effectiveness = Effectiveness.neutral;'),
   };
 
   const FNS: {[command: string]: string} = {

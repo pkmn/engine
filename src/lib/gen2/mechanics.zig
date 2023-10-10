@@ -111,7 +111,7 @@ pub const State = struct {
         assert(@sizeOf(State) == 12);
     }
 
-    inline fn immune(self: *State) bool {
+    pub inline fn immune(self: *State) bool {
         return self.effectiveness == 0;
     }
 };
