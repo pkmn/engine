@@ -561,8 +561,8 @@ const moveFns = async (
   write('var volatiles = &side.active.volatiles;\n');
   write('const ident = battle.active(player);');
   write('const foe_ident = battle.active(player.foe());\n');
-  write('const effect = Move.get(state.move).effect;');
-  write('switch (effect) {');
+  write('const move = Move.get(state.move);');
+  write('switch (move.effect) {');
   indent++;
 
   const GROUPED = [
@@ -594,6 +594,18 @@ const moveFns = async (
       'if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return',
     ),
     domove: () => write('if (!try doMove(!SECONDARY, battle, player, state, options)) return;'),
+    stab: effect => effect === 'OHKO'
+      ? sblock(
+        '// OHKO calls adjustDamage but only actually cares about immunity',
+        'assert(move.type == .Normal or move.type == .Ground);',
+        'const foe = battle.foe(player);',
+        'const immune = if (move.type == .Normal)',
+        '    foe.active.types.includes(.Ghost) and !foe.active.volatiles.Foresight',
+        'else',
+        '    foe.active.types.includes(.Ghost);',
+        'state.effectiveness = if (immune) 0 else Effectiveness.neutral;',
+      )
+      : write('try adjustDamage(battle, player, state, options);'),
     domovesecondary: () =>
       write('if (!try doMove(SECONDARY, battle, player, state, options)) return;'),
     checkfaint: () => write('if (try destinyBond(battle, player, state, options)) return;'),
@@ -601,7 +613,7 @@ const moveFns = async (
       'assert(volatiles.Rage);',
       'state.damage *|= (volatiles.rage +| 1);',
     ),
-    kingsrock: n => n === 'DrainHP'
+    kingsrock: effect => effect === 'DrainHP'
       ? write('if (state.move != .DreamEater) try kingsRock(battle, player, state, options);')
       : write('try kingsRock(battle, player, state, options);'),
     aftermove: () => write('_ = try afterMove(!KINGS, battle, player, state, options);'),
@@ -648,7 +660,7 @@ const moveFns = async (
   };
 
   const FNS: {[command: string]: string} = {
-    checkhit: 'checkHit', critical: 'checkCriticalHit', stab: 'adjustDamage',
+    checkhit: 'checkHit', critical: 'checkCriticalHit',
     damagecalc: 'calcDamage', damagevariation: 'randomizeDamage', applydamage: 'applyDamage',
     effectchance: 'effectChance', reportoutcome: 'reportOutcome',
     buildopponentrage: 'buildRage', burntarget: 'Effects.burnChance',
@@ -741,14 +753,20 @@ const moveFns = async (
       if (array === unboostChances) {
         block(
           '// GLITCH: moves that lower Defense can do so after breaking a Substitute',
-          'if (effect == .DefenseDownChance) try effectChance(battle, player, state, options);',
+          'if (move.effect == .DefenseDownChance) {',
+          '    try effectChance(battle, player, state, options);',
+          '}',
         );
       }
     }
     const fn = array === boosts || array === boostChances ? 'boost' : 'unboost';
     write(`try Effects.${fn}(battle, player, state, options);`);
     if (array === boosts) {
-      write('if (effect == .DefenseCurl) try Effects.defenseCurl(battle, player, state, options);');
+      block(
+        'if (move.effect == .DefenseCurl) {',
+        '    try Effects.defenseCurl(battle, player, state, options);',
+        '}',
+      );
     }
     indent--;
     write('},');

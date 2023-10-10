@@ -47,8 +47,8 @@ pub fn runMove(battle: anytype, player: Player, state: *State, options: anytype)
     const ident = battle.active(player);
     const foe_ident = battle.active(player.foe());
 
-    const effect = Move.get(state.move).effect;
-    switch (effect) {
+    const move = Move.get(state.move);
+    switch (move.effect) {
         .AlwaysHit, .HighCritical, .Priority, .JumpKick, .None => {
             if (!try canMove(battle, player, state, options)) return;
             if (!try doMove(!SECONDARY, battle, player, state, options)) return;
@@ -97,7 +97,16 @@ pub fn runMove(battle: anytype, player: Player, state: *State, options: anytype)
         },
         .OHKO => {
             if (!try canMove(battle, player, state, options)) return;
-            try adjustDamage(battle, player, state, options);
+
+            // OHKO calls adjustDamage but only actually cares about immunity
+            assert(move.type == .Normal or move.type == .Ground);
+            const foe = battle.foe(player);
+            const immune = if (move.type == .Normal)
+                foe.active.types.includes(.Ghost) and !foe.active.volatiles.Foresight
+            else
+                foe.active.types.includes(.Ghost);
+            state.effectiveness = if (immune) 0 else Effectiveness.neutral;
+
             try Effects.ohko(battle, player, state, options);
             try applyDamage(battle, player, state, options);
             try reportOutcome(battle, player, state, options);
@@ -813,7 +822,9 @@ pub fn runMove(battle: anytype, player: Player, state: *State, options: anytype)
         // zig fmt: on
             _ = try canMove(battle, player, state, options);
             try Effects.boost(battle, player, state, options);
-            if (effect == .DefenseCurl) try Effects.defenseCurl(battle, player, state, options);
+            if (move.effect == .DefenseCurl) {
+                try Effects.defenseCurl(battle, player, state, options);
+            }
         },
         .AttackUpChance, .DefenseUpChance => {
             _ = try canMove(battle, player, state, options);
@@ -837,7 +848,9 @@ pub fn runMove(battle: anytype, player: Player, state: *State, options: anytype)
             if (!try doMove(SECONDARY, battle, player, state, options)) return;
             if (!try afterMove(!KINGS, battle, player, state, options)) return;
             // GLITCH: moves that lower Defense can do so after breaking a Substitute
-            if (effect == .DefenseDownChance) try effectChance(battle, player, state, options);
+            if (move.effect == .DefenseDownChance) {
+                try effectChance(battle, player, state, options);
+            }
             try Effects.unboost(battle, player, state, options);
         },
     }

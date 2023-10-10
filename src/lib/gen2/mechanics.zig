@@ -98,17 +98,19 @@ const MAX_STAT_VALUE = 999;
 pub const State = struct {
     damage: u16 = 0, // wCurDamage
     effectiveness: u16 = Effectiveness.neutral, // wTypeModifier
-    bp: u8 = 0, // wPlayerMoveStructPower
-    move: Move = .None, // wCurPlayerMove
+    bp: u8, // wPlayerMoveStructPower
+    accuracy: u8, // wEnemyMoveStruct + MOVE_ACC
+    move: Move, // wCurPlayerMove
     from: Move = .None,
-    mslot: u4 = 0, // wCurMoveNum
-    first: bool = false, // wEnemyGoesFirst
+    mslot: u4, // wCurMoveNum
+    first: bool, // wEnemyGoesFirst
     miss: bool = false, // wAttackMissed
-    crit: bool = false, // wCriticalHit (NB: used on device for OHKO as well)
+    crit: bool = false, // wCriticalHit = 1
+    ohko: bool = false, // wCriticalHit = 2
     proc: bool = true, // wEffectFailed
 
     comptime {
-        assert(@sizeOf(State) == 12);
+        assert(@sizeOf(State) == 14);
     }
 
     pub inline fn immune(self: *State) bool {
@@ -141,8 +143,8 @@ fn start(battle: anytype, options: anytype) !Result {
     assert(!showdown or p2_slot == 1);
     if (p2_slot == 0) return Result.Win;
 
-    try switchIn(battle, .P1, p1_slot, true, options);
-    try switchIn(battle, .P2, p2_slot, true, options);
+    try switchIn(battle, .P1, p1_slot, .Initial, options);
+    try switchIn(battle, .P2, p2_slot, .Initial, options);
 
     return endTurn(battle, options);
 }
@@ -216,7 +218,9 @@ fn selectMove(battle: anytype, player: Player, choice: Choice) void {
     volatiles.protect = 0;
 }
 
-fn switchIn(battle: anytype, player: Player, slot: u8, initial: bool, options: anytype) !void {
+const SwitchIn = enum { Initial, Switch, Drag };
+
+fn switchIn(battle: anytype, player: Player, slot: u8, kind: SwitchIn, options: anytype) !void {
     var side = battle.side(player);
     var foe = battle.foe(player);
 
@@ -224,7 +228,7 @@ fn switchIn(battle: anytype, player: Player, slot: u8, initial: bool, options: a
     const incoming = side.get(slot);
 
     assert(incoming.hp != 0);
-    assert(slot != 1 or initial);
+    assert(slot != 1 or kind == .Initial);
 
     const out = side.pokemon[0].position;
     side.pokemon[0].position = side.pokemon[slot - 1].position;
@@ -242,7 +246,11 @@ fn switchIn(battle: anytype, player: Player, slot: u8, initial: bool, options: a
 
     statusModify(incoming.status, &active.stats);
 
-    try options.log.switched(battle.active(player), incoming);
+    if (kind == .Drag) {
+        try options.log.drag(battle.active(player), incoming);
+    } else {
+        try options.log.switched(battle.active(player), incoming);
+    }
     options.chance.switched(player, side.pokemon[0].position, out);
 
     if (side.conditions.Spikes and !active.types.includes(.Flying)) {
@@ -378,7 +386,7 @@ fn executeMove(
     options: anytype,
 ) !?Result {
     if (choice.type == .Switch) {
-        try switchIn(battle, player, choice.data, false, options);
+        try switchIn(battle, player, choice.data, .Switch, options);
         return null;
     }
 
@@ -389,7 +397,9 @@ fn executeMove(
     if (!try beforeMove(battle, player, move, options)) return null;
 
     // FIXME: need damage from doTurn
-    var state: State = .{ .move = move, .mslot = mslot, .first = first };
+    const m = Move.get(move);
+    var state: State =
+        .{ .move = move, .mslot = mslot, .first = first, .accuracy = m.accuracy, .bp = m.bp };
     try generated.runMove(battle, player, &state, options);
     return null;
 }
@@ -774,7 +784,8 @@ pub fn checkHit(
         return;
     }
 
-    var accuracy: u16 = move.accuracy;
+    var accuracy: u16 = state.accuracy;
+    assert(accuracy > 0);
     if (foe.active.boosts.evasion <= side.active.boosts.accuracy or
         !foe.active.volatiles.Foresight)
     {
@@ -1359,8 +1370,8 @@ pub const Effects = struct {
         _ = .{ battle, player, state, options }; // TODO
     }
 
-    pub fn defenseCurl(battle: anytype, player: Player, state: *State, options: anytype) !void {
-        _ = .{ battle, player, state, options }; // TODO
+    pub fn defenseCurl(battle: anytype, player: Player, _: *State, _: anytype) !void {
+        battle.side(player).active.volatiles.DefenseCurl = true;
     }
 
     pub fn defrost(battle: anytype, player: Player, _: *State, options: anytype) !void {
@@ -1493,8 +1504,18 @@ pub const Effects = struct {
         _ = .{ battle, player, state, options }; // TODO
     }
 
-    pub fn flinchChance(battle: anytype, player: Player, state: *State, options: anytype) !void {
-        _ = .{ battle, player, state, options }; // TODO
+    pub fn flinchChance(battle: anytype, player: Player, state: *State, _: anytype) !void {
+        const foe = battle.foe(player);
+        const status = foe.stored().status;
+        var volatiles = &foe.active.volatiles;
+
+        if (volatiles.Substitute) return;
+        if (Status.is(status, .FRZ) or Status.is(status, .SLP)) return;
+        if (!state.first) return;
+        if (!state.proc) return;
+
+        volatiles.Flinch = true;
+        volatiles.Recharging = false;
     }
 
     pub fn flyDig(battle: anytype, player: Player, state: *State, options: anytype) !void {
@@ -1515,8 +1536,12 @@ pub const Effects = struct {
 
     var SLOTS: [5]u4 = .{ 0, 0, 0, 0, 0 };
 
-    pub fn forceSwitch(battle: anytype, player: Player, _: *State, options: anytype) !void {
+    pub fn forceSwitch(battle: anytype, player: Player, state: *State, options: anytype) !void {
+        assert(!state.miss); // FIXME ensure checkHit handles fail message
+
         const foe = battle.foe(player);
+
+        if (state.first) return try options.log.fail(battle.active(player), .None);
 
         var n: u4 = 0;
         var i: u4 = 0;
@@ -1535,7 +1560,8 @@ pub const Effects = struct {
             return;
         }
 
-        _ = try Rolls.forceSwitch(battle, player, SLOTS[0..i], n, options); // TODO
+        const slot = try Rolls.forceSwitch(battle, player, SLOTS[0..i], n, options);
+        try switchIn(battle, player.foe(), slot, .Drag, options);
     }
 
     pub fn foresight(battle: anytype, player: Player, _: *State, options: anytype) !void {
@@ -1679,7 +1705,20 @@ pub const Effects = struct {
     }
 
     pub fn ohko(battle: anytype, player: Player, state: *State, options: anytype) !void {
-        _ = .{ battle, player, state, options }; // TODO
+        const side = battle.side(player);
+        const foe = battle.foe(player);
+
+        const foe_ident = battle.active(player.foe());
+
+        state.damage = 0;
+        if (state.immune()) return try options.log.immune(foe_ident, .None);
+        const delta = side.stored().level -| foe.stored().level;
+        if (delta == 0) return try options.log.immune(foe_ident, .OHKO);
+
+        state.accuracy = 2 * delta +| Gen12.percent(30);
+        try checkHit(battle, player, state, options);
+        if (!state.miss) state.damage = 65535;
+        state.ohko = true;
     }
 
     pub fn painSplit(battle: anytype, player: Player, state: *State, options: anytype) !void {
