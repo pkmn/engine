@@ -144,7 +144,9 @@ pub fn runMove(battle: anytype, player: Player, state: *State, options: anytype)
             try calcDamage(battle, player, state, options);
             try adjustDamage(battle, player, state, options);
             try randomizeDamage(battle, player, state, options);
-            // TODO doubleminimizedamage
+
+            if (battle.foe(player).active.volatiles.minimized) state.damage *|= 2;
+
             try checkHit(battle, player, state, options);
             try effectChance(battle, player, state, options);
             try applyDamage(battle, player, state, options);

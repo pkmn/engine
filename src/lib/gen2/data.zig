@@ -336,7 +336,8 @@ pub const Volatiles = packed struct(u128) {
     dirty: bool = false,
 
     frozen: bool = false,
-    _: u11 = 0,
+    minimized: bool = false,
+    _: u10 = 0,
     // TODO?
     transform: u4 = 0,
 

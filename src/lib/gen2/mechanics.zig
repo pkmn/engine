@@ -2092,6 +2092,7 @@ pub const Effects = struct {
                 }
                 boosts.evasion = @intCast(@min(6, @as(i8, boosts.evasion) + 1));
                 try log.boost(ident, .Evasion, 1);
+                if (state.move == .Minimize) side.active.volatiles.minimized = true;
             },
             else => unreachable,
         }

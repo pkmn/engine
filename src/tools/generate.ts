@@ -613,6 +613,8 @@ const moveFns = async (
       sblock('if (battle.foe(player).active.volatiles.Flying) state.damage *|= 2;'),
     doubleundergrounddamage: () =>
       sblock('if (battle.foe(player).active.volatiles.Underground) state.damage *|= 2;'),
+    doubleminimizedamage: () =>
+      sblock('if (battle.foe(player).active.volatiles.minimized) state.damage *|= 2;'),
   };
 
   const FNS: {[command: string]: string} = {
