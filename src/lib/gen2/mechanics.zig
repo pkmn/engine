@@ -404,7 +404,7 @@ fn beforeMove(battle: anytype, player: Player, move: Move, options: anytype) !bo
 
     if (volatiles.Recharging) {
         volatiles.Recharging = false;
-        cantMove(volatiles);
+        resetCant(volatiles);
         try log.cant(ident, .Recharge);
         return false;
     }
@@ -426,18 +426,18 @@ fn beforeMove(battle: anytype, player: Player, move: Move, options: anytype) !bo
         if (duration == 0) {
             try log.curestatus(ident, before, .Message);
             stored.status = 0; // clears EXT if present
-            cantMove(volatiles);
+            resetCant(volatiles);
             volatiles.Nightmare = false;
         } else {
             try log.cant(ident, .Sleep);
             if (move == .Snore or move == .SleepTalk) break :slp;
-            cantMove(volatiles);
+            resetCant(volatiles);
             return false;
         }
     }
 
     if (Status.is(stored.status, .FRZ) and !(move == .FlameWheel or move == .SacredFire)) {
-        cantMove(volatiles);
+        resetCant(volatiles);
         try log.cant(ident, .Freeze);
         return false;
     }
@@ -447,7 +447,7 @@ fn beforeMove(battle: anytype, player: Player, move: Move, options: anytype) !bo
         // Pokémon can sometimes flinch multiple times from the same original hit
         // if (!showdown) volatiles.Flinch = false;
         volatiles.Flinch = false;
-        cantMove(volatiles);
+        resetCant(volatiles);
         try log.cant(ident, .Flinch);
         return false;
     }
@@ -485,7 +485,7 @@ fn beforeMove(battle: anytype, player: Player, move: Move, options: anytype) !bo
             if (try Rolls.confused(battle, player, options)) {
                 volatiles.BeatUp = false;
                 volatiles.Flinch = false;
-                cantMove(volatiles);
+                resetCant(volatiles);
 
                 // TODO HitConfusion
 
@@ -498,7 +498,7 @@ fn beforeMove(battle: anytype, player: Player, move: Move, options: anytype) !bo
         try log.activate(ident, .Attract);
 
         if (try Rolls.attract(battle, player, options)) {
-            cantMove(volatiles);
+            resetCant(volatiles);
             try log.cant(ident, .Attract);
             return false;
         }
@@ -509,14 +509,14 @@ fn beforeMove(battle: anytype, player: Player, move: Move, options: anytype) !bo
         const m = side.active.moves[side.active.volatiles.disable.move - 1].id;
         if (m != .None and m == move) {
             side.active.volatiles.Charging = false;
-            cantMove(volatiles);
+            resetCant(volatiles);
             try options.log.disabled(ident, move);
             return false;
         }
     }
 
     if (Status.is(stored.status, .PAR) and try Rolls.paralyzed(battle, player, options)) {
-        cantMove(volatiles);
+        resetCant(volatiles);
         try log.cant(ident, .Paralysis);
         return false;
     }
@@ -524,7 +524,7 @@ fn beforeMove(battle: anytype, player: Player, move: Move, options: anytype) !bo
     return true;
 }
 
-fn cantMove(volatiles: *align(8) Volatiles) void {
+fn resetCant(volatiles: *align(8) Volatiles) void {
     volatiles.Bide = false;
     volatiles.Thrashing = false;
     volatiles.Charging = false;
