@@ -1155,6 +1155,7 @@ fn endTurn(battle: anytype, options: anytype) @TypeOf(options.log).Error!Result 
 }
 
 pub fn buildRage(battle: anytype, player: Player, state: *State, options: anytype) !void {
+    assert(!state.miss); // TODO
     var foe = battle.foe(player);
     if (foe.active.volatiles.Rage) {
         if (showdown) {
@@ -1169,7 +1170,8 @@ pub fn buildRage(battle: anytype, player: Player, state: *State, options: anytyp
     }
 }
 
-pub fn kingsRock(battle: anytype, player: Player, _: *State, options: anytype) !void {
+pub fn kingsRock(battle: anytype, player: Player, state: *State, options: anytype) !void {
+    assert(!state.miss); // TODO
     var foe = battle.foe(player);
     const flinch = battle.side(player).stored().item == .KingsRock and
         !foe.active.volatiles.Substitute and
