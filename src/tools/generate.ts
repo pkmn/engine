@@ -508,7 +508,7 @@ const moveFns = async (
   }
 
   write(
-    '\npub fn runMove(battle: anytype, player: Player, state: *State, options: anytype) !?Result {'
+    '\npub fn runMove(battle: anytype, player: Player, state: *State, options: anytype) !void {'
   );
   indent++;
   write('var log = options.log;\n');
@@ -534,8 +534,8 @@ const moveFns = async (
   ];
 
   const SNIPPETS: {[command: string]: (effect?: string) => void} = {
-    canmove: () => write('_ = try canMove(battle, player, state, options);'),
-    cancharge: () => write('_ = try canCharge(battle, player, state, options);'),
+    canmove: () => write('if (!try canMove(battle, player, state, options)) return;'),
+    cancharge: () => write('if (!try canCharge(battle, player, state, options)) return;'),
     usedmovetext: () => block([
       '// usedmovetext',
       'try log.move(ident, state.move, foe_ident); // FIXME self? from?',
@@ -547,7 +547,7 @@ const moveFns = async (
       '    (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);',
       'if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return',
     ]),
-    checkfaint: () => write('_ = try destinyBond(battle, player, state, options);'),
+    checkfaint: () => write('if (try destinyBond(battle, player, state, options)) return;'),
     ragedamage: () => block([
       '',
       '// ragedamage',
@@ -673,8 +673,7 @@ const moveFns = async (
   }
 
   indent--;
-  write('}\n');
-  write('return null;');
+  write('}');
   indent--;
   write('}');
 
