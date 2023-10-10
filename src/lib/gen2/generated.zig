@@ -32,7 +32,7 @@ const buildRage = mechanics.buildRage;
 const kingsRock = mechanics.kingsRock;
 const destinyBond = mechanics.destinyBond;
 
-pub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) !?Result {
+pub fn runMove(battle: anytype, player: Player, state: *State, options: anytype) !?Result {
     var log = options.log;
 
     var side = battle.side(player);

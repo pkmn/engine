@@ -380,7 +380,7 @@ const levenshtein = (s: string[], t: string[]) => {
   return arr[t.length][s.length];
 };
 
-const doMoveFns = async (
+const moveFns = async (
   gen: Generation, dirs: { out: string; cache: string },
   update: boolean, pret: string, names: Set<string>,
 ) => {
@@ -508,7 +508,7 @@ const doMoveFns = async (
   }
 
   write(
-    '\npub fn doMove(battle: anytype, player: Player, state: *State, options: anytype) !?Result {'
+    '\npub fn runMove(battle: anytype, player: Player, state: *State, options: anytype) !?Result {'
   );
   indent++;
   write('var log = options.log;\n');
@@ -1339,7 +1339,7 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
     });
 
     if (tests) moveTests(gen, moves);
-    await doMoveFns(gen, dirs, update, pret, EFFECTS);
+    await moveFns(gen, dirs, update, pret, EFFECTS);
 
     // Species
     url = `${pret}/constants/pokemon_constants.asm`;

@@ -390,7 +390,7 @@ fn executeMove(
 
     // FIXME: need damage from doTurn
     var state: State = .{ .move = move, .mslot = mslot, .first = first };
-    return generated.doMove(battle, player, &state, options);
+    return generated.runMove(battle, player, &state, options);
 }
 
 fn beforeMove(battle: anytype, player: Player, move: Move, options: anytype) !bool {
