@@ -2027,7 +2027,7 @@ pub const Effects = struct {
                 .FRZ => freezeChance(battle, player, state, options),
                 .BRN => burnChance(battle, player, state, options),
             };
-        } else if (!showdown and pkmn.options.advance) _ = battle.rng.next();
+        } else if (!showdown) battle.rng.advance(1);
     }
 
     pub fn tripleKick(battle: anytype, player: Player, state: *State, options: anytype) !void {

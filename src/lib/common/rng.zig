@@ -25,6 +25,11 @@ pub fn PRNG(comptime gen: comptime_int) type {
         pub fn next(self: *Self) Output(gen) {
             return self.src.next();
         }
+
+        pub fn advance(self: *Self, n: usize) void {
+            if (!options.advance) return;
+            for (0..n) |_| self.src.advance();
+        }
     };
 }
 
@@ -88,6 +93,10 @@ pub const Gen12 = extern struct {
         self.seed[self.index] = val;
         self.index = (self.index + 1) % 9;
         return val;
+    }
+
+    pub fn advance(self: *Gen12) void {
+        _ = self.next();
     }
 };
 
