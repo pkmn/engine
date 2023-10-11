@@ -104,7 +104,7 @@ pub fn runMove(battle: anytype, player: Player, state: *State, options: anytype)
             const immune = if (move.type == .Normal)
                 foe.active.types.includes(.Ghost) and !foe.active.volatiles.Foresight
             else
-                foe.active.types.includes(.Ghost);
+                foe.active.types.includes(.Flying);
             state.effectiveness = if (immune) 0 else Effectiveness.neutral;
 
             try Effects.ohko(battle, player, state, options);
