@@ -2020,7 +2020,22 @@ pub const Effects = struct {
     }
 
     pub fn thief(battle: anytype, player: Player, state: *State, options: anytype) !void {
-        _ = .{ battle, player, state, options }; // TODO
+        const side = battle.side(player);
+        const foe = battle.foe(player);
+
+        if (side.stored().item != .None or foe.stored().item == .None) return;
+        // Pokémon Showdown incorrectly allows you steal Mail
+        if (!showdown and foe.stored().item.isMail()) return;
+        if (!state.proc) return;
+
+        side.stored().item = foe.stored().item;
+        foe.stored().item = .None;
+
+        try options.log.item(
+            battle.active(player),
+            side.stored().item,
+            battle.active(player.foe()),
+        );
     }
 
     pub fn thrashing(battle: anytype, player: Player, state: *State, options: anytype) !void {
