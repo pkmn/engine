@@ -1907,8 +1907,18 @@ pub const Effects = struct {
         _ = .{ battle, player, state, options }; // TODO
     }
 
-    pub fn sketch(battle: anytype, player: Player, state: *State, options: anytype) !void {
-        _ = .{ battle, player, state, options }; // TODO
+    pub fn sketch(battle: anytype, player: Player, _: *State, options: anytype) !void {
+        var side = battle.side(player);
+
+        side.last_used_move = .None;
+        side.active.volatiles.dirty = false;
+
+        if (showdown) {
+            // yes, actually "Splash". '|nothing' gets blindly mapped to  '|-activate||move:Splash'
+            try options.log.activate(battle.active(player), .Splash);
+        } else {
+            try options.log.fail(battle.active(player), .None);
+        }
     }
 
     pub fn skullBash(battle: anytype, player: Player, state: *State, options: anytype) !void {
@@ -1978,8 +1988,8 @@ pub const Effects = struct {
         _ = .{ battle, player, state, options }; // TODO
     }
 
-    pub fn splash(battle: anytype, player: Player, state: *State, options: anytype) !void {
-        _ = .{ battle, player, state, options }; // TODO
+    pub fn splash(battle: anytype, player: Player, _: *State, options: anytype) !void {
+        try options.log.activate(battle.active(player), .Splash);
     }
 
     pub fn stomp(battle: anytype, player: Player, state: *State, options: anytype) !void {
@@ -2002,8 +2012,11 @@ pub const Effects = struct {
         _ = .{ battle, player, state, options }; // TODO
     }
 
-    pub fn teleport(battle: anytype, player: Player, state: *State, options: anytype) !void {
-        _ = .{ battle, player, state, options }; // TODO
+    pub fn teleport(battle: anytype, player: Player, _: *State, options: anytype) !void {
+        if (showdown) return;
+
+        try options.log.fail(battle.active(player), .None);
+        try options.log.laststill();
     }
 
     pub fn thief(battle: anytype, player: Player, state: *State, options: anytype) !void {
