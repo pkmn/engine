@@ -775,9 +775,15 @@ pub fn checkHit(
             return;
         }
     }
-    if (move.effect == .Thunder and battle.field.weather == .Rain) {
-        state.miss = false;
-        return;
+    if (move.effect == .Thunder) {
+        if (battle.field.weather == .Rain) {
+            state.miss = false;
+            return;
+        } else if (battle.field.weather == .Sun) {
+            // This latter part gets applied in a separate Thunder accuracy handler
+            // on the cartridge but it makes more sense to just do it here
+            state.accuracy = Gen12.percent(50) + 1;
+        }
     }
     if (move.effect == .AlwaysHit) {
         state.miss = false;

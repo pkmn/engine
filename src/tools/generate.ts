@@ -401,6 +401,7 @@ const moveFns = async (
   const SKIP = new Set([
     'checkobedience', 'lowersub', 'raisesub', 'moveanim', 'moveanimnosub', 'endmove',
     'statupanim', 'statupmessage', 'statupfailtext', 'movedelay', 'cleartext',
+    'thunderaccuracy',
   ]);
 
   const effects = new Map<string, string[]>();

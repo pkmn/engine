@@ -308,7 +308,6 @@ pub fn runMove(battle: anytype, player: Player, state: *State, options: anytype)
             if (!try canMove(battle, player, state, options)) return;
             try checkCriticalHit(battle, player, state, options);
             try calcDamage(battle, player, state, options);
-            // TODO thunderaccuracy
             try checkHit(battle, player, state, options);
             try effectChance(battle, player, state, options);
             try adjustDamage(battle, player, state, options);
