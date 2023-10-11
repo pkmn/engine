@@ -266,7 +266,7 @@ pub const Rolls = struct {
     const PLAYERS = [_]Optional(Player){ .P1, .P2 };
 
     /// Returns a slice with the correct range of values for speed ties given the `action` state.
-    pub inline fn speedTie(action: Action) []const Optional(Player) {
+    pub fn speedTie(action: Action) []const Optional(Player) {
         return if (@field(action, "speed_tie") == .None) &PLAYER_NONE else &PLAYERS;
     }
 
@@ -275,14 +275,14 @@ pub const Rolls = struct {
 
     /// Returns a slice with the correct range of values for hits given the `action` state
     /// and the state of the `parent` (whether the player's Pokémon was fully paralyzed).
-    pub inline fn hit(action: Action, parent: Optional(bool)) []const Optional(bool) {
+    pub fn hit(action: Action, parent: Optional(bool)) []const Optional(bool) {
         if (parent == .true) return &BOOL_NONE;
         return if (@field(action, "hit") == .None) &BOOL_NONE else &BOOLS;
     }
 
     /// Returns a slice with the correct range of values for critical hits given the `action` state
     /// and the state of the `parent` (whether the player's Pokémon's move hit).
-    pub inline fn criticalHit(
+    pub fn criticalHit(
         action: Action,
         parent: Optional(bool),
     ) []const Optional(bool) {
@@ -292,7 +292,7 @@ pub const Rolls = struct {
 
     /// Returns a slice with the correct range of values for secondary chances hits given the
     /// `action` state and the state of the `parent` (whether the player's Pokémon's move hit).
-    pub inline fn secondaryChance(
+    pub fn secondaryChance(
         action: Action,
         parent: Optional(bool),
     ) []const Optional(bool) {
@@ -305,7 +305,7 @@ pub const Rolls = struct {
 
     /// Returns the range bounding damage rolls given the `action` state and the state of
     /// the `parent` (whether the player's Pokémon's move hit).
-    pub inline fn damage(action: Action, parent: Optional(bool)) Range {
+    pub fn damage(action: Action, parent: Optional(bool)) Range {
         return if (parent == .false or @field(action, "damage") == 0)
             .{ .min = 0, .max = 1 }
         else
@@ -314,7 +314,7 @@ pub const Rolls = struct {
 
     /// Returns the max damage roll which will produce the same damage as `roll`
     /// given the base damage in `summaries`.
-    pub inline fn coalesce(player: Player, roll: u8, summaries: *calc.Summaries, cap: bool) !u8 {
+    pub fn coalesce(player: Player, roll: u8, summaries: *calc.Summaries, cap: bool) !u8 {
         if (roll == 0) return roll;
 
         const dmg = summaries.get(player.foe()).damage;
@@ -326,13 +326,13 @@ pub const Rolls = struct {
 
     /// Returns a slice with the correct range of values for confused given the `action` state
     /// and the state of the `parent` (the player's Pokémon's remaining confusion turns).
-    pub inline fn confused(action: Action, parent: u4) []const Optional(bool) {
+    pub fn confused(action: Action, parent: u4) []const Optional(bool) {
         return if (parent == 0 or @field(action, "confused") == .None) &BOOL_NONE else &BOOLS;
     }
 
     /// Returns a slice with the correct range of values for paralysis given the `action` state
     /// and the state of the `parent` (whether the player's Pokémon was confused).
-    pub inline fn paralyzed(action: Action, parent: Optional(bool)) []const Optional(bool) {
+    pub fn paralyzed(action: Action, parent: Optional(bool)) []const Optional(bool) {
         if (parent == .true) return &BOOL_NONE;
         return if (@field(action, "paralyzed") == .None) &BOOL_NONE else &BOOLS;
     }
@@ -342,7 +342,7 @@ pub const Rolls = struct {
 
     /// Returns a slice with a range of values for duration given the `action` state
     /// and the state of the `parent` (whether the player's Pokémon's move hit).
-    pub inline fn duration(action: Action, parent: Optional(bool)) []const u1 {
+    pub fn duration(action: Action, parent: Optional(bool)) []const u1 {
         if (parent == .false) return &DURATION_NONE;
         return if (@field(action, "duration") == 0) &DURATION_NONE else &DURATION;
     }
@@ -418,7 +418,7 @@ pub const Rolls = struct {
     /// and the state of the `parent` (whether the player's Pokémon's move hit).
     ///
     /// These slots may or **may not be valid** as slots may be unset / have 0 PP.
-    pub inline fn moveSlot(action: Action, parent: Optional(bool)) []const u4 {
+    pub fn moveSlot(action: Action, parent: Optional(bool)) []const u4 {
         if (parent == .false) return &SLOT_NONE;
         return if (@field(action, "move_slot") == 0) &SLOT_NONE else &SLOT;
     }
@@ -428,7 +428,7 @@ pub const Rolls = struct {
 
     /// Returns a slice with the correct range of values for multi hit given the `action` state
     /// and the state of the `parent` (whether the player's Pokémon's move hit).
-    pub inline fn multiHit(action: Action, parent: Optional(bool)) []const u4 {
+    pub fn multiHit(action: Action, parent: Optional(bool)) []const u4 {
         if (parent == .false) return &MULTI_NONE;
         return if (@field(action, "multi_hit") == 0) &MULTI_NONE else &MULTI;
     }
@@ -442,7 +442,7 @@ pub const Rolls = struct {
 
     /// Returns a slice with the correct range of values for psywave given the `action` state,
     /// the `side`, and the state of the `parent` (whether the player's Pokémon's move hit).
-    pub inline fn psywave(
+    pub fn psywave(
         action: Action,
         side: *data.Side,
         parent: Optional(bool),
@@ -457,7 +457,7 @@ pub const Rolls = struct {
     const MOVE_NONE = [_]Move{.None};
 
     /// Returns a slice with the correct range of values for metronome given the `action` state.
-    pub inline fn metronome(action: Action) []const Move {
+    pub fn metronome(action: Action) []const Move {
         return if (@field(action, "metronome") == .None) &MOVE_NONE else &Move.METRONOME;
     }
 };

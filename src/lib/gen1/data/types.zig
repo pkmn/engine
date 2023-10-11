@@ -90,12 +90,12 @@ pub const Type = enum(u4) {
     pub const size = 15;
 
     /// Whether or not this type is considered to be special as opposed to physical.
-    pub inline fn special(self: Type) bool {
+    pub fn special(self: Type) bool {
         return @intFromEnum(self) >= @intFromEnum(Type.Fire);
     }
 
     /// The `Effectiveness` of type `t2` vs. type `t1`.
-    pub inline fn effectiveness(t1: Type, t2: Type) Effectiveness {
+    pub fn effectiveness(t1: Type, t2: Type) Effectiveness {
         return CHART[@intFromEnum(t1)][@intFromEnum(t2)];
     }
 
@@ -120,12 +120,12 @@ pub const Types = packed struct {
     }
 
     /// Whether this typing is immune to type `t`.
-    pub inline fn immune(self: Types, t: Type) bool {
+    pub fn immune(self: Types, t: Type) bool {
         return t.effectiveness(self.type1) == I or t.effectiveness(self.type2) == I;
     }
 
     /// Whether this typing includes type `t`.
-    pub inline fn includes(self: Types, t: Type) bool {
+    pub fn includes(self: Types, t: Type) bool {
         return self.type1 == t or self.type2 == t;
     }
 };

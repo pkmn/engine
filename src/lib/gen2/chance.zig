@@ -37,19 +37,19 @@ pub const Actions = extern struct {
     p2: Action = .{},
 
     /// Returns the `Action` for the given `player`.
-    pub inline fn get(self: anytype, player: Player) util.PointerType(@TypeOf(self), Action) {
+    pub fn get(self: anytype, player: Player) util.PointerType(@TypeOf(self), Action) {
         assert(@typeInfo(@TypeOf(self)).Pointer.child == Actions);
         return if (player == .P1) &self.p1 else &self.p2;
     }
 
     /// Perform a reset by clearing fields which should not persist across updates.
-    pub inline fn reset(self: *Actions) void {
+    pub fn reset(self: *Actions) void {
         self.p1.reset();
         self.p2.reset();
     }
 
     /// Returns true if `a` is equal to `b`.
-    pub inline fn eql(a: Actions, b: Actions) bool {
+    pub fn eql(a: Actions, b: Actions) bool {
         return @as(u128, @bitCast(a.p1)) == @as(u128, @bitCast(b.p1)) and
             @as(u128, @bitCast(a.p2)) == @as(u128, @bitCast(b.p2));
     }
@@ -198,7 +198,7 @@ pub const Action = packed struct(u128) {
     pub const Field = std.meta.FieldEnum(Action);
 
     /// Perform a reset by clearing fields which should not persist across updates.
-    pub inline fn reset(self: *Action) void {
+    pub fn reset(self: *Action) void {
         self.* = @bitCast(@as(u128, @bitCast(self.*)) & DURATIONS);
     }
 

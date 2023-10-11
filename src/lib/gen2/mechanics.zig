@@ -113,7 +113,7 @@ pub const State = struct {
         assert(@sizeOf(State) == 14);
     }
 
-    pub inline fn immune(self: *State) bool {
+    pub fn immune(self: *State) bool {
         return self.effectiveness == 0;
     }
 };
@@ -1173,7 +1173,7 @@ fn betweenTurns(battle: anytype, mslot: u4, options: anytype) !?Result {
     return null;
 }
 
-inline fn updateSideCondition(
+fn updateSideCondition(
     battle: anytype,
     player: Player,
     comptime key: []const u8,
@@ -2269,20 +2269,20 @@ fn statusModify(status: u8, stats: *Stats(u16)) void {
     }
 }
 
-inline fn isForced(active: anytype) bool {
+fn isForced(active: anytype) bool {
     return active.volatiles.Recharging or active.volatiles.Rage or
         active.volatiles.Thrashing or active.volatiles.Charging or
         active.volatiles.Rollout;
 }
 
-inline fn convertible(active: ActivePokemon, m: Move) bool {
+fn convertible(active: ActivePokemon, m: Move) bool {
     if (m == .None) return false;
     const t = Move.get(m).type;
     return t != .@"???" and !active.types.includes(t);
 }
 
 pub const Rolls = struct {
-    inline fn speedTie(battle: anytype, options: anytype) !bool {
+    fn speedTie(battle: anytype, options: anytype) !bool {
         const p1 = if (options.calc.overridden(.P1, .speed_tie)) |player|
             player == .P1
         else if (showdown)
@@ -2294,7 +2294,7 @@ pub const Rolls = struct {
         return p1;
     }
 
-    inline fn quickClaw(battle: anytype, player: Player, options: anytype) !bool {
+    fn quickClaw(battle: anytype, player: Player, options: anytype) !bool {
         const qkc = if (options.calc.overridden(player, .quick_claw)) |val|
             val == .true
         else if (showdown)
@@ -2306,7 +2306,7 @@ pub const Rolls = struct {
         return qkc;
     }
 
-    inline fn hit(battle: anytype, player: Player, accuracy: u8, options: anytype) !bool {
+    fn hit(battle: anytype, player: Player, accuracy: u8, options: anytype) !bool {
         const ok = if (options.calc.overridden(player, .hit)) |val|
             val == .true
         else if (showdown)
@@ -2318,7 +2318,7 @@ pub const Rolls = struct {
         return ok;
     }
 
-    inline fn criticalHit(battle: anytype, player: Player, rate: u8, options: anytype) !bool {
+    fn criticalHit(battle: anytype, player: Player, rate: u8, options: anytype) !bool {
         const crit = if (options.calc.overridden(player, .critical_hit)) |val|
             val == .true
         else if (showdown)
@@ -2330,7 +2330,7 @@ pub const Rolls = struct {
         return crit;
     }
 
-    inline fn damage(battle: anytype, player: Player, options: anytype) !u8 {
+    fn damage(battle: anytype, player: Player, options: anytype) !u8 {
         const roll = if (options.calc.overridden(player, .damage)) |val|
             val
         else roll: {
@@ -2346,7 +2346,7 @@ pub const Rolls = struct {
         return roll;
     }
 
-    inline fn confused(battle: anytype, player: Player, options: anytype) !bool {
+    fn confused(battle: anytype, player: Player, options: anytype) !bool {
         const cfz = if (options.calc.overridden(player, .confused)) |val|
             val == .true
         else if (showdown)
@@ -2358,7 +2358,7 @@ pub const Rolls = struct {
         return cfz;
     }
 
-    inline fn attract(battle: anytype, player: Player, options: anytype) !bool {
+    fn attract(battle: anytype, player: Player, options: anytype) !bool {
         const cant = if (options.calc.overridden(player, .attract)) |val|
             val == .true
         else if (showdown)
@@ -2370,7 +2370,7 @@ pub const Rolls = struct {
         return cant;
     }
 
-    inline fn paralyzed(battle: anytype, player: Player, options: anytype) !bool {
+    fn paralyzed(battle: anytype, player: Player, options: anytype) !bool {
         const par = if (options.calc.overridden(player, .paralyzed)) |val|
             val == .true
         else if (showdown)
@@ -2382,7 +2382,7 @@ pub const Rolls = struct {
         return par;
     }
 
-    inline fn defrost(battle: anytype, player: Player, options: anytype) !bool {
+    fn defrost(battle: anytype, player: Player, options: anytype) !bool {
         const thaw = if (options.calc.overridden(player, .defrost)) |val|
             val == .true
         else if (showdown)
@@ -2394,7 +2394,7 @@ pub const Rolls = struct {
         return thaw;
     }
 
-    inline fn secondaryChance(battle: anytype, player: Player, rate: u8, options: anytype) !bool {
+    fn secondaryChance(battle: anytype, player: Player, rate: u8, options: anytype) !bool {
         // GLITCH: 100% secondary chance will still fail 1/256 of the time
         const proc = if (options.calc.overridden(player, .secondary_chance)) |val|
             val == .true
@@ -2407,7 +2407,7 @@ pub const Rolls = struct {
         return proc;
     }
 
-    inline fn item(battle: anytype, player: Player, options: anytype) !bool {
+    fn item(battle: anytype, player: Player, options: anytype) !bool {
         const proc = if (options.calc.overridden(player, .item)) |val|
             val == .true
         else if (showdown)
@@ -2419,7 +2419,7 @@ pub const Rolls = struct {
         return proc;
     }
 
-    inline fn triAttack(battle: anytype, player: Player, options: anytype) !TriAttack {
+    fn triAttack(battle: anytype, player: Player, options: anytype) !TriAttack {
         const status: TriAttack = if (options.calc.overridden(player, .tri_attack)) |val|
             @enumFromInt(@intFromEnum(val) - 1)
         else if (showdown)
@@ -2435,7 +2435,7 @@ pub const Rolls = struct {
         return status;
     }
 
-    inline fn present(battle: anytype, player: Player, options: anytype) !u8 {
+    fn present(battle: anytype, player: Player, options: anytype) !u8 {
         const power = if (options.calc.overridden(player, .present)) |val|
             (val - 1) * 40
         else if (showdown) power: {
@@ -2457,7 +2457,7 @@ pub const Rolls = struct {
         return power;
     }
 
-    inline fn magnitude(battle: anytype, player: Player, options: anytype) !u8 {
+    fn magnitude(battle: anytype, player: Player, options: anytype) !u8 {
         const num = if (options.calc.overridden(player, .magnitude)) |val|
             val + 3
         else if (showdown) num: {
@@ -2485,7 +2485,7 @@ pub const Rolls = struct {
         return num;
     }
 
-    inline fn tripleKick(battle: anytype, player: Player, options: anytype) !u2 {
+    fn tripleKick(battle: anytype, player: Player, options: anytype) !u2 {
         const hits = if (options.calc.overridden(player, .triple_kick)) |val|
             val
         else if (showdown)
@@ -2502,7 +2502,7 @@ pub const Rolls = struct {
         return hits;
     }
 
-    inline fn spite(battle: anytype, player: Player, options: anytype) !u8 {
+    fn spite(battle: anytype, player: Player, options: anytype) !u8 {
         const pp = if (options.calc.overridden(player, .spite)) |val|
             val + 1
         else if (showdown)
@@ -2518,7 +2518,7 @@ pub const Rolls = struct {
     // Conversion 2 can at most choose between 7 types (vs. a Grass-type attack)
     var CONVERSION_2: [7]Type = [_]Type{.@"???"} ** 7;
 
-    inline fn conversion2(battle: anytype, player: Player, mtype: Type, options: anytype) !Type {
+    fn conversion2(battle: anytype, player: Player, mtype: Type, options: anytype) !Type {
         var i: u8 = 0;
         const neutral = @intFromEnum(Effectiveness.Neutral);
         assert(mtype != .@"???");
@@ -2552,7 +2552,7 @@ pub const Rolls = struct {
         return ty;
     }
 
-    inline fn protect(battle: anytype, player: Player, count: u8, options: anytype) !bool {
+    fn protect(battle: anytype, player: Player, count: u8, options: anytype) !bool {
         assert(count <= 8);
         const num = if (count == 8) 0 else @as(u8, 255) >> @intCast(count);
 
@@ -2646,7 +2646,7 @@ pub const Rolls = struct {
         return slot;
     }
 
-    inline fn forceSwitch(
+    fn forceSwitch(
         battle: anytype,
         player: Player,
         slots: []u4,
@@ -2684,7 +2684,7 @@ pub const Rolls = struct {
 
     const DISTRIBUTION = [_]u3{ 2, 2, 2, 3, 3, 3, 4, 5 };
 
-    inline fn multiHit(battle: anytype, player: Player, options: anytype) !u3 {
+    fn multiHit(battle: anytype, player: Player, options: anytype) !u3 {
         const n: u3 = if (options.calc.overridden(player, .multi_hit)) |val|
             @intCast(val)
         else if (showdown)
@@ -2699,7 +2699,7 @@ pub const Rolls = struct {
         return n;
     }
 
-    inline fn psywave(battle: anytype, player: Player, max: u8, options: anytype) !u8 {
+    fn psywave(battle: anytype, player: Player, max: u8, options: anytype) !u8 {
         const power = if (options.calc.overridden(player, .psywave)) |val|
             val
         else if (showdown)
@@ -2716,7 +2716,7 @@ pub const Rolls = struct {
         return power;
     }
 
-    inline fn metronome(battle: anytype, player: Player, options: anytype) !Move {
+    fn metronome(battle: anytype, player: Player, options: anytype) !Move {
         const moves = battle.get(player).active.moves;
 
         var n: u2 = 0;
@@ -2756,7 +2756,7 @@ pub const Rolls = struct {
         return move;
     }
 
-    inline fn sleepDuration(battle: anytype, player: Player, options: anytype) u3 {
+    fn sleepDuration(battle: anytype, player: Player, options: anytype) u3 {
         const duration: u3 = if (options.calc.overridden(player, .duration)) |val|
             @intCast(val)
         else if (showdown)
@@ -2773,7 +2773,7 @@ pub const Rolls = struct {
         return duration + 1;
     }
 
-    inline fn confusionDuration(battle: anytype, player: Player, self: bool, options: anytype) u3 {
+    fn confusionDuration(battle: anytype, player: Player, self: bool, options: anytype) u3 {
         const duration: u3 = if (options.calc.overridden(player, .duration)) |val|
             @intCast(val)
         else if (showdown)
@@ -2787,7 +2787,7 @@ pub const Rolls = struct {
         return duration;
     }
 
-    inline fn disableDuration(battle: anytype, player: Player, options: anytype) u4 {
+    fn disableDuration(battle: anytype, player: Player, options: anytype) u4 {
         const duration: u4 = if (options.calc.overridden(player, .duration)) |val|
             @intCast(val)
         else if (showdown)
@@ -2805,7 +2805,7 @@ pub const Rolls = struct {
         return duration;
     }
 
-    inline fn attackingDuration(battle: anytype, player: Player, options: anytype) u3 {
+    fn attackingDuration(battle: anytype, player: Player, options: anytype) u3 {
         const duration: u3 = if (options.calc.overridden(player, .duration)) |val|
             @intCast(val)
         else if (showdown)
@@ -2818,7 +2818,7 @@ pub const Rolls = struct {
         return duration;
     }
 
-    inline fn bindingDuration(battle: anytype, player: Player, options: anytype) u3 {
+    fn bindingDuration(battle: anytype, player: Player, options: anytype) u3 {
         const duration: u3 = (if (options.calc.overridden(player, .duration)) |val|
             @intCast(val)
         else if (showdown)
@@ -2833,7 +2833,7 @@ pub const Rolls = struct {
     }
 
     // TODO: consider sharing implementation with bindingDuration
-    inline fn encoreDuration(battle: anytype, player: Player, options: anytype) u3 {
+    fn encoreDuration(battle: anytype, player: Player, options: anytype) u3 {
         const duration: u3 = (if (options.calc.overridden(player, .duration)) |val|
             @intCast(val)
         else if (showdown)

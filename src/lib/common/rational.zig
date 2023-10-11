@@ -185,12 +185,12 @@ pub fn Rational(comptime T: type) type {
             try writer.print("{d}/{d}", .{ self.p, self.q });
         }
 
-        inline fn multiplication(r: *Self, p: anytype, q: anytype) !void {
+        fn multiplication(r: *Self, p: anytype, q: anytype) !void {
             r.p = try std.math.mul(T, r.p, p);
             r.q = try std.math.mul(T, r.q, q);
         }
 
-        inline fn addition(r: *Self, p: anytype, q: anytype) !void {
+        fn addition(r: *Self, p: anytype, q: anytype) !void {
             // (a/b) + (c/d) = (ad+bc)/(bd)
             var d = try std.math.mul(T, r.q, q);
             var n1 = try std.math.mul(T, r.p, q);
@@ -203,7 +203,7 @@ pub fn Rational(comptime T: type) type {
 }
 
 // https://en.wikipedia.org/wiki/Euclidean_algorithm
-inline fn gcd(p: anytype, q: anytype) @TypeOf(p, q) {
+fn gcd(p: anytype, q: anytype) @TypeOf(p, q) {
     assert(p >= 1);
     assert(q >= 1);
 

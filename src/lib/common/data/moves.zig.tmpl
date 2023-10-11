@@ -56,7 +56,7 @@ pub const Move = enum({{{ Move.type }}}) {
     pub const METRONOME = {{{ Move.metronome }}}
 
     /// Returns the `Data` corresponding to the move.
-    pub inline fn get(id: Move) Data {
+    pub fn get(id: Move) Data {
         {{{ Move.assert }}}
         return DATA[@intFromEnum(id) - 1];
     }

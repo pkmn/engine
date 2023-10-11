@@ -30,7 +30,7 @@ pub const Summaries = extern struct {
     }
 
     /// Returns the `Summary` for the given `player`.
-    pub inline fn get(self: anytype, player: Player) PointerType(@TypeOf(self), Summary) {
+    pub fn get(self: anytype, player: Player) PointerType(@TypeOf(self), Summary) {
         assert(@typeInfo(@TypeOf(self)).Pointer.child == Summaries);
         return if (player == .P1) &self.p1 else &self.p2;
     }

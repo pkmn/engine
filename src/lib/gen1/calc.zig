@@ -50,7 +50,7 @@ pub const Summaries = extern struct {
     }
 
     /// Returns the `Summary` for the given `player`.
-    pub inline fn get(self: anytype, player: Player) PointerType(@TypeOf(self), Summary) {
+    pub fn get(self: anytype, player: Player) PointerType(@TypeOf(self), Summary) {
         assert(@typeInfo(@TypeOf(self)).Pointer.child == Summaries);
         return if (player == .P1) &self.p1 else &self.p2;
     }
@@ -387,7 +387,7 @@ pub fn transitions(
     return stats;
 }
 
-inline fn matches(actions: Actions, i: usize, frontier: []Actions) bool {
+fn matches(actions: Actions, i: usize, frontier: []Actions) bool {
     for (frontier, 0..) |f, j| {
         // TODO: is skipping this redundant check worth it?
         if (i == j) continue;

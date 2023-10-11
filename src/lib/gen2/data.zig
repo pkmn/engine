@@ -62,17 +62,17 @@ pub fn Battle(comptime RNG: anytype) type {
 
         _: [padding]u8 = .{0} ** padding,
 
-        pub inline fn side(self: anytype, player: Player) PointerType(@TypeOf(self), Side) {
+        pub fn side(self: anytype, player: Player) PointerType(@TypeOf(self), Side) {
             assert(@typeInfo(@TypeOf(self)).Pointer.child == Self);
             return &self.sides[@intFromEnum(player)];
         }
 
-        pub inline fn foe(self: anytype, player: Player) PointerType(@TypeOf(self), Side) {
+        pub fn foe(self: anytype, player: Player) PointerType(@TypeOf(self), Side) {
             assert(@typeInfo(@TypeOf(self)).Pointer.child == Self);
             return &self.sides[@intFromEnum(player.foe())];
         }
 
-        pub inline fn active(self: *const Self, player: Player) ID {
+        pub fn active(self: *const Self, player: Player) ID {
             return player.ident(@intCast(self.side(player).pokemon[0].position));
         }
 
@@ -133,7 +133,7 @@ pub const Side = extern struct {
         assert(@sizeOf(Side) == 248);
     }
 
-    pub inline fn get(self: anytype, slot: u8) PointerType(@TypeOf(self), Pokemon) {
+    pub fn get(self: anytype, slot: u8) PointerType(@TypeOf(self), Pokemon) {
         assert(@typeInfo(@TypeOf(self)).Pointer.child == Side);
         assert(slot > 0 and slot <= 6);
         const id = self.pokemon[slot - 1].position;
@@ -141,19 +141,19 @@ pub const Side = extern struct {
         return &self.pokemon[id - 1];
     }
 
-    pub inline fn stored(self: anytype) PointerType(@TypeOf(self), Pokemon) {
+    pub fn stored(self: anytype) PointerType(@TypeOf(self), Pokemon) {
         assert(@typeInfo(@TypeOf(self)).Pointer.child == Side);
         return self.get(1);
     }
 
-    pub inline fn lastMove(self: anytype, encore: bool) Move {
+    pub fn lastMove(self: anytype, encore: bool) Move {
         assert(self.last_used_move != .None or !self.active.volatiles.dirty);
         if (encore) return self.last_used_move;
         return if (self.active.volatiles.dirty) .None else self.last_used_move;
     }
 
     // TODO
-    // pub inline fn useMove(self: anytype) void {
+    // pub fn useMove(self: anytype) void {
     //     assert(side.last_selected_move != .None);
     //     self.last_used_move = side.last_selected_move;
     //     self.active.volatiles.dirty = false;
@@ -175,7 +175,7 @@ pub const ActivePokemon = extern struct {
         assert(@sizeOf(ActivePokemon) == 44);
     }
 
-    pub inline fn move(self: anytype, mslot: u8) PointerType(@TypeOf(self), MoveSlot) {
+    pub fn move(self: anytype, mslot: u8) PointerType(@TypeOf(self), MoveSlot) {
         assert(@typeInfo(@TypeOf(self)).Pointer.child == Pokemon);
         assert(mslot > 0 and mslot <= 4);
         assert(self.moves[mslot - 1].id != .None);
@@ -200,7 +200,7 @@ pub const Pokemon = extern struct {
         assert(@sizeOf(Pokemon) == 32);
     }
 
-    pub inline fn move(self: anytype, mslot: u8) PointerType(@TypeOf(self), MoveSlot) {
+    pub fn move(self: anytype, mslot: u8) PointerType(@TypeOf(self), MoveSlot) {
         assert(@typeInfo(@TypeOf(self)).Pointer.child == Pokemon);
         assert(mslot > 0 and mslot <= 4);
         assert(self.moves[mslot - 1].id != .None);
@@ -225,7 +225,7 @@ pub const DVs = packed struct(u16) {
         return .{ .gender = g, .pow = p, .type = t };
     }
 
-    pub inline fn power(dvs: DVs) u8 {
+    pub fn power(dvs: DVs) u8 {
         return @as(u8, dvs.pow) + 30;
     }
 

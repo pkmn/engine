@@ -216,14 +216,14 @@ pub const Item = enum(u8) {
     pub const size = 196;
 
     /// Returns a `Type` boosted by this item or `null` if the item is not a type-boosting item.
-    pub inline fn boost(item: Item) ?Type {
+    pub fn boost(item: Item) ?Type {
         assert(item != .None);
         if (item == .PolkadotBow) return .Normal;
         return if (@intFromEnum(item) <= 18) @enumFromInt(@intFromEnum(item) - 1) else null;
     }
 
     /// Whether or not this item is Mail.
-    pub inline fn isMail(item: Item) bool {
+    pub fn isMail(item: Item) bool {
         assert(item != .None);
         return @intFromEnum(item) > 60 and @intFromEnum(item) <= 70;
     }

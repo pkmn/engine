@@ -874,43 +874,43 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
         }
 
         /// Whether this effect activates during the "begin" step of move execution.
-        pub inline fn onBegin(effect: Effect) bool {
+        pub fn onBegin(effect: Effect) bool {
             return @intFromEnum(effect) > 0 and @intFromEnum(effect) <= ${begin};
         }
 
         /// Whether this effect lowers stats.
-        pub inline fn isStatDown(effect: Effect) bool {
+        pub fn isStatDown(effect: Effect) bool {
             return @intFromEnum(effect) > ${begin} and @intFromEnum(effect) <= ${sd};
         }
 
         /// Whether this effect activates during the "end" step of move execution.
-        pub inline fn onEnd(effect: Effect) bool {
+        pub fn onEnd(effect: Effect) bool {
             return @intFromEnum(effect) > ${begin} and @intFromEnum(effect) <= ${end};
         }
 
         /// Whether this effect is considered to "always happen".
-        pub inline fn alwaysHappens(effect: Effect) bool {
+        pub fn alwaysHappens(effect: Effect) bool {
             return @intFromEnum(effect) > ${end} and @intFromEnum(effect) <= ${ahs};
         }
 
         /// Whether this effect is handled specially by the engine.
-        pub inline fn isSpecial(effect: Effect) bool {
+        pub fn isSpecial(effect: Effect) bool {
             // NB: isSpecial includes isMulti up to Twineedle
             return @intFromEnum(effect) > ${end} and @intFromEnum(effect) <= ${multi - 1};
         }
 
         /// Whether this effect is a multi-hit effect.
-        pub inline fn isMulti(effect: Effect) bool {
+        pub fn isMulti(effect: Effect) bool {
             return @intFromEnum(effect) > ${special} and @intFromEnum(effect) <= ${multi};
         }
 
         /// Whether this effect is has chance of lowering stats.
-        pub inline fn isStatDownChance(effect: Effect) bool {
+        pub fn isStatDownChance(effect: Effect) bool {
             return @intFromEnum(effect) > ${multi} and @intFromEnum(effect) <= ${sdc};
         }
 
         /// Whether this effect has a secondary chance.
-        pub inline fn isSecondaryChance(effect: Effect) bool {
+        pub fn isSecondaryChance(effect: Effect) bool {
             // NB: isSecondaryChance includes isStatDownChance as well as Twineedle
             return (@intFromEnum(effect) > ${multi - 1} and @intFromEnum(effect) <= ${sec});
         }
@@ -1010,7 +1010,7 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
     const chanceFn = `
 
     /// The Pokémon's critical hit rate=io out of 256.
-    pub inline fn chance(id: Species) u8 {
+    pub fn chance(id: Species) u8 {
         assert(id != .None);
         return CHANCES[@intFromEnum(id) - 1];
     }`;
@@ -1119,19 +1119,19 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
 
     const precedenceFn =
     `/// The precedence order of Type \`type\`.
-    pub inline fn precedence(self: Type) u8 {
+    pub fn precedence(self: Type) u8 {
         return PRECEDENCE[@intFromEnum(self)];
     }`;
 
     const extraFns = `
 
     /// The internal index of this Type used by Present.
-    pub inline fn present(self: Type) u8 {
+    pub fn present(self: Type) u8 {
         return INDEXES[@intFromEnum(self)];
     }
 
     /// The Type corresponding to a random roll of \`num\` for Conversion 2.
-    pub inline fn conversion2(num: u8) Type {
+    pub fn conversion2(num: u8) Type {
         assert(num != 6);
         assert(num < 10 or num >= 20);
         assert(num <= 27);
@@ -1139,13 +1139,13 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
     }
 
     /// The Type corresponding to a Hidden Power \`index\`.
-    pub inline fn hiddenPower(index: u8) Type {
+    pub fn hiddenPower(index: u8) Type {
         return HIDDEN_POWER[index];
     }`;
 
     const sandstormFn = `\n
     /// Whether this typing is immune to damage from Sandstorm.
-    pub inline fn sandstormImmune(self: Types) bool {
+    pub fn sandstormImmune(self: Types) bool {
         return @intFromEnum(self.type1) <= @intFromEnum(Type.Steel) or
             @intFromEnum(self.type2) <= @intFromEnum(Type.Steel);
     }`;
@@ -1398,7 +1398,7 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
         }
 
         /// Whether this effect has a high critical rate.
-        pub inline fn isHighCritical(effect: Effect) bool {
+        pub fn isHighCritical(effect: Effect) bool {
             return effect == .HighCritical or effect == .RazorWind;
         }
     };\n`;

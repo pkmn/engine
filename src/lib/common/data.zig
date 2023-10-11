@@ -9,12 +9,12 @@ pub const Player = enum(u1) {
     P2,
 
     /// Returns a player's opponent.
-    pub inline fn foe(self: Player) Player {
+    pub fn foe(self: Player) Player {
         return @enumFromInt(~@intFromEnum(self));
     }
 
     /// Return's an identifier for the player's Pokémon at the one-indexed `id`.
-    pub inline fn ident(self: Player, id: u3) ID {
+    pub fn ident(self: Player, id: u3) ID {
         assert(id > 0 and id <= 6);
         return .{ .id = id, .player = self };
     }
@@ -35,12 +35,12 @@ pub const ID = packed struct(u8) {
     _: u4 = 0,
 
     /// Converts the identifier into a number.
-    pub inline fn int(self: ID) u4 {
+    pub fn int(self: ID) u4 {
         return @intCast(@as(u8, @bitCast(self)));
     }
 
     /// Decodes the identifier from a number.
-    pub inline fn from(id: u4) ID {
+    pub fn from(id: u4) ID {
         return @bitCast(@as(u8, id));
     }
 };

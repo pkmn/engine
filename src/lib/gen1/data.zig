@@ -70,24 +70,24 @@ pub fn Battle(comptime RNG: anytype) type {
         rng: RNG,
 
         /// Returns the `Side` for the given `player`.
-        pub inline fn side(self: anytype, player: Player) PointerType(@TypeOf(self), Side) {
+        pub fn side(self: anytype, player: Player) PointerType(@TypeOf(self), Side) {
             assert(@typeInfo(@TypeOf(self)).Pointer.child == Self);
             return &self.sides[@intFromEnum(player)];
         }
 
         /// Returns the `Side` of the opponent for the given `player`
-        pub inline fn foe(self: anytype, player: Player) PointerType(@TypeOf(self), Side) {
+        pub fn foe(self: anytype, player: Player) PointerType(@TypeOf(self), Side) {
             assert(@typeInfo(@TypeOf(self)).Pointer.child == Self);
             return &self.sides[@intFromEnum(player.foe())];
         }
 
         /// Returns an identifier for the active Pokémon of `player`.
-        pub inline fn active(self: *const Self, player: Player) ID {
+        pub fn active(self: *const Self, player: Player) ID {
             return player.ident(@intCast(self.side(player).order[0]));
         }
 
         /// Returns the `MoveDetails` for the given `player`.
-        pub inline fn lastMove(
+        pub fn lastMove(
             self: anytype,
             player: Player,
         ) PointerType(@TypeOf(self), MoveDetails) {
@@ -141,7 +141,7 @@ pub const Side = extern struct {
     }
 
     /// Returns the stored `Pokemon` corresponding to the one-indexed party `slot`.
-    pub inline fn get(self: anytype, slot: u8) PointerType(@TypeOf(self), Pokemon) {
+    pub fn get(self: anytype, slot: u8) PointerType(@TypeOf(self), Pokemon) {
         assert(@typeInfo(@TypeOf(self)).Pointer.child == Side);
         assert(slot > 0 and slot <= 6);
         const id = self.order[slot - 1];
@@ -150,7 +150,7 @@ pub const Side = extern struct {
     }
 
     /// Returns the stored `Pokemon` corresponding to the `active` Pokémon (slot 1).
-    pub inline fn stored(self: anytype) PointerType(@TypeOf(self), Pokemon) {
+    pub fn stored(self: anytype) PointerType(@TypeOf(self), Pokemon) {
         assert(@typeInfo(@TypeOf(self)).Pointer.child == Side);
         return self.get(1);
     }
@@ -176,7 +176,7 @@ pub const ActivePokemon = extern struct {
     }
 
     /// Returns the active Pokémon's current move slot located at the one-indexed `mslot`.
-    pub inline fn move(self: anytype, mslot: u8) PointerType(@TypeOf(self), MoveSlot) {
+    pub fn move(self: anytype, mslot: u8) PointerType(@TypeOf(self), MoveSlot) {
         assert(@typeInfo(@TypeOf(self)).Pointer.child == ActivePokemon);
         assert(mslot > 0 and mslot <= 4);
         assert(self.moves[mslot - 1].id != .None);
@@ -206,7 +206,7 @@ pub const Pokemon = extern struct {
     }
 
     /// Returns the Pokémon's original move slot located at the one-indexed `mslot`.
-    pub inline fn move(self: anytype, mslot: u8) PointerType(@TypeOf(self), MoveSlot) {
+    pub fn move(self: anytype, mslot: u8) PointerType(@TypeOf(self), MoveSlot) {
         assert(@typeInfo(@TypeOf(self)).Pointer.child == Pokemon);
         assert(mslot > 0 and mslot <= 4);
         assert(self.moves[mslot - 1].id != .None);
@@ -258,36 +258,36 @@ pub const Status = enum(u8) {
     const SLP = 0b111;
 
     /// Whether or not the status `num` is the same as `status`.
-    pub inline fn is(num: u8, status: Status) bool {
+    pub fn is(num: u8, status: Status) bool {
         if (status == .SLP) return Status.duration(num) > 0;
         return ((num >> @intCast(@intFromEnum(status))) & 1) != 0;
     }
 
     /// Initializes a non-sleep `status`. Use `slp` or `slf` to initialize a sleep status.
-    pub inline fn init(status: Status) u8 {
+    pub fn init(status: Status) u8 {
         assert(status != .SLP and status != .EXT);
         return @as(u8, 1) << @intCast(@intFromEnum(status));
     }
 
     /// Initializes a non self-inflicted sleep status with duration `dur`.
-    pub inline fn slp(dur: u3) u8 {
+    pub fn slp(dur: u3) u8 {
         assert(dur > 0);
         return @as(u8, dur);
     }
 
     /// Initializes a self-inflicted sleep status with duration `dur`.
-    pub inline fn slf(dur: u3) u8 {
+    pub fn slf(dur: u3) u8 {
         assert(dur > 0);
         return 0x80 | slp(dur);
     }
 
     /// Returns the duration of a sleep status.
-    pub inline fn duration(num: u8) u3 {
+    pub fn duration(num: u8) u3 {
         return @intCast(num & SLP);
     }
 
     /// Returns whether `num` reflects any status.
-    pub inline fn any(num: u8) bool {
+    pub fn any(num: u8) bool {
         return num > 0;
     }
 

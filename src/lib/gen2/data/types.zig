@@ -164,27 +164,27 @@ pub const Type = enum(u8) {
     pub const size = 18;
 
     /// Whether or not this type is considered to be special as opposed to physical.
-    pub inline fn special(self: Type) bool {
+    pub fn special(self: Type) bool {
         return @intFromEnum(self) >= @intFromEnum(Type.Fire);
     }
 
     /// The `Effectiveness` of type `t2` vs. type `t1`.
-    pub inline fn effectiveness(t1: Type, t2: Type) Effectiveness {
+    pub fn effectiveness(t1: Type, t2: Type) Effectiveness {
         return CHART[@intFromEnum(t1)][@intFromEnum(t2)];
     }
 
     /// The precedence order of Type `type`.
-    pub inline fn precedence(self: Type) u8 {
+    pub fn precedence(self: Type) u8 {
         return PRECEDENCE[@intFromEnum(self)];
     }
 
     /// The internal index of this Type used by Present.
-    pub inline fn present(self: Type) u8 {
+    pub fn present(self: Type) u8 {
         return INDEXES[@intFromEnum(self)];
     }
 
     /// The Type corresponding to a random roll of `num` for Conversion 2.
-    pub inline fn conversion2(num: u8) Type {
+    pub fn conversion2(num: u8) Type {
         assert(num != 6);
         assert(num < 10 or num >= 20);
         assert(num <= 27);
@@ -192,7 +192,7 @@ pub const Type = enum(u8) {
     }
 
     /// The Type corresponding to a Hidden Power `index`.
-    pub inline fn hiddenPower(index: u8) Type {
+    pub fn hiddenPower(index: u8) Type {
         return HIDDEN_POWER[index];
     }
 };
@@ -209,17 +209,17 @@ pub const Types = extern struct {
     }
 
     /// Whether this typing is immune to type `t`.
-    pub inline fn immune(self: Types, t: Type) bool {
+    pub fn immune(self: Types, t: Type) bool {
         return t.effectiveness(self.type1) == I or t.effectiveness(self.type2) == I;
     }
 
     /// Whether this typing includes type `t`.
-    pub inline fn includes(self: Types, t: Type) bool {
+    pub fn includes(self: Types, t: Type) bool {
         return self.type1 == t or self.type2 == t;
     }
 
     /// Whether this typing is immune to damage from Sandstorm.
-    pub inline fn sandstormImmune(self: Types) bool {
+    pub fn sandstormImmune(self: Types) bool {
         return @intFromEnum(self.type1) <= @intFromEnum(Type.Steel) or
             @intFromEnum(self.type2) <= @intFromEnum(Type.Steel);
     }

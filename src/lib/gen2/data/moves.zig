@@ -2562,7 +2562,7 @@ pub const Move = enum(u8) {
         }
 
         /// Whether this effect has a high critical rate.
-        pub inline fn isHighCritical(effect: Effect) bool {
+        pub fn isHighCritical(effect: Effect) bool {
             return effect == .HighCritical or effect == .RazorWind;
         }
     };
@@ -2865,7 +2865,7 @@ pub const Move = enum(u8) {
     };
 
     /// Returns the `Data` corresponding to the move.
-    pub inline fn get(id: Move) Data {
+    pub fn get(id: Move) Data {
         assert(id != .None);
         return DATA[@intFromEnum(id) - 1];
     }
