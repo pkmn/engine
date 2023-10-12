@@ -1,0 +1,12 @@
+.{
+    .name = "pkmn",
+    .version = "0.1.0-dev",
+    .paths = .{
+        "build.zig",
+        "docs",
+        "LICENSE",
+        "README.md",
+        "src/include",
+        "src/lib",
+    },
+}

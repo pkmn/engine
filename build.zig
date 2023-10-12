@@ -224,30 +224,32 @@ pub fn build(b: *std.Build) !void {
     var benchmark_config = tools;
     benchmark_config.general.optimize = .ReleaseFast;
     benchmark_config.general.strip = true;
-    const benchmark = tool(b, "src/test/benchmark.zig", benchmark_config);
+    const benchmark = try tool(b, "src/test/benchmark.zig", benchmark_config);
 
     var fuzz_config = tools;
     fuzz_config.general.strip = false;
     fuzz_config.tool.name = "fuzz";
-    const fuzz = tool(b, "src/test/fuzz.zig", fuzz_config);
+    const fuzz = try tool(b, "src/test/fuzz.zig", fuzz_config);
 
-    const analyze = tool(b, "src/tools/analyze.zig", tools);
-    const dump = tool(b, "src/tools/dump.zig", tools);
-    const transitions = tool(b, "src/tools/transitions.zig", tools);
+    const analyze = try tool(b, "src/tools/analyze.zig", tools);
+    const dump = try tool(b, "src/tools/dump.zig", tools);
+    const transitions = try tool(b, "src/tools/transitions.zig", tools);
 
     // FIXME: serde randomly fails to build in some release configurations
     var hack = tools;
     if (optimize != .Debug) hack.tool.tests = null;
-    const serde = tool(b, "src/tools/serde.zig", hack);
+    const serde = try tool(b, "src/tools/serde.zig", hack);
 
-    b.step("analyze", "Run LLVM analysis tool").dependOn(&analyze.step);
-    b.step("benchmark", "Run benchmark code").dependOn(&benchmark.step);
-    b.step("dump", "Run protocol dump tool").dependOn(&dump.step);
-    b.step("fuzz", "Run fuzz tester").dependOn(&fuzz.step);
-    b.step("serde", "Run serialization/deserialization tool").dependOn(&serde.step);
+    if (analyze) |t| b.step("analyze", "Run LLVM analysis tool").dependOn(&t.step);
+    if (benchmark) |t| b.step("benchmark", "Run benchmark code").dependOn(&t.step);
+    if (dump) |t| b.step("dump", "Run protocol dump tool").dependOn(&t.step);
+    if (fuzz) |t| b.step("fuzz", "Run fuzz tester").dependOn(&t.step);
+    if (serde) |t| b.step("serde", "Run serialization/deserialization tool").dependOn(&t.step);
     b.step("test", "Run all tests").dependOn(&tests.step);
     b.step("tools", "Install tools").dependOn(&ToolsStep.create(b, &exes).step);
-    b.step("transitions", "Visualize transitions algorithm search").dependOn(&transitions.step);
+    if (transitions) |t| {
+        b.step("transitions", "Visualize transitions algorithm search").dependOn(&t.step);
+    }
 }
 
 fn maybeStrip(
@@ -326,7 +328,11 @@ const ToolConfig = struct {
     },
 };
 
-fn tool(b: *std.Build, path: []const u8, config: ToolConfig) *std.Build.RunStep {
+fn tool(b: *std.Build, path: []const u8, config: ToolConfig) !?*std.Build.RunStep {
+    std.fs.cwd().access(path, .{}) catch |err| switch (err) {
+        error.FileNotFound => return null,
+        else => |e| return e,
+    };
     var name = config.tool.name orelse std.fs.path.basename(path);
     const index = std.mem.lastIndexOfScalar(u8, name, '.');
     if (index) |i| name = name[0..i];
