@@ -50,6 +50,7 @@ const TriAttack = data.TriAttack;
 const Type = data.Type;
 const Types = data.Types;
 const Volatiles = data.Volatiles;
+const Weather = data.Weather;
 
 // zig fmt: off
 const STAT_BOOSTS = &[_][2]u8{
@@ -1852,8 +1853,8 @@ pub const Effects = struct {
         try options.log.singlemove(battle.active(player), Move.Rage);
     }
 
-    pub fn rainDance(battle: anytype, player: Player, state: *State, options: anytype) !void {
-        _ = .{ battle, player, state, options }; // TODO
+    pub fn rainDance(battle: anytype, _: Player, _: *State, options: anytype) !void {
+        return weather(battle, .Rain, options);
     }
 
     pub fn rapidSpin(battle: anytype, player: Player, state: *State, options: anytype) !void {
@@ -1905,8 +1906,9 @@ pub const Effects = struct {
         _ = .{ battle, player, state, options }; // TODO
     }
 
-    pub fn sandstorm(battle: anytype, player: Player, state: *State, options: anytype) !void {
-        _ = .{ battle, player, state, options }; // TODO
+    pub fn sandstorm(battle: anytype, player: Player, _: *State, options: anytype) !void {
+        if (battle.field.weather != .Sandstorm) return weather(battle, .Sandstorm, options);
+        return try options.log.fail(battle.active(player), .None);
     }
 
     pub fn screens(battle: anytype, player: Player, state: *State, options: anytype) !void {
@@ -2006,8 +2008,14 @@ pub const Effects = struct {
         _ = .{ battle, player, state, options }; // TODO
     }
 
-    pub fn sunnyDay(battle: anytype, player: Player, state: *State, options: anytype) !void {
-        _ = .{ battle, player, state, options }; // TODO
+    pub fn sunnyDay(battle: anytype, _: Player, _: *State, options: anytype) !void {
+        return weather(battle, .Sun, options);
+    }
+
+    fn weather(battle: anytype, w: Weather, options: anytype) !void {
+        battle.field.weather = w;
+        battle.field.weather_duration = 5;
+        try options.log.weather(w, .None);
     }
 
     pub fn swagger(battle: anytype, player: Player, state: *State, options: anytype) !void {
