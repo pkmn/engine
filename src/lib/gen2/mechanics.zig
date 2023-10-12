@@ -2048,8 +2048,42 @@ pub const Effects = struct {
         _ = .{ battle, player, state, options }; // TODO
     }
 
-    pub fn transform(battle: anytype, player: Player, state: *State, options: anytype) !void {
-        _ = .{ battle, player, state, options }; // TODO
+    pub fn transform(battle: anytype, player: Player, _: *State, options: anytype) !void {
+        var side = battle.side(player);
+        const foe = battle.foe(player);
+        const foe_ident = battle.active(player.foe());
+
+        side.last_used_move = .None;
+        side.active.volatiles.dirty = false;
+
+        if (foe.active.volatiles.Transform) {
+            return try options.log.fail(battle.active(player), .None);
+        } else if (foe.active.volatiles.Flying or foe.active.volatiles.Underground) {
+            if (!showdown) return try options.log.fail(battle.active(player), .None);
+            try options.log.lastmiss();
+            return try options.log.miss(battle.active(player));
+        }
+
+        side.active.volatiles.Transform = true;
+        side.active.volatiles.transform = foe_ident.int();
+        side.active.volatiles.disable = .{};
+
+        // HP is not copied by Transform
+        side.active.stats.atk = foe.active.stats.atk;
+        side.active.stats.def = foe.active.stats.def;
+        side.active.stats.spe = foe.active.stats.spe;
+        side.active.stats.spa = foe.active.stats.spa;
+        side.active.stats.spd = foe.active.stats.spd;
+
+        side.active.species = foe.active.species;
+        side.active.types = foe.active.types;
+        side.active.boosts = foe.active.boosts;
+        for (foe.active.moves, 0..) |m, i| {
+            side.active.moves[i].id = m.id;
+            side.active.moves[i].pp = if (m.id != .None) if (m.id == .Sketch) 1 else 5 else 0;
+        }
+
+        try options.log.transform(battle.active(player), foe_ident);
     }
 
     pub fn triAttack(battle: anytype, player: Player, state: *State, options: anytype) !void {
