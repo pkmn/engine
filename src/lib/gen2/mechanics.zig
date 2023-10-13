@@ -270,7 +270,13 @@ fn turnOrder(battle: anytype, c1: Choice, c2: Choice, options: anytype) !Player 
     // TODO: add to pending and only commit roll on Pokémon Showdown if roll is used
     const qkc = showdown and try Rolls.quickClaw(battle, .P1, options);
 
-    if ((c1.type == .Switch) != (c2.type == .Switch)) return if (c1.type == .Switch) .P1 else .P2;
+    if ((c1.type == .Switch) != (c2.type == .Switch)) {
+        const m1 = .Pound; // TODO battle.side(.P1).last_selected_move;
+        const m2 = .Pound; // TODO battle.side(.P2).last_selected_move;
+        return if (c1.type == .Switch)
+            if (m1 == .Pursuit) .P2 else .P1
+        else if (m2 == .Pursuit) .P1 else .P2;
+    }
 
     // https://www.smogon.com/forums/threads/adv-switch-priority.3622189/
     // > In Gen 1 it's irrelevant [which player switches first] because switches happen instantly on
@@ -1844,8 +1850,8 @@ pub const Effects = struct {
         _ = .{ battle, player, state, options }; // TODO
     }
 
-    pub fn pursuit(battle: anytype, player: Player, state: *State, options: anytype) !void {
-        _ = .{ battle, player, state, options }; // TODO
+    pub fn pursuit(battle: anytype, player: Player, state: *State, _: anytype) !void {
+        if (battle.foe(player).active.volatiles.switching) state.damage *|= 2;
     }
 
     pub fn rage(battle: anytype, player: Player, _: *State, options: anytype) !void {
