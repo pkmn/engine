@@ -1713,8 +1713,24 @@ pub const Effects = struct {
         _ = .{ battle, player, state, options }; // TODO
     }
 
-    pub fn metronome(battle: anytype, player: Player, state: *State, options: anytype) !void {
-        _ = .{ battle, player, state, options }; // TODO
+    pub fn metronome(
+        battle: anytype,
+        player: Player,
+        state: *State,
+        options: anytype,
+    ) anyerror!void {
+        var side = battle.side(player);
+
+        side.last_used_move = .None;
+        side.active.volatiles.dirty = false;
+
+        // if (wPlayerCharging) ???
+        // wPlayerCharging = 1
+
+        // FIXME
+        state.move = try Rolls.metronome(battle, player, options);
+        state.from = .Metronome;
+        return try generated.runMove(battle, player, state, options);
     }
 
     pub fn mimic(battle: anytype, player: Player, state: *State, options: anytype) !void {
@@ -1725,8 +1741,33 @@ pub const Effects = struct {
         _ = .{ battle, player, state, options }; // TODO
     }
 
-    pub fn mirrorMove(battle: anytype, player: Player, state: *State, options: anytype) !void {
-        _ = .{ battle, player, state, options }; // TODO
+    pub fn mirrorMove(
+        battle: anytype,
+        player: Player,
+        state: *State,
+        options: anytype,
+    ) anyerror!void {
+        var side = battle.side(player);
+        const foe = battle.foe(player);
+
+        side.last_used_move = .None;
+        side.active.volatiles.dirty = false;
+
+        const last = foe.lastMove(false);
+
+        if (last == .None) return options.log.fail(battle.active(player), .None);
+        const knows = knows: for (side.active.moves) |m| {
+            if (last == m.id) break :knows true;
+        } else false;
+        if (knows) return options.log.fail(battle.active(player), .None);
+
+        // if (wPlayerCharging) ???
+        // wPlayerCharging = 1
+
+        // FIXME
+        state.move = last;
+        state.from = .MirrorMove;
+        return try generated.runMove(battle, player, state, options);
     }
 
     pub fn mist(battle: anytype, player: Player, _: *State, options: anytype) !void {
@@ -2908,12 +2949,12 @@ pub const Rolls = struct {
     }
 
     fn metronome(battle: anytype, player: Player, options: anytype) !Move {
-        const moves = battle.get(player).active.moves;
+        const moves = battle.side(player).active.moves;
 
         var n: u2 = 0;
         for (moves) |m| {
-            if (m == .None) break;
-            if (Move.get(m).metronome) n += 1;
+            if (m.id == .None) break;
+            if (Move.get(m.id).extra.metronome) n += 1;
         }
 
         // TODO: consider throwing error instead of rerolling?
@@ -2924,10 +2965,11 @@ pub const Rolls = struct {
 
         const move: Move = overridden orelse move: {
             if (showdown) {
-                var r = battle.rng.range(u8, 0, Move.METRONOME.len - n);
+                var r = battle.rng.range(u8, 0, @intCast(Move.METRONOME.len - n));
                 for (moves) |m| {
-                    if (m == .None or @intFromEnum(m) > @intFromEnum(Move.METRONOME[r])) break;
-                    if (Move.get(m).metronome) r -= 1;
+                    if (m.id == .None) break;
+                    if (@intFromEnum(m.id) > @intFromEnum(Move.METRONOME[r])) break;
+                    if (Move.get(m.id).extra.metronome) r -= 1;
                 }
                 break :move Move.METRONOME[r];
             } else {
@@ -2942,7 +2984,7 @@ pub const Rolls = struct {
             }
         };
 
-        assert(Move.get(move).metronome);
+        assert(Move.get(move).extra.metronome);
         try options.chance.metronome(player, move, n);
         return move;
     }
