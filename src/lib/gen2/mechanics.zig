@@ -1990,8 +1990,12 @@ pub const Effects = struct {
         _ = try Rolls.sleepTalk(battle, player, n, state.mslot, options); // TODO
     }
 
-    pub fn snore(battle: anytype, player: Player, state: *State, options: anytype) !void {
-        _ = .{ battle, player, state, options }; // TODO
+    pub fn snore(battle: anytype, player: Player, state: *State, options: anytype) !bool {
+        if (Status.is(battle.side(player).stored().status, .SLP)) return true;
+        state.damage = 0;
+        state.miss = true; // TODO is this necessary?
+        if (!showdown) try options.log.fail(battle.active(player), .None);
+        return false;
     }
 
     pub fn spikes(battle: anytype, player: Player, state: *State, options: anytype) !void {

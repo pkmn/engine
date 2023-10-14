@@ -521,7 +521,7 @@ pub fn runMove(battle: anytype, player: Player, state: *State, options: anytype)
             try randomizeDamage(battle, player, state, options);
             try checkHit(battle, player, state, options);
             try effectChance(battle, player, state, options);
-            try Effects.snore(battle, player, state, options);
+            if (!try Effects.snore(battle, player, state, options)) return;
             try applyDamage(battle, player, state, options);
             try reportOutcome(battle, player, state, options);
             if (!try afterMove(!KINGS, battle, player, state, options)) return;

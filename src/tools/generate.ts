@@ -658,6 +658,7 @@ const moveFns = async (
       'if (state.damage == 0) state.miss = true;',
       '',
     ),
+    snore: () => write('if (!try Effects.snore(battle, player, state, options)) return;'),
   };
 
   const FNS: {[command: string]: string} = {
