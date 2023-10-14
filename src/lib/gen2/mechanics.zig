@@ -1729,8 +1729,13 @@ pub const Effects = struct {
         _ = .{ battle, player, state, options }; // TODO
     }
 
-    pub fn mist(battle: anytype, player: Player, state: *State, options: anytype) !void {
-        _ = .{ battle, player, state, options }; // TODO
+    pub fn mist(battle: anytype, player: Player, _: *State, options: anytype) !void {
+        var side = battle.side(player);
+
+        if (side.active.volatiles.Mist) return try options.log.fail(battle.active(player), .None);
+        side.active.volatiles.Mist = true;
+
+        try options.log.start(battle.active(player), .Mist);
     }
 
     pub fn weatherHeal(battle: anytype, player: Player, _: *State, options: anytype) !void {
