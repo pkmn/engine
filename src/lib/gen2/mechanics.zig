@@ -1144,7 +1144,7 @@ fn betweenTurns(battle: anytype, mslot: u4, options: anytype) !?Result {
 
                     // FIXME wtf?
                     // side.active.volatiles.Toxic = false;
-                    // side.active.volatiles.NightMare = false;
+                    // side.active.volatiles.Nightmare = false;
                     if (stored.item == .MiracleBerry) {
                         side.active.volatiles.Confusion = false;
                         try options.log.end(ident, .Confusion);
@@ -1752,8 +1752,22 @@ pub const Effects = struct {
         _ = .{ battle, player, state, options }; // TODO
     }
 
-    pub fn nightmare(battle: anytype, player: Player, state: *State, options: anytype) !void {
-        _ = .{ battle, player, state, options }; // TODO
+    pub fn nightmare(battle: anytype, player: Player, _: *State, options: anytype) !void {
+        var foe = battle.foe(player);
+        var foe_volatiles = &foe.active.volatiles;
+
+        if (foe_volatiles.Flying or foe_volatiles.Underground) {
+            if (!showdown) return try options.log.fail(battle.active(player.foe()), .None);
+            try options.log.lastmiss();
+            return try options.log.miss(battle.active(player));
+        }
+        const fail = foe_volatiles.Substitute or
+            !Status.is(foe.stored().status, .SLP) or
+            foe_volatiles.Nightmare;
+        if (fail) return try options.log.fail(battle.active(player.foe()), .None);
+
+        foe_volatiles.Nightmare = true;
+        try options.log.start(battle.active(player.foe()), .Nightmare);
     }
 
     pub const ohko = struct {
