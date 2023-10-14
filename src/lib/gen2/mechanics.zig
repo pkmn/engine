@@ -1312,7 +1312,7 @@ pub const Effects = struct {
             // }
             try options.chance.attacking(player, volatiles.attacks);
 
-            if (volatiles.attacks != 0) return try options.log.activate(ident, .Bide);
+            if (volatiles.attacks != 0) return options.log.activate(ident, .Bide);
 
             volatiles.Bide = false;
             try options.log.end(ident, .Bide);
@@ -1593,7 +1593,7 @@ pub const Effects = struct {
 
         const foe = battle.foe(player);
 
-        if (state.first) return try options.log.fail(battle.active(player), .None);
+        if (state.first) return options.log.fail(battle.active(player), .None);
 
         var n: u4 = 0;
         var i: u4 = 0;
@@ -1732,7 +1732,7 @@ pub const Effects = struct {
     pub fn mist(battle: anytype, player: Player, _: *State, options: anytype) !void {
         var side = battle.side(player);
 
-        if (side.active.volatiles.Mist) return try options.log.fail(battle.active(player), .None);
+        if (side.active.volatiles.Mist) return options.log.fail(battle.active(player), .None);
         side.active.volatiles.Mist = true;
 
         try options.log.start(battle.active(player), .Mist);
@@ -1742,7 +1742,7 @@ pub const Effects = struct {
         var stored = battle.side(player).stored();
         const ident = battle.active(player);
 
-        if (stored.hp == stored.stats.hp) return try options.log.fail(ident, .None);
+        if (stored.hp == stored.stats.hp) return options.log.fail(ident, .None);
 
         stored.hp = switch (battle.field.weather) {
             .Sun => stored.stats.hp,
@@ -1763,13 +1763,13 @@ pub const Effects = struct {
         const foe_ident = battle.active(player.foe());
 
         if (foe_volatiles.Flying or foe_volatiles.Underground) {
-            if (!showdown) return try options.log.fail(battle.active(player.foe()), .None);
+            if (!showdown) return options.log.fail(battle.active(player.foe()), .None);
             try options.log.lastmiss();
-            return try options.log.miss(battle.active(player));
+            return options.log.miss(battle.active(player));
         } else if (foe_volatiles.Substitute) {
             return options.log.activateMove(foe_ident, .SubstituteBlock, state.move);
         } else if (!Status.is(foe.stored().status, .SLP) or foe_volatiles.Nightmare) {
-            return try options.log.fail(foe_ident, .None);
+            return options.log.fail(foe_ident, .None);
         }
 
         foe_volatiles.Nightmare = true;
@@ -1797,9 +1797,9 @@ pub const Effects = struct {
             const foe_ident = battle.active(player.foe());
 
             state.damage = 0;
-            if (state.immune()) return try options.log.immune(foe_ident, .None);
+            if (state.immune()) return options.log.immune(foe_ident, .None);
             const delta = side.stored().level -| foe.stored().level;
-            if (delta == 0) return try options.log.immune(foe_ident, .OHKO);
+            if (delta == 0) return options.log.immune(foe_ident, .OHKO);
 
             state.accuracy = 2 * delta +| Gen12.percent(30);
             try checkHit(battle, player, state, options);
@@ -1815,7 +1815,7 @@ pub const Effects = struct {
         const ident = battle.active(player);
         const foe_ident = battle.active(player.foe());
 
-        if (state.miss) return try options.log.fail(foe_ident, .None);
+        if (state.miss) return options.log.fail(foe_ident, .None);
         if (foe.active.volatiles.Substitute) {
             return options.log.activateMove(foe_ident, .SubstituteBlock, state.move);
         }
@@ -1860,7 +1860,7 @@ pub const Effects = struct {
         var foe = battle.foe(player);
 
         if (foe.active.volatiles.PerishSong) {
-            return try options.log.fail(battle.active(player.foe()), .None);
+            return options.log.fail(battle.active(player.foe()), .None);
         } else if (!side.active.volatiles.PerishSong) {
             side.active.volatiles.PerishSong = true;
             side.active.volatiles.perish_song = 4;
@@ -2031,7 +2031,7 @@ pub const Effects = struct {
 
     pub fn sandstorm(battle: anytype, player: Player, _: *State, options: anytype) !void {
         if (battle.field.weather != .Sandstorm) return weather(battle, .Sandstorm, options);
-        return try options.log.fail(battle.active(player), .None);
+        return options.log.fail(battle.active(player), .None);
     }
 
     pub fn screens(battle: anytype, player: Player, state: *State, options: anytype) !void {
@@ -2192,11 +2192,11 @@ pub const Effects = struct {
         side.active.volatiles.dirty = false;
 
         if (foe.active.volatiles.Transform) {
-            return try options.log.fail(battle.active(player), .None);
+            return options.log.fail(battle.active(player), .None);
         } else if (foe.active.volatiles.Flying or foe.active.volatiles.Underground) {
-            if (!showdown) return try options.log.fail(battle.active(player), .None);
+            if (!showdown) return options.log.fail(battle.active(player), .None);
             try options.log.lastmiss();
-            return try options.log.miss(battle.active(player));
+            return options.log.miss(battle.active(player));
         }
 
         side.active.volatiles.Transform = true;
@@ -2273,7 +2273,7 @@ pub const Effects = struct {
         var side = battle.side(player);
         const ident = battle.active(player);
 
-        if (state.miss) return try log.fail(ident, .None);
+        if (state.miss) return log.fail(ident, .None);
 
         var stats = &side.active.stats;
         var boosts = &side.active.boosts;
@@ -2282,9 +2282,7 @@ pub const Effects = struct {
         switch (move.effect) {
             .AttackUp1, .AttackUp2, .Rage => {
                 assert(boosts.atk >= -6 and boosts.atk <= 6);
-                if (boosts.atk == 6 or stats.atk == MAX_STAT_VALUE) {
-                    return try log.fail(ident, .None);
-                }
+                if (boosts.atk == 6 or stats.atk == MAX_STAT_VALUE) return log.fail(ident, .None);
                 const n: u2 = if (move.effect == .AttackUp2) 2 else 1;
                 boosts.atk = @as(i4, @intCast(@min(6, @as(i8, boosts.atk) + n)));
                 const reason = if (showdown and move.effect == .Rage) Boost.Rage else Boost.Attack;
@@ -2295,9 +2293,7 @@ pub const Effects = struct {
             },
             .DefenseUp1, .DefenseUp2 => {
                 assert(boosts.def >= -6 and boosts.def <= 6);
-                if (boosts.def == 6 or stats.def == MAX_STAT_VALUE) {
-                    return try log.fail(ident, .None);
-                }
+                if (boosts.def == 6 or stats.def == MAX_STAT_VALUE) return log.fail(ident, .None);
                 const n: u2 = if (move.effect == .DefenseUp2) 2 else 1;
                 boosts.def = @intCast(@min(6, @as(i8, boosts.def) + n));
                 var mod = STAT_BOOSTS[@as(u4, @intCast(@as(i8, boosts.def) + 6))];
@@ -2307,9 +2303,7 @@ pub const Effects = struct {
             },
             .SpeedUp2 => {
                 assert(boosts.spe >= -6 and boosts.spe <= 6);
-                if (boosts.spe == 6 or stats.spe == MAX_STAT_VALUE) {
-                    return try log.fail(ident, .None);
-                }
+                if (boosts.spe == 6 or stats.spe == MAX_STAT_VALUE) return log.fail(ident, .None);
                 boosts.spe = @intCast(@min(6, @as(i8, boosts.spe) + 2));
                 var mod = STAT_BOOSTS[@as(u4, @intCast(@as(i8, boosts.spe) + 6))];
                 const stat = unmodifiedStats(battle, side).spe;
@@ -2318,9 +2312,7 @@ pub const Effects = struct {
             },
             .SpAtkUp1 => {
                 assert(boosts.spa >= -6 and boosts.spa <= 6);
-                if (boosts.spa == 6 or stats.spa == MAX_STAT_VALUE) {
-                    return try log.fail(ident, .None);
-                }
+                if (boosts.spa == 6 or stats.spa == MAX_STAT_VALUE) return log.fail(ident, .None);
                 boosts.spa = @intCast(@min(6, @as(i8, boosts.spa) + 1));
                 var mod = STAT_BOOSTS[@as(u4, @intCast(@as(i8, boosts.spa) + 6))];
                 const stat = unmodifiedStats(battle, side).spa;
@@ -2329,9 +2321,7 @@ pub const Effects = struct {
             },
             .SpDefUp2 => {
                 assert(boosts.spd >= -6 and boosts.spd <= 6);
-                if (boosts.spd == 6 or stats.spd == MAX_STAT_VALUE) {
-                    return try log.fail(ident, .None);
-                }
+                if (boosts.spd == 6 or stats.spd == MAX_STAT_VALUE) return log.fail(ident, .None);
                 boosts.spd = @intCast(@min(6, @as(i8, boosts.spd) + 2));
                 var mod = STAT_BOOSTS[@as(u4, @intCast(@as(i8, boosts.spd) + 6))];
                 const stat = unmodifiedStats(battle, side).spd;
@@ -2340,9 +2330,7 @@ pub const Effects = struct {
             },
             .EvasionUp1 => {
                 assert(boosts.evasion >= -6 and boosts.evasion <= 6);
-                if (boosts.evasion == 6) {
-                    return try log.fail(ident, .None);
-                }
+                if (boosts.evasion == 6) return log.fail(ident, .None);
                 boosts.evasion = @intCast(@min(6, @as(i8, boosts.evasion) + 1));
                 try log.boost(ident, .Evasion, 1);
                 if (state.move == .Minimize) side.active.volatiles.minimized = true;
@@ -2360,7 +2348,7 @@ pub const Effects = struct {
 
         if (foe.active.volatiles.Mist) {
             try log.activate(foe_ident, .Mist);
-            return try log.fail(foe_ident, .None);
+            return log.fail(foe_ident, .None);
         }
 
         const fail = foe.active.volatiles.Substitute or state.miss or !state.proc;
