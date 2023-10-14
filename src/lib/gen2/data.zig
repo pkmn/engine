@@ -317,13 +317,15 @@ pub const Volatiles = packed struct(u128) {
 
     trapped: bool = false,
     switched: bool = false,
+    // TODO: replace with simply looking at Choice on Battle
     switching: bool = false,
+    // TODO: simply store both last moves on side
     dirty: bool = false,
 
     frozen: bool = false,
     minimized: bool = false,
     _: u10 = 0,
-    // TODO?
+    // TODO: is this needed for unmodified stats?
     transform: u4 = 0,
 
     bide: u16 = 0,
