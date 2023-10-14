@@ -1849,8 +1849,10 @@ pub const Effects = struct {
         // TODO: check for status berry
     }
 
-    pub fn payDay(battle: anytype, player: Player, state: *State, options: anytype) !void {
-        _ = .{ battle, player, state, options }; // TODO
+    pub fn payDay(battle: anytype, player: Player, _: *State, options: anytype) !void {
+        if (!showdown or !battle.foe(player).active.volatiles.Substitute) {
+            try options.log.fieldactivate(); // FIXME .PayDay
+        }
     }
 
     pub fn perishSong(battle: anytype, player: Player, state: *State, options: anytype) !void {
