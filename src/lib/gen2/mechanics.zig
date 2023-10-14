@@ -1757,19 +1757,20 @@ pub const Effects = struct {
         _ = .{ battle, player, state, options }; // TODO
     }
 
-    pub fn nightmare(battle: anytype, player: Player, _: *State, options: anytype) !void {
+    pub fn nightmare(battle: anytype, player: Player, state: *State, options: anytype) !void {
         var foe = battle.foe(player);
         var foe_volatiles = &foe.active.volatiles;
+        const foe_ident = battle.active(player.foe());
 
         if (foe_volatiles.Flying or foe_volatiles.Underground) {
             if (!showdown) return try options.log.fail(battle.active(player.foe()), .None);
             try options.log.lastmiss();
             return try options.log.miss(battle.active(player));
+        } else if (foe_volatiles.Substitute) {
+            return options.log.activateMove(foe_ident, .SubstituteBlock, state.move);
+        } else if (!Status.is(foe.stored().status, .SLP) or foe_volatiles.Nightmare) {
+            return try options.log.fail(foe_ident, .None);
         }
-        const fail = foe_volatiles.Substitute or
-            !Status.is(foe.stored().status, .SLP) or
-            foe_volatiles.Nightmare;
-        if (fail) return try options.log.fail(battle.active(player.foe()), .None);
 
         foe_volatiles.Nightmare = true;
         try options.log.start(battle.active(player.foe()), .Nightmare);
@@ -1808,7 +1809,23 @@ pub const Effects = struct {
     };
 
     pub fn painSplit(battle: anytype, player: Player, state: *State, options: anytype) !void {
-        _ = .{ battle, player, state, options }; // TODO
+        var side = battle.side(player);
+        var foe = battle.foe(player);
+
+        const ident = battle.active(player);
+        const foe_ident = battle.active(player.foe());
+
+        if (state.miss) return try options.log.fail(foe_ident, .None);
+        if (foe.active.volatiles.Substitute) {
+            return options.log.activateMove(foe_ident, .SubstituteBlock, state.move);
+        }
+
+        const avg = @max((foe.stored().hp + side.stored().hp) / 2, 1);
+        foe.stored().hp -= avg;
+        side.stored().hp = avg;
+
+        try options.log.sethp(foe_ident, foe.stored(), .Silent);
+        try options.log.sethp(ident, side.stored(), .None);
     }
 
     pub fn paralyze(battle: anytype, player: Player, state: *State, options: anytype) !void {
