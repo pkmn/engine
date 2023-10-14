@@ -97,17 +97,8 @@ pub fn runMove(battle: anytype, player: Player, state: *State, options: anytype)
         },
         .OHKO => {
             if (!try canMove(battle, player, state, options)) return;
-
-            // OHKO calls adjustDamage but only actually cares about immunity
-            assert(move.type == .Normal or move.type == .Ground);
-            const foe = battle.foe(player);
-            const immune = if (move.type == .Normal)
-                foe.active.types.includes(.Ghost) and !foe.active.volatiles.Foresight
-            else
-                foe.active.types.includes(.Flying);
-            state.effectiveness = if (immune) 0 else Effectiveness.neutral;
-
-            try Effects.ohko(battle, player, state, options);
+            try Effects.ohko.immune(battle, player, state, options);
+            try Effects.ohko.damage(battle, player, state, options);
             try applyDamage(battle, player, state, options);
             try reportOutcome(battle, player, state, options);
             _ = try afterMove(!KINGS, battle, player, state, options);
@@ -118,9 +109,7 @@ pub fn runMove(battle: anytype, player: Player, state: *State, options: anytype)
             try calcDamage(battle, player, state, options);
             try adjustDamage(battle, player, state, options);
             try randomizeDamage(battle, player, state, options);
-
-            if (battle.foe(player).active.volatiles.Flying) state.damage *|= 2;
-
+            try Effects.double.flying(battle, player, state, options);
             try checkHit(battle, player, state, options);
             try applyDamage(battle, player, state, options);
             try reportOutcome(battle, player, state, options);
@@ -157,9 +146,7 @@ pub fn runMove(battle: anytype, player: Player, state: *State, options: anytype)
             try calcDamage(battle, player, state, options);
             try adjustDamage(battle, player, state, options);
             try randomizeDamage(battle, player, state, options);
-
-            if (battle.foe(player).active.volatiles.minimized) state.damage *|= 2;
-
+            try Effects.double.minimize(battle, player, state, options);
             try checkHit(battle, player, state, options);
             try effectChance(battle, player, state, options);
             try applyDamage(battle, player, state, options);
@@ -323,9 +310,7 @@ pub fn runMove(battle: anytype, player: Player, state: *State, options: anytype)
             try calcDamage(battle, player, state, options);
             try adjustDamage(battle, player, state, options);
             try randomizeDamage(battle, player, state, options);
-
-            if (battle.foe(player).active.volatiles.Underground) state.damage *|= 2;
-
+            try Effects.double.underground(battle, player, state, options);
             try checkHit(battle, player, state, options);
             try effectChance(battle, player, state, options);
             try applyDamage(battle, player, state, options);
@@ -338,13 +323,10 @@ pub fn runMove(battle: anytype, player: Player, state: *State, options: anytype)
             try calcDamage(battle, player, state, options);
             try adjustDamage(battle, player, state, options);
             try checkHit(battle, player, state, options);
-
-            assert(volatiles.Rage);
-            state.damage *|= (volatiles.rage +| 1);
-
+            try Effects.rage.damage(battle, player, state, options);
             try randomizeDamage(battle, player, state, options);
             // TODO failuretext
-            try Effects.rage(battle, player, state, options);
+            try Effects.rage.start(battle, player, state, options);
             try applyDamage(battle, player, state, options);
             try reportOutcome(battle, player, state, options);
             _ = try afterMove(KINGS, battle, player, state, options);
@@ -375,26 +357,7 @@ pub fn runMove(battle: anytype, player: Player, state: *State, options: anytype)
             try Effects.focusEnergy(battle, player, state, options);
         },
         .Bide => {
-            if (!volatiles.Bide) return;
-
-            assert(volatiles.attacks > 0);
-            // if (options.calc.modify(player, .attacking)) |extend| {
-            //     if (!extend) volatiles.attacks = 0;
-            // } else {
-            volatiles.attacks -= 1;
-            // }
-            try options.chance.attacking(player, volatiles.attacks);
-
-            if (volatiles.attacks != 0) return try options.log.activate(ident, .Bide);
-
-            volatiles.Bide = false;
-            try options.log.end(ident, .Bide);
-
-            state.damage = volatiles.bide *% 2;
-            volatiles.bide = 0;
-
-            if (state.damage == 0) state.miss = true;
-
+            try Effects.bide.store(battle, player, state, options);
             // doturn
             const charging = false; // TODO
             const skip_pp = charging or state.move == .Struggle or
@@ -402,7 +365,7 @@ pub fn runMove(battle: anytype, player: Player, state: *State, options: anytype)
             if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
             // usedmovetext
             try log.move(ident, state.move, foe_ident); // FIXME self? from?
-            // TODO unleashenergy
+            try Effects.bide.unleash(battle, player, state, options);
 
             if (state.immune()) {
                 state.damage = 0;
@@ -698,9 +661,7 @@ pub fn runMove(battle: anytype, player: Player, state: *State, options: anytype)
             try adjustDamage(battle, player, state, options);
             try randomizeDamage(battle, player, state, options);
             try checkHit(battle, player, state, options);
-
-            if (battle.foe(player).active.volatiles.Underground) state.damage *|= 2;
-
+            try Effects.double.underground(battle, player, state, options);
             try applyDamage(battle, player, state, options);
             try reportOutcome(battle, player, state, options);
             _ = try afterMove(KINGS, battle, player, state, options);
@@ -754,9 +715,7 @@ pub fn runMove(battle: anytype, player: Player, state: *State, options: anytype)
             try calcDamage(battle, player, state, options);
             try adjustDamage(battle, player, state, options);
             try randomizeDamage(battle, player, state, options);
-
-            if (battle.foe(player).active.volatiles.Flying) state.damage *|= 2;
-
+            try Effects.double.flying(battle, player, state, options);
             try checkHit(battle, player, state, options);
             try effectChance(battle, player, state, options);
             try applyDamage(battle, player, state, options);

@@ -596,24 +596,11 @@ const moveFns = async (
     ),
     domove: () => write('if (!try doMove(!SECONDARY, battle, player, state, options)) return;'),
     stab: effect => effect === 'OHKO'
-      ? sblock(
-        '// OHKO calls adjustDamage but only actually cares about immunity',
-        'assert(move.type == .Normal or move.type == .Ground);',
-        'const foe = battle.foe(player);',
-        'const immune = if (move.type == .Normal)',
-        '    foe.active.types.includes(.Ghost) and !foe.active.volatiles.Foresight',
-        'else',
-        '    foe.active.types.includes(.Flying);',
-        'state.effectiveness = if (immune) 0 else Effectiveness.neutral;',
-      )
+      ? write('try Effects.ohko.immune(battle, player, state, options);')
       : write('try adjustDamage(battle, player, state, options);'),
     domovesecondary: () =>
       write('if (!try doMove(SECONDARY, battle, player, state, options)) return;'),
     checkfaint: () => write('if (try destinyBond(battle, player, state, options)) return;'),
-    ragedamage: () => sblock(
-      'assert(volatiles.Rage);',
-      'state.damage *|= (volatiles.rage +| 1);',
-    ),
     kingsrock: effect => effect === 'DrainHP'
       ? write('if (state.move != .DreamEater) try kingsRock(battle, player, state, options);')
       : write('try kingsRock(battle, player, state, options);'),
@@ -622,12 +609,6 @@ const moveFns = async (
     aftermovekings: () => write('_ = try afterMove(KINGS, battle, player, state, options);'),
     ifaftermovekings: () =>
       write('if (!try afterMove(KINGS, battle, player, state, options)) return;'),
-    doubleflyingdamage: () =>
-      sblock('if (battle.foe(player).active.volatiles.Flying) state.damage *|= 2;'),
-    doubleundergrounddamage: () =>
-      sblock('if (battle.foe(player).active.volatiles.Underground) state.damage *|= 2;'),
-    doubleminimizedamage: () =>
-      sblock('if (battle.foe(player).active.volatiles.minimized) state.damage *|= 2;'),
     clearmissdamage: () =>
       sblock('if (state.miss) state.damage = 0;'),
     resettypematchup: () =>
@@ -636,28 +617,6 @@ const moveFns = async (
         '    state.miss = true;',
         '}',
         'state.effectiveness = Effectiveness.neutral;'),
-    storeenergy: () => block(
-      'if (!volatiles.Bide) return;',
-      '',
-      'assert(volatiles.attacks > 0);',
-      '// if (options.calc.modify(player, .attacking)) |extend| {',
-      '//     if (!extend) volatiles.attacks = 0;',
-      '// } else {',
-      'volatiles.attacks -= 1;',
-      '// }',
-      'try options.chance.attacking(player, volatiles.attacks);',
-      '',
-      'if (volatiles.attacks != 0) return try options.log.activate(ident, .Bide);',
-      '',
-      'volatiles.Bide = false;',
-      'try options.log.end(ident, .Bide);',
-      '',
-      'state.damage = volatiles.bide *% 2;',
-      'volatiles.bide = 0;',
-      '',
-      'if (state.damage == 0) state.miss = true;',
-      '',
-    ),
     snore: () => write('if (!try Effects.snore(battle, player, state, options)) return;'),
   };
 
@@ -666,7 +625,7 @@ const moveFns = async (
     damagecalc: 'calcDamage', damagevariation: 'randomizeDamage', applydamage: 'applyDamage',
     effectchance: 'effectChance', reportoutcome: 'reportOutcome',
     buildopponentrage: 'buildRage', burntarget: 'Effects.burnChance',
-    freezetarget: 'Effects.freezeChance', ohko: 'Effects.ohko', startsun: 'Effects.sunnyDay',
+    freezetarget: 'Effects.freezeChance', ohko: 'Effects.ohko.damage', startsun: 'Effects.sunnyDay',
     startsandstorm: 'Effects.sandstorm', paralyzetarget: 'Effects.paralyzeChance',
     arenatrap: 'Effects.meanLook', traptarget: 'Effects.binding',
     flinchtarget: 'Effects.flinchChance', poisontarget: 'Effects.poisonChance',
@@ -677,7 +636,11 @@ const moveFns = async (
     defenseup: 'Effects.boost', screen: 'Effects.screens', tristatuschance: 'Effects.triAttack',
     allstatsup: 'Effects.allStatUpChance', defrost: 'Effects.defrost',
     happinesspower: 'Effects.happiness', startrain: 'Effects.rainDance',
-    clearhazards: 'Effects.rapidSpin', healnite: 'Effects.weatherHeal',
+    clearhazards: 'Effects.rapidSpin', healnite: 'Effects.weatherHeal', rage: 'Effects.rage.start',
+    ragedamage: 'Effects.rage.damage', storeenergy: 'Effects.bide.store',
+    unleashenergy: 'Effects.bide.unleash', doubleflyingdamage: 'Effects.double.flying',
+    doubleundergrounddamage: 'Effects.double.underground',
+    doubleminimizedamage: 'Effects.double.minimize',
   };
 
   const BOOST = /[^th]Up[12]?(?:Chance)?$/;

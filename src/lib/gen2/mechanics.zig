@@ -1295,9 +1295,38 @@ pub const Effects = struct {
         _ = .{ battle, player, state, options }; // TODO
     }
 
-    pub fn bide(battle: anytype, player: Player, state: *State, options: anytype) !void {
-        _ = .{ battle, player, state, options }; // TODO
-    }
+    pub const bide = struct {
+        pub fn store(battle: anytype, player: Player, state: *State, options: anytype) !void {
+            var side = battle.side(player);
+            var volatiles = &side.active.volatiles;
+
+            const ident = battle.active(player);
+
+            if (!volatiles.Bide) return;
+
+            assert(volatiles.attacks > 0);
+            // if (options.calc.modify(player, .attacking)) |extend| {
+            //     if (!extend) volatiles.attacks = 0;
+            // } else {
+            volatiles.attacks -= 1;
+            // }
+            try options.chance.attacking(player, volatiles.attacks);
+
+            if (volatiles.attacks != 0) return try options.log.activate(ident, .Bide);
+
+            volatiles.Bide = false;
+            try options.log.end(ident, .Bide);
+
+            state.damage = volatiles.bide *% 2;
+            volatiles.bide = 0;
+
+            if (state.damage == 0) state.miss = true;
+        }
+
+        pub fn unleash(battle: anytype, player: Player, state: *State, options: anytype) !void {
+            _ = .{ battle, player, state, options }; // TODO
+        }
+    };
 
     pub fn binding(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
@@ -1434,9 +1463,19 @@ pub const Effects = struct {
         try options.log.startEffect(foe_ident, .Disable, move.id);
     }
 
-    pub fn doubleHit(battle: anytype, player: Player, state: *State, options: anytype) !void {
-        _ = .{ battle, player, state, options }; // TODO
-    }
+    pub const double = struct {
+        pub fn flying(battle: anytype, player: Player, state: *State, _: anytype) !void {
+            if (battle.foe(player).active.volatiles.Flying) state.damage *|= 2;
+        }
+
+        pub fn underground(battle: anytype, player: Player, state: *State, _: anytype) !void {
+            if (battle.foe(player).active.volatiles.Underground) state.damage *|= 2;
+        }
+
+        pub fn minimize(battle: anytype, player: Player, state: *State, _: anytype) !void {
+            if (battle.foe(player).active.volatiles.minimized) state.damage *|= 2;
+        }
+    };
 
     pub fn drainHP(battle: anytype, player: Player, state: *State, options: anytype) !void {
         var stored = battle.side(player).stored();
@@ -1717,22 +1756,37 @@ pub const Effects = struct {
         _ = .{ battle, player, state, options }; // TODO
     }
 
-    pub fn ohko(battle: anytype, player: Player, state: *State, options: anytype) !void {
-        const side = battle.side(player);
-        const foe = battle.foe(player);
+    pub const ohko = struct {
+        // OHKO calls adjustDamage but only actually cares about immunity
+        pub fn immune(battle: anytype, player: Player, state: *State, _: anytype) !void {
+            const move = Move.get(state.move);
 
-        const foe_ident = battle.active(player.foe());
+            assert(move.type == .Normal or move.type == .Ground);
+            const foe = battle.foe(player);
+            const zero = if (move.type == .Normal)
+                foe.active.types.includes(.Ghost) and !foe.active.volatiles.Foresight
+            else
+                foe.active.types.includes(.Flying);
+            state.effectiveness = if (zero) 0 else Effectiveness.neutral;
+        }
 
-        state.damage = 0;
-        if (state.immune()) return try options.log.immune(foe_ident, .None);
-        const delta = side.stored().level -| foe.stored().level;
-        if (delta == 0) return try options.log.immune(foe_ident, .OHKO);
+        pub fn damage(battle: anytype, player: Player, state: *State, options: anytype) !void {
+            const side = battle.side(player);
+            const foe = battle.foe(player);
 
-        state.accuracy = 2 * delta +| Gen12.percent(30);
-        try checkHit(battle, player, state, options);
-        if (!state.miss) state.damage = 65535;
-        state.ohko = true;
-    }
+            const foe_ident = battle.active(player.foe());
+
+            state.damage = 0;
+            if (state.immune()) return try options.log.immune(foe_ident, .None);
+            const delta = side.stored().level -| foe.stored().level;
+            if (delta == 0) return try options.log.immune(foe_ident, .OHKO);
+
+            state.accuracy = 2 * delta +| Gen12.percent(30);
+            try checkHit(battle, player, state, options);
+            if (!state.miss) state.damage = 65535;
+            state.ohko = true;
+        }
+    };
 
     pub fn painSplit(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
@@ -1851,13 +1905,24 @@ pub const Effects = struct {
     }
 
     pub fn pursuit(battle: anytype, player: Player, state: *State, _: anytype) !void {
+        // TODO: remove switching variable and just look at Choice saved in Battle struct?
         if (battle.foe(player).active.volatiles.switching) state.damage *|= 2;
     }
 
-    pub fn rage(battle: anytype, player: Player, _: *State, options: anytype) !void {
-        battle.side(player).active.volatiles.Rage = true;
-        try options.log.singlemove(battle.active(player), Move.Rage);
-    }
+    pub const rage = struct {
+        pub fn start(battle: anytype, player: Player, _: *State, options: anytype) !void {
+            battle.side(player).active.volatiles.Rage = true;
+            try options.log.singlemove(battle.active(player), Move.Rage);
+        }
+
+        pub fn damage(battle: anytype, player: Player, state: *State, _: anytype) !void {
+            var side = battle.side(player);
+            var volatiles = &side.active.volatiles;
+
+            assert(volatiles.Rage);
+            state.damage *|= (volatiles.rage +| 1);
+        }
+    };
 
     pub fn rainDance(battle: anytype, _: Player, _: *State, options: anytype) !void {
         return weather(battle, .Rain, options);
