@@ -1855,8 +1855,22 @@ pub const Effects = struct {
         }
     }
 
-    pub fn perishSong(battle: anytype, player: Player, state: *State, options: anytype) !void {
-        _ = .{ battle, player, state, options }; // TODO
+    pub fn perishSong(battle: anytype, player: Player, _: *State, options: anytype) !void {
+        var side = battle.side(player);
+        var foe = battle.foe(player);
+
+        if (foe.active.volatiles.PerishSong) {
+            return try options.log.fail(battle.active(player.foe()), .None);
+        } else if (!side.active.volatiles.PerishSong) {
+            side.active.volatiles.PerishSong = true;
+            side.active.volatiles.perish_song = 4;
+            try options.log.start(battle.active(player), .PerishSong3Silent);
+        }
+        foe.active.volatiles.PerishSong = true;
+        foe.active.volatiles.perish_song = 4;
+        try options.log.start(battle.active(player.foe()), .PerishSong3Silent);
+
+        try options.log.fieldactivate(); // FIXME .PerishSong
     }
 
     pub fn poison(battle: anytype, player: Player, state: *State, options: anytype) !void {
