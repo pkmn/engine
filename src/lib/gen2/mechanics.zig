@@ -1993,8 +1993,18 @@ pub const Effects = struct {
         try options.log.singleturn(battle.active(player), state.move);
     }
 
-    pub fn psychUp(battle: anytype, player: Player, state: *State, options: anytype) !void {
-        _ = .{ battle, player, state, options }; // TODO
+    pub fn psychUp(battle: anytype, player: Player, _: *State, options: anytype) !void {
+        _ = .{ battle, player, options }; // TODO
+        // var side = battle.side(player);
+        // const foe = battle.foe(player);
+
+        // // Pokémon Showdown should fail when the enemy has no boosts/unboosts but doesn't
+        // if (!showdown and @as(u32, @bitCast(foe.active.boosts)) == 0) {
+        //     return options.log.fail(battle.active(player), .None);
+        // }
+
+        // side.active.boosts = foe.active.boosts;
+        // try options.log.copyboost(battle.active(player), battle.active(player.foe()));
     }
 
     pub fn pursuit(battle: anytype, player: Player, state: *State, _: anytype) !void {
@@ -2190,10 +2200,6 @@ pub const Effects = struct {
         _ = .{ battle, player, state, options }; // TODO
     }
 
-    pub fn synthesis(battle: anytype, player: Player, state: *State, options: anytype) !void {
-        _ = .{ battle, player, state, options }; // TODO
-    }
-
     pub fn teleport(battle: anytype, player: Player, _: *State, options: anytype) !void {
         if (showdown) return;
 
@@ -2275,10 +2281,6 @@ pub const Effects = struct {
     }
 
     pub fn tripleKick(battle: anytype, player: Player, state: *State, options: anytype) !void {
-        _ = .{ battle, player, state, options }; // TODO
-    }
-
-    pub fn twister(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
     }
 
