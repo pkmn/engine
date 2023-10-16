@@ -2323,10 +2323,10 @@ pub const Effects = struct {
 
         const move = Move.get(state.move);
         switch (move.effect) {
-            .AttackUp1, .AttackUp2, .Rage => {
+            .AttackUp1, .AttackUp2, .Rage, .Swagger => {
                 assert(boosts.atk >= -6 and boosts.atk <= 6);
                 if (boosts.atk == 6 or stats.atk == MAX_STAT_VALUE) return log.fail(ident, .None);
-                const n: u2 = if (move.effect == .AttackUp2) 2 else 1;
+                const n: u2 = if (move.effect == .AttackUp2 or move.effect == .Swagger) 2 else 1;
                 boosts.atk = @as(i4, @intCast(@min(6, @as(i8, boosts.atk) + n)));
                 const reason = if (showdown and move.effect == .Rage) Boost.Rage else Boost.Attack;
                 var mod = STAT_BOOSTS[@as(u4, @intCast(@as(i8, boosts.atk) + 6))];

@@ -519,6 +519,13 @@ const moveFns = async (
       commands.splice(index, replacement === 'aftermove' ? 1 : 2);
       commands[index] = `${index === commands.length - 1 ? '' : 'if'}${replacement}`;
     },
+    // (switchturn, ..., switchturn) -> swagger
+    commands => {
+      const index = commands.indexOf('switchturn');
+      if (index === -1) return;
+      commands.splice(index, commands.lastIndexOf('switchturn') - index);
+      commands[index] = 'swagger';
+    },
   ];
 
   for (const [effect, commands] of effects.entries()) {
@@ -618,6 +625,7 @@ const moveFns = async (
         '}',
         'state.effectiveness = Effectiveness.neutral;'),
     snore: () => write('if (!try Effects.snore(battle, player, state, options)) return;'),
+    swagger: () => write('try Effects.boost(battle, player.foe(), state, options);'),
   };
 
   const FNS: {[command: string]: string} = {

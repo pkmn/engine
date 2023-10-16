@@ -577,12 +577,7 @@ pub fn runMove(battle: anytype, player: Player, state: *State, options: anytype)
         .Swagger => {
             if (!try canMove(battle, player, state, options)) return;
             try checkHit(battle, player, state, options);
-            // TODO switchturn
-            // TODO attackup2
-            // TODO switchturn
-            // TODO failuretext
-            // TODO switchturn
-            // TODO switchturn
+            try Effects.boost(battle, player.foe(), state, options);
             try Effects.confusionChance(battle, player, state, options);
         },
         .FuryCutter => {
