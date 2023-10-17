@@ -1991,8 +1991,24 @@ pub const Effects = struct {
         return weather(battle, .Rain, options);
     }
 
-    pub fn rapidSpin(battle: anytype, player: Player, state: *State, options: anytype) !void {
-        _ = .{ battle, player, state, options }; // TODO
+    pub fn rapidSpin(battle: anytype, player: Player, _: *State, options: anytype) !void {
+        var side = battle.side(player);
+
+        if (side.active.volatiles.LeechSeed) {
+            try options.log.end(battle.active(player), .LeechSeedFrom);
+            side.active.volatiles.LeechSeed = false;
+        }
+
+        if (side.conditions.Spikes) {
+            try options.log.spikesend(battle.active(player));
+            side.conditions.Spikes = false;
+        }
+
+        if (side.active.volatiles.bind.duration > 0) {
+            const reason = @intFromEnum(End.Bind) + side.active.volatiles.bind.reason - 1;
+            try options.log.end(battle.active(player), @enumFromInt(reason));
+            side.active.volatiles.bind = .{};
+        }
     }
 
     pub fn recoil(battle: anytype, player: Player, state: *State, options: anytype) !void {

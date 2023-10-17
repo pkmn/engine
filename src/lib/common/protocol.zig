@@ -257,6 +257,7 @@ pub const End = enum(u8) {
     Encore,
     FutureSight,
     LeechSeed,
+
     Bind,
     Wrap,
     FireSpin,
@@ -272,6 +273,8 @@ pub const End = enum(u8) {
     LightScreenSilent,
     ReflectSilent,
     BideSilent,
+
+    LeechSeedFrom,
 };
 
 pub const Immune = enum(u8) {
@@ -780,14 +783,13 @@ pub fn Log(comptime Writer: type) type {
             });
         }
 
-        pub fn spikesend(self: Self, player: Player, m: anytype, source: ID) Error!void {
+        pub fn spikesend(self: Self, source: ID) Error!void {
             if (!enabled) return;
 
             try self.writer.writeAll(&.{
                 @intFromEnum(ArgType.SideEnd),
-                @intFromEnum(player),
+                @intFromEnum(source.player),
                 @intFromEnum(Side.Spikes),
-                @intFromEnum(m),
                 @as(u8, @bitCast(source)),
             });
         }
@@ -1805,14 +1807,13 @@ test "|-sideend|" {
     try expectLog2(&.{ N(ArgType.SideEnd), 1, N(Side.LightScreen) }, buf[0..3]);
     stream.reset();
 
-    try log.spikesend(.P1, M2.RapidSpin, p1.ident(3));
+    try log.spikesend(p1.ident(3));
     try expectLog2(&.{
         N(ArgType.SideEnd),
         0,
         N(Side.Spikes),
-        N(M2.RapidSpin),
         0b0011,
-    }, buf[0..5]);
+    }, buf[0..4]);
     stream.reset();
 }
 
