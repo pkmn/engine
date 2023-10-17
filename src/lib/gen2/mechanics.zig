@@ -1831,7 +1831,23 @@ pub const Effects = struct {
     }
 
     pub fn paralyze(battle: anytype, player: Player, state: *State, options: anytype) !void {
-        _ = .{ battle, player, state, options }; // TODO
+        var foe = battle.foe(player);
+        const foe_ident = battle.active(player.foe());
+
+        if (Status.is(foe.stored().status, .PAR)) return options.log.fail(foe_ident, .Paralysis);
+        if (state.immune()) return options.log.immune(foe_ident, .None);
+        if (Status.any(foe.stored().status)) return options.log.fail(foe_ident, .None);
+        if (state.miss) {
+            try options.log.lastmiss();
+            return options.log.miss(battle.active(player));
+        } else if (foe.active.volatiles.Substitute) {
+            return options.log.activateMove(foe_ident, .SubstituteBlock, state.move);
+        }
+
+        foe.stored().status = Status.init(.PAR);
+        foe.active.stats.spe = @max(foe.active.stats.spe / 4, 1);
+
+        try options.log.status(foe_ident, foe.stored().status, .None);
     }
 
     pub fn paralyzeChance(battle: anytype, player: Player, state: *State, options: anytype) !void {
@@ -1899,7 +1915,7 @@ pub const Effects = struct {
             return options.log.activateMove(foe_ident, .SubstituteBlock, state.move);
         } else if (state.miss) {
             try options.log.lastmiss();
-            try options.log.miss(battle.active(player));
+            return options.log.miss(battle.active(player));
         }
 
         foe_stored.status = Status.init(.PSN);
