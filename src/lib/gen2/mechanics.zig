@@ -2024,9 +2024,38 @@ pub const Effects = struct {
         try calcDamage(battle, player, state, options);
     }
 
-    pub fn rollout(battle: anytype, player: Player, state: *State, options: anytype) !void {
-        _ = .{ battle, player, state, options }; // TODO
-    }
+    pub const rollout = struct {
+        pub fn check(battle: anytype, player: Player, _: *State, _: anytype) !void {
+            var side = battle.side(player);
+
+            if (!side.active.volatiles.Rollout) {
+                side.active.volatiles.attacks = 0;
+            } else {
+                // TODO SkipToBattleCommand(doturn_command)
+            }
+        }
+
+        pub fn power(battle: anytype, player: Player, state: *State, _: anytype) !void {
+            var side = battle.side(player);
+
+            if (Status.is(side.stored().status, .SLP)) return;
+
+            if (side.active.volatiles.attacks > 0) {
+                // TODO set wSomeoneIsRampaging
+            }
+
+            if (state.miss) {
+                side.active.volatiles.Rollout = false;
+                return;
+            }
+
+            assert(side.active.volatiles.attacks < 5);
+            side.active.volatiles.attacks += 1;
+            side.active.volatiles.Rollout = side.active.volatiles.attacks != 5;
+
+            if (side.active.volatiles.DefenseCurl) state.damage *|= 2;
+        }
+    };
 
     pub fn sandstorm(battle: anytype, player: Player, _: *State, options: anytype) !void {
         if (battle.field.weather != .Sandstorm) return weather(battle, .Sandstorm, options);

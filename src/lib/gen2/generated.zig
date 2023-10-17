@@ -548,7 +548,7 @@ pub fn runMove(battle: anytype, player: Player, state: *State, options: anytype)
             try Effects.sandstorm(battle, player, state, options);
         },
         .Rollout => {
-            // TODO checkcurl
+            try Effects.rollout.check(battle, player, state, options);
             // doturn
             const charging = false; // TODO
             const skip_pp = charging or state.move == .Struggle or
@@ -560,7 +560,7 @@ pub fn runMove(battle: anytype, player: Player, state: *State, options: anytype)
             try calcDamage(battle, player, state, options);
             try adjustDamage(battle, player, state, options);
             try checkHit(battle, player, state, options);
-            // TODO rolloutpower
+            try Effects.rollout.power(battle, player, state, options);
             try randomizeDamage(battle, player, state, options);
             try applyDamage(battle, player, state, options);
             try reportOutcome(battle, player, state, options);
