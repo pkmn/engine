@@ -2239,8 +2239,14 @@ pub const Effects = struct {
         );
     }
 
-    pub fn thrashing(battle: anytype, player: Player, state: *State, options: anytype) !void {
-        _ = .{ battle, player, state, options }; // TODO
+    pub fn thrashing(battle: anytype, player: Player, _: *State, options: anytype) !void {
+        var side = battle.side(player);
+        if (Status.is(side.stored().status, .SLP)) return;
+
+        assert(!side.active.volatiles.Thrashing);
+        side.active.volatiles.Thrashing = true;
+        side.active.volatiles.attacks = Rolls.attackingDuration(battle, player, options);
+        // TODO wSomeoneIsRampaging = true;
     }
 
     pub fn transform(battle: anytype, player: Player, _: *State, options: anytype) !void {
