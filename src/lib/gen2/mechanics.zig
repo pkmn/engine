@@ -2182,8 +2182,26 @@ pub const Effects = struct {
         _ = .{ battle, player, state, options }; // TODO
     }
 
-    pub fn substitute(battle: anytype, player: Player, state: *State, options: anytype) !void {
-        _ = .{ battle, player, state, options }; // TODO
+    pub fn substitute(battle: anytype, player: Player, _: *State, options: anytype) !void {
+        var side = battle.side(player);
+        if (side.active.volatiles.Substitute) {
+            try options.log.fail(battle.active(player), .Substitute);
+            return;
+        }
+
+        assert(side.stored().stats.hp <= 1023);
+        const hp: u8 = @intCast(side.stored().stats.hp / 4);
+
+        if (hp == 0 or side.stored().hp <= hp) {
+            return options.log.fail(battle.active(player), .Weak);
+        }
+
+        side.stored().hp -= hp;
+        side.active.volatiles.substitute = hp;
+        side.active.volatiles.Substitute = true;
+        side.active.volatiles.bind = .{};
+        try options.log.start(battle.active(player), .Substitute);
+        try options.log.damage(battle.active(player), side.stored(), .None);
     }
 
     pub fn sunnyDay(battle: anytype, _: Player, _: *State, options: anytype) !void {
@@ -2194,10 +2212,6 @@ pub const Effects = struct {
         battle.field.weather = w;
         battle.field.weather_duration = 5;
         try options.log.weather(w, .None);
-    }
-
-    pub fn swagger(battle: anytype, player: Player, state: *State, options: anytype) !void {
-        _ = .{ battle, player, state, options }; // TODO
     }
 
     pub fn teleport(battle: anytype, player: Player, _: *State, options: anytype) !void {
