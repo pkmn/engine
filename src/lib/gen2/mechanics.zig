@@ -1664,10 +1664,6 @@ pub const Effects = struct {
         _ = .{ battle, player, state, options }; // TODO
     }
 
-    pub fn jumpKick(battle: anytype, player: Player, state: *State, options: anytype) !void {
-        _ = .{ battle, player, state, options }; // TODO
-    }
-
     pub fn leechSeed(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
     }
@@ -2007,10 +2003,6 @@ pub const Effects = struct {
         _ = .{ battle, player, state, options }; // TODO
     }
 
-    pub fn razorWind(battle: anytype, player: Player, state: *State, options: anytype) !void {
-        _ = .{ battle, player, state, options }; // TODO
-    }
-
     pub fn recoil(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
     }
@@ -2044,10 +2036,6 @@ pub const Effects = struct {
         _ = .{ battle, player, state, options }; // TODO
     }
 
-    pub fn sacredFire(battle: anytype, player: Player, state: *State, options: anytype) !void {
-        _ = .{ battle, player, state, options }; // TODO
-    }
-
     pub fn safeguard(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
     }
@@ -2073,14 +2061,6 @@ pub const Effects = struct {
         } else {
             try options.log.fail(battle.active(player), .None);
         }
-    }
-
-    pub fn skullBash(battle: anytype, player: Player, state: *State, options: anytype) !void {
-        _ = .{ battle, player, state, options }; // TODO
-    }
-
-    pub fn skyAttack(battle: anytype, player: Player, state: *State, options: anytype) !void {
-        _ = .{ battle, player, state, options }; // TODO
     }
 
     pub fn sleep(battle: anytype, player: Player, state: *State, options: anytype) !void {
@@ -2145,6 +2125,16 @@ pub const Effects = struct {
 
     pub fn spite(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
+        // var foe = battle.foe(player);
+
+        // if (state.miss) return options.log.fail(battle.active(player), .None);
+
+        // const last = foe.lastMove(false);
+        // if (showdown) {
+        //     const roll = try Rolls.spite(battle, player, options);
+        // } else {
+        //     if (last != .None) {}
+        // }
     }
 
     pub fn splash(battle: anytype, player: Player, _: *State, options: anytype) !void {
@@ -2316,7 +2306,7 @@ pub const Effects = struct {
                 stats.atk = @min(MAX_STAT_VALUE, stat * mod[0] / mod[1]);
                 try log.boost(ident, reason, n);
             },
-            .DefenseUp1, .DefenseUp2 => {
+            .DefenseUp1, .DefenseUp2, .SkullBash => {
                 assert(boosts.def >= -6 and boosts.def <= 6);
                 if (boosts.def == 6 or stats.def == MAX_STAT_VALUE) return log.fail(ident, .None);
                 const n: u2 = if (move.effect == .DefenseUp2) 2 else 1;
