@@ -1996,7 +1996,20 @@ pub const Effects = struct {
     }
 
     pub fn recoil(battle: anytype, player: Player, state: *State, options: anytype) !void {
-        _ = .{ battle, player, state, options }; // TODO
+        var side = battle.side(player);
+        var stored = side.stored();
+
+        assert(state.damage > 0);
+
+        const damage: i16 = @intCast(@max(state.damage / 4, 1));
+        stored.hp = @intCast(@max(@as(i16, @intCast(stored.hp)) - damage, 0));
+
+        try options.log.damageOf(
+            battle.active(player),
+            stored,
+            .RecoilOf,
+            battle.active(player.foe()),
+        );
     }
 
     pub fn reversal(battle: anytype, player: Player, state: *State, options: anytype) !void {
