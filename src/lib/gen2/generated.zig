@@ -344,13 +344,17 @@ pub fn runMove(battle: anytype, player: Player, state: *State, options: anytype)
             if (!try canMove(battle, player, state, options)) return;
             try Effects.heal(battle, player, state, options);
         },
+        .LightScreen => {
+            if (!try canMove(battle, player, state, options)) return;
+            try Effects.lightScreen(battle, player, state, options);
+        },
         .Haze => {
             if (!try canMove(battle, player, state, options)) return;
             try Effects.haze(battle, player, state, options);
         },
-        .LightScreen, .Reflect => {
+        .Reflect => {
             if (!try canMove(battle, player, state, options)) return;
-            try Effects.screens(battle, player, state, options);
+            try Effects.reflect(battle, player, state, options);
         },
         .FocusEnergy => {
             if (!try canMove(battle, player, state, options)) return;

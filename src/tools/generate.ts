@@ -583,7 +583,6 @@ const moveFns = async (
     ['Endure', 'Protect'],
     ['Toxic', 'Poison'],
     ['AlwaysHit', 'HighCritical', 'Priority', 'JumpKick', 'None'],
-    ['LightScreen', 'Reflect'],
     ['SuperFang', 'LevelDamage', 'Psywave', 'FixedDamage'],
     ['DoubleHit', 'MultiHit'],
     ['MorningSun', 'Synthesis', 'Moonlight'],
@@ -631,6 +630,9 @@ const moveFns = async (
         'state.effectiveness = Effectiveness.neutral;'),
     snore: () => write('if (!try Effects.snore(battle, player, state, options)) return;'),
     swagger: () => write('try Effects.boost(battle, player.foe(), state, options);'),
+    screen: effect => effect === 'LightScreen'
+      ? write('try Effects.lightScreen(battle, player, state, options);')
+      : write('try Effects.reflect(battle, player, state, options);'),
   };
 
   const FNS: {[command: string]: string} = {
@@ -646,7 +648,7 @@ const moveFns = async (
     constantdamage: 'Effects.fixedDamage', confusetarget: 'Effects.confusionChance',
     selfdestruct: 'Effects.explode', rechargenextturn: 'Effects.hyperBeam',
     draintarget: 'Effects.drainHP', skipsuncharge: 'Effects.solarBeam',
-    defenseup: 'Effects.boost', screen: 'Effects.screens', tristatuschance: 'Effects.triAttack',
+    defenseup: 'Effects.boost', tristatuschance: 'Effects.triAttack',
     allstatsup: 'Effects.allStatUpChance', defrost: 'Effects.defrost',
     happinesspower: 'Effects.happiness', startrain: 'Effects.rainDance',
     clearhazards: 'Effects.rapidSpin', healnite: 'Effects.weatherHeal', rage: 'Effects.rage.start',
@@ -661,7 +663,7 @@ const moveFns = async (
 
   const writeCommands = (name: string) => {
     indent++;
-    for (const command of effects.get(name)!) {
+    for (const command of effects.get(name === 'LightScreen' ? 'Reflect' : name)!) {
       const fn = FNS[command] ?? (command === name.toLowerCase()
         ? `Effects.${name[0].toLowerCase()}${name.slice(1)}`
         : undefined);

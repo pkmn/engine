@@ -1260,10 +1260,6 @@ pub fn destinyBond(battle: anytype, player: Player, _: *State, options: anytype)
 }
 
 pub const Effects = struct {
-    pub fn alwaysHit(battle: anytype, player: Player, state: *State, options: anytype) !void {
-        _ = .{ battle, player, state, options }; // TODO
-    }
-
     pub fn attract(battle: anytype, player: Player, _: *State, options: anytype) !void {
         const side = battle.side(player);
         var foe = battle.foe(player);
@@ -1528,10 +1524,6 @@ pub const Effects = struct {
             ),
             else => unreachable,
         };
-    }
-
-    pub fn flameWheel(battle: anytype, player: Player, state: *State, options: anytype) !void {
-        _ = .{ battle, player, state, options }; // TODO
     }
 
     pub fn flinchChance(battle: anytype, player: Player, state: *State, _: anytype) !void {
@@ -2036,17 +2028,37 @@ pub const Effects = struct {
         _ = .{ battle, player, state, options }; // TODO
     }
 
-    pub fn safeguard(battle: anytype, player: Player, state: *State, options: anytype) !void {
-        _ = .{ battle, player, state, options }; // TODO
-    }
-
     pub fn sandstorm(battle: anytype, player: Player, _: *State, options: anytype) !void {
         if (battle.field.weather != .Sandstorm) return weather(battle, .Sandstorm, options);
         return options.log.fail(battle.active(player), .None);
     }
 
-    pub fn screens(battle: anytype, player: Player, state: *State, options: anytype) !void {
-        _ = .{ battle, player, state, options }; // TODO
+    pub fn safeguard(battle: anytype, player: Player, _: *State, options: anytype) !void {
+        return screens(battle, player, "Safeguard", "safeguard", options);
+    }
+
+    pub fn reflect(battle: anytype, player: Player, _: *State, options: anytype) !void {
+        return screens(battle, player, "Reflect", "reflect", options);
+    }
+
+    pub fn lightScreen(battle: anytype, player: Player, _: *State, options: anytype) !void {
+        return screens(battle, player, "LightScreen", "light_screen", options);
+    }
+
+    fn screens(
+        battle: anytype,
+        player: Player,
+        comptime key: []const u8,
+        comptime value: []const u8,
+        options: anytype,
+    ) !void {
+        var side = battle.side(player);
+
+        if (@field(side.conditions, key)) return options.log.fail(battle.active(player), .None);
+
+        @field(side.conditions, key) = true;
+        @field(side.conditions, value) = 5;
+        try options.log.sidestart(player, @field(protocol.Side, key));
     }
 
     pub fn sketch(battle: anytype, player: Player, _: *State, options: anytype) !void {
