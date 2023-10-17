@@ -1333,7 +1333,7 @@ pub const Effects = struct {
         if (foe.active.volatiles.Substitute) return;
         if (Status.any(foe_stored.status)) {
             if (Status.is(foe_stored.status, .FRZ)) {
-                assert(Move.get(state.move).type == .Fire);
+                assert(Move.get(state.move).type == .Fire or state.move == .TriAttack);
                 try options.log.curestatus(
                     battle.active(player.foe()),
                     foe_stored.status,
@@ -1347,7 +1347,9 @@ pub const Effects = struct {
         if (foe.conditions.Safeguard) return;
         // Nothing is immune to Fire-type, but Ghosts are immune to burnChance called by Tri Attack
         if (state.immune()) return;
-        if (foe.active.types.includes(Move.get(state.move).type)) return;
+        if (foe.active.types.includes(Move.get(state.move).type) and state.move != .TriAttack) {
+            return;
+        }
 
         foe_stored.status = Status.init(.BRN);
         foe.active.stats.atk = @max(foe.active.stats.atk / 2, 1);
@@ -1606,8 +1608,11 @@ pub const Effects = struct {
         if (Status.any(foe_stored.status)) return;
 
         // Nothing is immune to Ice-type, but Ghosts are immune to freezeChance called by Tri Attack
+        if (state.immune()) return;
         if (battle.field.weather == .Sun) return;
-        if (foe.active.types.includes(Move.get(state.move).type)) return;
+        if (foe.active.types.includes(Move.get(state.move).type) and state.move != .TriAttack) {
+            return;
+        }
         if (!state.proc) return;
         if (foe.conditions.Safeguard) return;
         // Freeze Clause Mod
