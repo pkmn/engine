@@ -2025,7 +2025,7 @@ pub const Effects = struct {
         // GLITCH: HP recovery move failure glitches
         const delta = stored.stats.hp - stored.hp;
         if (delta == 0 or (delta & 255 == 255 and stored.hp % 256 != 0)) {
-            return try options.log.fail(ident, .None);
+            return options.log.fail(ident, .None);
         }
 
         const rest = side.last_selected_move == .Rest;
@@ -2107,7 +2107,7 @@ pub const Effects = struct {
                 // Invulnerable foes or 1/256 miss can trigger |-miss| instead of |-fail|
                 if (!try checkHit(battle, player, move, options)) return;
                 try options.chance.commit(player, .hit);
-                return try options.log.fail(battle.active(player.foe()), .None);
+                return options.log.fail(battle.active(player.foe()), .None);
             }
         }
         if (!try checkHit(battle, player, move, options)) return;
@@ -2325,8 +2325,7 @@ pub const Effects = struct {
     fn substitute(battle: anytype, player: Player, residual: *bool, options: anytype) !void {
         var side = battle.side(player);
         if (side.active.volatiles.Substitute) {
-            try options.log.fail(battle.active(player), .Substitute);
-            return;
+            return options.log.fail(battle.active(player), .Substitute);
         }
 
         assert(side.stored().stats.hp <= 1023);
@@ -2337,10 +2336,7 @@ pub const Effects = struct {
         // the target's HP is exactly divisible by 4 (here we're using an inlined divCeil routine to
         // avoid having to convert to floating point)
         const required_hp = if (showdown) @divFloor(side.stored().stats.hp - 1, 4) + 1 else hp;
-        if (side.stored().hp < required_hp) {
-            try options.log.fail(battle.active(player), .Weak);
-            return;
-        }
+        if (side.stored().hp < required_hp) return options.log.fail(battle.active(player), .Weak);
 
         // GLITCH: can leave the user with 0 HP (faints later) because didn't check '<=' above
         side.stored().hp -= hp;
@@ -2432,7 +2428,7 @@ pub const Effects = struct {
         switch (move.effect) {
             .AttackUp1, .AttackUp2, .Rage => {
                 assert(boosts.atk >= -6 and boosts.atk <= 6);
-                if (boosts.atk == 6) return try log.fail(ident, .None);
+                if (boosts.atk == 6) return log.fail(ident, .None);
                 const n: u2 = if (move.effect == .AttackUp2) 2 else 1;
                 boosts.atk = @as(i4, @intCast(@min(6, @as(i8, boosts.atk) + n)));
                 const reason = if (move.effect == .Rage) Boost.Rage else Boost.Attack;
@@ -2443,7 +2439,7 @@ pub const Effects = struct {
                         try log.boost(ident, Boost.Attack, -1);
                         if (move.effect == .Rage) return;
                     }
-                    return try log.fail(ident, .None);
+                    return log.fail(ident, .None);
                 }
                 var mod = BOOSTS[@as(u4, @intCast(@as(i8, boosts.atk) + 6))];
                 const stat = unmodifiedStats(battle, side).atk;
@@ -2454,7 +2450,7 @@ pub const Effects = struct {
             },
             .DefenseUp1, .DefenseUp2 => {
                 assert(boosts.def >= -6 and boosts.def <= 6);
-                if (boosts.def == 6) return try log.fail(ident, .None);
+                if (boosts.def == 6) return log.fail(ident, .None);
                 const n: u2 = if (move.effect == .DefenseUp2) 2 else 1;
                 boosts.def = @intCast(@min(6, @as(i8, boosts.def) + n));
                 if (stats.def == MAX_STAT_VALUE) {
@@ -2463,7 +2459,7 @@ pub const Effects = struct {
                         try log.boost(ident, .Defense, n);
                         try log.boost(ident, .Defense, -1);
                     }
-                    return try log.fail(ident, .None);
+                    return log.fail(ident, .None);
                 }
                 var mod = BOOSTS[@as(u4, @intCast(@as(i8, boosts.def) + 6))];
                 const stat = unmodifiedStats(battle, side).def;
@@ -2472,7 +2468,7 @@ pub const Effects = struct {
             },
             .SpeedUp2 => {
                 assert(boosts.spe >= -6 and boosts.spe <= 6);
-                if (boosts.spe == 6) return try log.fail(ident, .None);
+                if (boosts.spe == 6) return log.fail(ident, .None);
                 boosts.spe = @intCast(@min(6, @as(i8, boosts.spe) + 2));
                 if (stats.spe == MAX_STAT_VALUE) {
                     boosts.spe -= 1;
@@ -2480,7 +2476,7 @@ pub const Effects = struct {
                         try log.boost(ident, .Speed, 2);
                         try log.boost(ident, .Speed, -1);
                     }
-                    return try log.fail(ident, .None);
+                    return log.fail(ident, .None);
                 }
                 var mod = BOOSTS[@as(u4, @intCast(@as(i8, boosts.spe) + 6))];
                 const stat = unmodifiedStats(battle, side).spe;
@@ -2489,7 +2485,7 @@ pub const Effects = struct {
             },
             .SpecialUp1, .SpecialUp2 => {
                 assert(boosts.spc >= -6 and boosts.spc <= 6);
-                if (boosts.spc == 6) return try log.fail(ident, .None);
+                if (boosts.spc == 6) return log.fail(ident, .None);
                 const n: u2 = if (move.effect == .SpecialUp2) 2 else 1;
                 boosts.spc = @intCast(@min(6, @as(i8, boosts.spc) + n));
                 if (stats.spc == MAX_STAT_VALUE) {
@@ -2500,7 +2496,7 @@ pub const Effects = struct {
                         try log.boost(ident, .SpecialDefense, n);
                         try log.boost(ident, .SpecialDefense, -1);
                     }
-                    return try log.fail(ident, .None);
+                    return log.fail(ident, .None);
                 }
                 var mod = BOOSTS[@as(u4, @intCast(@as(i8, boosts.spc) + 6))];
                 const stat = unmodifiedStats(battle, side).spc;
@@ -2510,7 +2506,7 @@ pub const Effects = struct {
             },
             .EvasionUp1 => {
                 assert(boosts.evasion >= -6 and boosts.evasion <= 6);
-                if (boosts.evasion == 6) return try log.fail(ident, .None);
+                if (boosts.evasion == 6) return log.fail(ident, .None);
                 boosts.evasion = @intCast(@min(6, @as(i8, boosts.evasion) + 1));
                 try log.boost(ident, .Evasion, 1);
             },
@@ -2553,7 +2549,7 @@ pub const Effects = struct {
                         try log.boost(foe_ident, .Attack, -1);
                         try log.boost(foe_ident, .Attack, 1);
                     }
-                    return try log.fail(foe_ident, .None);
+                    return log.fail(foe_ident, .None);
                 }
                 var mod = BOOSTS[@as(u4, @intCast(@as(i8, boosts.atk) + 6))];
                 const stat = unmodifiedStats(battle, foe).atk;
@@ -2571,7 +2567,7 @@ pub const Effects = struct {
                         try log.boost(foe_ident, .Defense, -@as(i8, n));
                         try log.boost(foe_ident, .Defense, 1);
                     }
-                    return try log.fail(foe_ident, .None);
+                    return log.fail(foe_ident, .None);
                 }
                 var mod = BOOSTS[@as(u4, @intCast(@as(i8, boosts.def) + 6))];
                 const stat = unmodifiedStats(battle, foe).def;
@@ -2588,7 +2584,7 @@ pub const Effects = struct {
                         try log.boost(foe_ident, .Speed, -1);
                         try log.boost(foe_ident, .Speed, 1);
                     }
-                    return try log.fail(foe_ident, .None);
+                    return log.fail(foe_ident, .None);
                 }
                 var mod = BOOSTS[@as(u4, @intCast(@as(i8, boosts.spe) + 6))];
                 const stat = unmodifiedStats(battle, foe).spe;
@@ -2608,7 +2604,7 @@ pub const Effects = struct {
                         try log.boost(foe_ident, .SpecialDefense, -1);
                         try log.boost(foe_ident, .SpecialDefense, 1);
                     }
-                    return try log.fail(foe_ident, .None);
+                    return log.fail(foe_ident, .None);
                 }
                 var mod = BOOSTS[@as(u4, @intCast(@as(i8, boosts.spc) + 6))];
                 const stat = unmodifiedStats(battle, foe).spc;
