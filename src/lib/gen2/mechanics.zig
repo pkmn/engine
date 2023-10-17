@@ -2135,8 +2135,12 @@ pub const Effects = struct {
         return false;
     }
 
-    pub fn spikes(battle: anytype, player: Player, state: *State, options: anytype) !void {
-        _ = .{ battle, player, state, options }; // TODO
+    pub fn spikes(battle: anytype, player: Player, _: *State, options: anytype) !void {
+        var foe = battle.foe(player);
+        if (foe.conditions.Spikes) return options.log.fail(battle.active(player), .None);
+
+        foe.conditions.Spikes = true;
+        try options.log.sidestart(player.foe(), .Spikes);
     }
 
     pub fn spite(battle: anytype, player: Player, state: *State, options: anytype) !void {
