@@ -1391,8 +1391,31 @@ pub const Effects = struct {
         side.active.types.type2 = side.active.types.type1;
     }
 
-    pub fn counter(battle: anytype, player: Player, state: *State, options: anytype) !void {
-        _ = .{ battle, player, state, options }; // TODO
+    pub fn counter(battle: anytype, player: Player, state: *State, _: anytype) !void {
+        assert(state.move == .Counter or state.move == .MirrorCoat);
+
+        const foe = battle.foe(player);
+
+        state.miss = true;
+        const last = foe.lastMove(false);
+
+        if (last == .None) return;
+        if (last == state.move) return;
+
+        const immune = state.immune();
+        state.effectiveness = Effectiveness.neutral;
+        if (immune) {
+            state.damage = 0;
+            return;
+        }
+
+        const move = Move.get(last);
+        if (move.bp == 0) return;
+        if (move.type.special() != (last == .MirrorCoat)) return;
+        if (state.damage == 0) return;
+
+        state.damage *|= 2;
+        state.miss = false;
     }
 
     pub fn curse(battle: anytype, player: Player, state: *State, options: anytype) !void {

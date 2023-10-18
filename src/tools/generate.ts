@@ -584,6 +584,7 @@ const moveFns = async (
     ['Toxic', 'Poison'],
     ['AlwaysHit', 'HighCritical', 'Priority', 'JumpKick', 'None'],
     ['SuperFang', 'LevelDamage', 'Psywave', 'FixedDamage'],
+    ['MirrorCoat', 'Counter'],
     ['DoubleHit', 'MultiHit'],
     ['MorningSun', 'Synthesis', 'Moonlight'],
     ['DreamEater', 'DrainHP'],

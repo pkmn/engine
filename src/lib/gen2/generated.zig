@@ -260,7 +260,7 @@ pub fn runMove(battle: anytype, player: Player, state: *State, options: anytype)
             try Effects.hyperBeam(battle, player, state, options);
             _ = try afterMove(!KINGS, battle, player, state, options);
         },
-        .Counter => {
+        .MirrorCoat, .Counter => {
             if (!try canMove(battle, player, state, options)) return;
             try Effects.counter(battle, player, state, options);
             try applyDamage(battle, player, state, options);
@@ -729,12 +729,6 @@ pub fn runMove(battle: anytype, player: Player, state: *State, options: anytype)
         .SunnyDay => {
             if (!try canMove(battle, player, state, options)) return;
             try Effects.sunnyDay(battle, player, state, options);
-        },
-        .MirrorCoat => {
-            if (!try canMove(battle, player, state, options)) return;
-            try Effects.mirrorCoat(battle, player, state, options);
-            try applyDamage(battle, player, state, options);
-            _ = try afterMove(KINGS, battle, player, state, options);
         },
         .PsychUp => {
             if (!try canMove(battle, player, state, options)) return;
