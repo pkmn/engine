@@ -245,7 +245,11 @@ fn switchIn(battle: anytype, player: Player, slot: u8, kind: SwitchIn, options: 
     active.types = incoming.types;
     active.species = incoming.species;
 
-    statusModify(incoming.status, &active.stats);
+    if (Status.is(incoming.status, .PAR)) {
+        active.stats.spe = @max(active.stats.spe / 4, 1);
+    } else if (Status.is(incoming.status, .BRN)) {
+        active.stats.atk = @max(active.stats.atk / 2, 1);
+    }
 
     if (kind == .Drag) {
         try options.log.drag(battle.active(player), incoming);
@@ -1420,6 +1424,25 @@ pub const Effects = struct {
 
     pub fn curse(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
+
+        // var side = battle.side(player);
+        // const ident = battle.active(player);
+
+        // if (side.active.pokemon.types.includes(.Ghost)) {
+        //     //
+        // } else {
+        //     var stats = &side.active.stats;
+        //     var boosts = &side.active.boosts;
+
+        //     assert(boosts.atk >= -6 and boosts.atk <= 6);
+        //     assert(boosts.def >= -6 and boosts.def <= 6);
+
+        //     const atk = boosts.atk == 6 or stats.atk == MAX_STAT_VALUE;
+        //     const def = boosts.def == 6 or stats.def == MAX_STAT_VALUE;
+        //     if (atk and def) return options.log.fail(ident, .None);
+
+        //     // TODO
+        // }
     }
 
     pub fn defenseCurl(battle: anytype, player: Player, _: *State, _: anytype) !void {
@@ -2395,11 +2418,18 @@ pub const Effects = struct {
                 var mod = STAT_BOOSTS[@as(u4, @intCast(@as(i8, @field(boosts, s)) + 6))];
                 const stat = @field(unmodifiedStats(battle, side), s);
                 @field(stats, s) = @min(MAX_STAT_VALUE, stat * mod[0] / mod[1]);
+                if (comptime std.mem.eql(u8, s, "atk")) {
+                    if (Status.is(side.stored().status, .BRN)) {
+                        @field(stats, s) = @max(@field(stats, s) / 2, 1);
+                    }
+                } else if (comptime std.mem.eql(u8, s, "atk")) {
+                    if (Status.is(side.stored().status, .PAR)) {
+                        @field(stats, s) = @max(@field(stats, s) / 4, 1);
+                    }
+                }
                 try options.log.boost(battle.active(player), r, 1);
             }
         }
-
-        statusModify(side.stored().status, stats);
     }
 
     pub fn boost(battle: anytype, player: Player, state: *State, options: anytype) !void {
@@ -2423,6 +2453,7 @@ pub const Effects = struct {
                 var mod = STAT_BOOSTS[@as(u4, @intCast(@as(i8, boosts.atk) + 6))];
                 const stat = unmodifiedStats(battle, side).atk;
                 stats.atk = @min(MAX_STAT_VALUE, stat * mod[0] / mod[1]);
+                if (Status.is(side.stored().status, .BRN)) stats.atk = @max(stats.atk / 2, 1);
                 try log.boost(ident, reason, n);
             },
             .DefenseUp1, .DefenseUp2, .SkullBash => {
@@ -2442,6 +2473,7 @@ pub const Effects = struct {
                 var mod = STAT_BOOSTS[@as(u4, @intCast(@as(i8, boosts.spe) + 6))];
                 const stat = unmodifiedStats(battle, side).spe;
                 stats.spe = @min(MAX_STAT_VALUE, stat * mod[0] / mod[1]);
+                if (Status.is(side.stored().status, .PAR)) stats.spe = @max(stats.spe / 4, 1);
                 try log.boost(ident, .Speed, 2);
             },
             .SpAtkUp1 => {
@@ -2471,8 +2503,6 @@ pub const Effects = struct {
             },
             else => unreachable,
         }
-
-        statusModify(side.stored().status, stats);
     }
 
     pub fn unboost(battle: anytype, player: Player, state: *State, options: anytype) !void {
@@ -2507,6 +2537,7 @@ pub const Effects = struct {
                 var mod = STAT_BOOSTS[@as(u4, @intCast(@as(i8, boosts.atk) + 6))];
                 const stat = unmodifiedStats(battle, foe).atk;
                 stats.atk = @max(1, stat * mod[0] / mod[1]);
+                if (Status.is(foe.stored().status, .BRN)) stats.atk = @max(stats.atk / 2, 1);
                 try log.boost(foe_ident, .Attack, -@as(i8, n));
             },
             .DefenseDown1, .DefenseDown2, .DefenseDownChance => {
@@ -2541,6 +2572,7 @@ pub const Effects = struct {
                 var mod = STAT_BOOSTS[@as(u4, @intCast(@as(i8, boosts.spe) + 6))];
                 const stat = unmodifiedStats(battle, foe).spe;
                 stats.spe = @max(1, stat * mod[0] / mod[1]);
+                if (Status.is(foe.stored().status, .PAR)) stats.spe = @max(stats.spe / 4, 1);
                 try log.boost(foe_ident, .Speed, -@as(i8, n));
                 assert(boosts.spe >= -6);
             },
@@ -2570,8 +2602,6 @@ pub const Effects = struct {
             },
             else => unreachable,
         }
-
-        statusModify(foe.stored().status, stats);
     }
 };
 
@@ -2579,14 +2609,6 @@ fn unmodifiedStats(battle: anytype, side: *Side) *Stats(u16) {
     if (!side.active.volatiles.Transform) return &side.stored().stats;
     const id = ID.from(side.active.volatiles.transform);
     return &battle.side(id.player).pokemon[id.id - 1].stats;
-}
-
-fn statusModify(status: u8, stats: *Stats(u16)) void {
-    if (Status.is(status, .PAR)) {
-        stats.spe = @max(stats.spe / 4, 1);
-    } else if (Status.is(status, .BRN)) {
-        stats.atk = @max(stats.atk / 2, 1);
-    }
 }
 
 fn isForced(active: anytype) bool {
