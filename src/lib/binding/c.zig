@@ -62,7 +62,7 @@ export fn pkmn_psrng_next(prng: *pkmn.PSRNG) u32 {
     return prng.next();
 }
 
-export fn pkmn_rational_reset(rational: *pkmn.Rational(f64)) void {
+export fn pkmn_rational_init(rational: *pkmn.Rational(f64)) void {
     rational.reset();
 }
 

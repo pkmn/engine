@@ -44,7 +44,7 @@ pub fn Rational(comptime T: type) type {
         /// Both p and q must be >= 1, and if computable at comptime must have no common factors.
         pub fn update(r: *Self, p: anytype, q: anytype) Error!void {
             // FIXME
-            // std.debug.print("({d}/{d}) * ", .{p, q});
+            // std.debug.print("({d}/{d}) * ", .{ p, q });
             assert(p >= 1);
             assert(q >= 1);
 
