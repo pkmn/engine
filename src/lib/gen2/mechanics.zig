@@ -1738,8 +1738,9 @@ pub const Effects = struct {
         _ = .{ battle, player, state, options }; // TODO
     }
 
-    pub fn hyperBeam(battle: anytype, player: Player, state: *State, options: anytype) !void {
-        _ = .{ battle, player, state, options }; // TODO
+    pub fn hyperBeam(battle: anytype, player: Player, _: *State, options: anytype) !void {
+        battle.side(player).active.volatiles.Recharging = true;
+        try options.log.mustrecharge(battle.active(player));
     }
 
     pub fn leechSeed(battle: anytype, player: Player, state: *State, options: anytype) !void {
