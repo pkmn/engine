@@ -1743,7 +1743,33 @@ pub const Effects = struct {
     }
 
     pub fn leechSeed(battle: anytype, player: Player, state: *State, options: anytype) !void {
-        _ = .{ battle, player, state, options }; // TODO
+        var foe = battle.foe(player);
+
+        if (showdown) {
+            // Invulnerability trumps type immunity on Pokémon Showdown
+            const invulnerable = foe.active.volatiles.Underground or foe.active.volatiles.Flying;
+            if (!invulnerable and foe.active.types.includes(.Grass)) {
+                return options.log.immune(battle.active(player.foe()), .None);
+            }
+            try checkHit(battle, player, state, options);
+            if (state.miss) {
+                try options.log.lastmiss();
+                return options.log.miss(battle.active(player));
+            }
+            if (foe.active.volatiles.LeechSeed) return;
+        } else {
+            try checkHit(battle, player, state, options);
+            const miss =
+                state.miss or foe.active.types.includes(.Grass) or foe.active.volatiles.LeechSeed;
+            if (miss) {
+                try options.log.lastmiss();
+                return options.log.miss(battle.active(player));
+            }
+        }
+
+        foe.active.volatiles.LeechSeed = true;
+
+        try options.log.start(battle.active(player.foe()), .LeechSeed);
     }
 
     pub fn lockOn(battle: anytype, player: Player, state: *State, options: anytype) !void {
