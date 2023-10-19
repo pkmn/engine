@@ -97,6 +97,8 @@ const CRITICAL_HITS = &[_]u8{
 
 const MAX_STAT_VALUE = 999;
 
+const STATS = [_][]const u8{ "atk", "def", "spe", "spa", "spd" };
+
 pub const State = struct {
     damage: u16 = 0, // wCurDamage
     effectiveness: u16 = Effectiveness.neutral, // wTypeModifier
@@ -1736,8 +1738,21 @@ pub const Effects = struct {
         _ = .{ battle, player, state, options }; // TODO
     }
 
-    pub fn healBell(battle: anytype, player: Player, state: *State, options: anytype) !void {
-        _ = .{ battle, player, state, options }; // TODO
+    pub fn healBell(battle: anytype, player: Player, _: *State, options: anytype) !void {
+        var side = battle.side(player);
+        side.active.volatiles.Nightmare = false;
+
+        try options.log.cureteam(battle.active(player));
+        for (&side.pokemon) |*p| p.status = 0;
+
+        // We technically only need to recompute stats if the active Pokémon was burned/paralyzed,
+        // but adding a branch to check for that is probably more expensive than just recomputing
+        var stats = unmodifiedStats(battle, side);
+        inline for (STATS) |s| {
+            var mod = STAT_BOOSTS[@as(u4, @intCast(@as(i8, @field(side.active.boosts, s)) + 6))];
+            const val = @field(stats, s) * mod[0] / mod[1];
+            @field(side.active.stats, s) = @max(1, @min(MAX_STAT_VALUE, val));
+        }
     }
 
     pub fn hiddenPower(battle: anytype, player: Player, state: *State, _: anytype) !void {
@@ -2486,8 +2501,7 @@ pub const Effects = struct {
         _ = .{ battle, player, state, options }; // TODO
     }
 
-    const ALL_STAT_UP_STATS = [_][]const u8{ "atk", "def", "spe", "spa", "spd" };
-    const ALL_STAT_UP_REASONS =
+    const STAT_UP_REASONS =
         [_]Boost{ .Attack, .Defense, .Speed, .SpecialAttack, .SpecialDefense };
 
     pub fn allStatUpChance(battle: anytype, player: Player, state: *State, options: anytype) !void {
@@ -2497,7 +2511,7 @@ pub const Effects = struct {
         var boosts = &side.active.boosts;
 
         if (!state.proc) return;
-        inline for (ALL_STAT_UP_STATS, ALL_STAT_UP_REASONS) |s, r| {
+        inline for (STATS, STAT_UP_REASONS) |s, r| {
             assert(@field(boosts, s) >= -6 and @field(boosts, s) <= 6);
             if (@field(boosts, s) == 6 or @field(stats, s) == MAX_STAT_VALUE) {
                 try options.log.boost(battle.active(player), r, 0);
