@@ -1747,7 +1747,17 @@ pub const Effects = struct {
     }
 
     pub fn lockOn(battle: anytype, player: Player, state: *State, options: anytype) !void {
-        _ = .{ battle, player, state, options }; // TODO
+        var foe = battle.foe(player);
+        const foe_ident = battle.active(player.foe());
+
+        if (foe.active.volatiles.Substitute) {
+            return options.log.activateMove(foe_ident, .SubstituteBlock, state.move);
+        } else if (state.miss) {
+            return options.log.fail(foe_ident, .None);
+        }
+
+        foe.active.volatiles.LockOn = true;
+        try options.log.activate(battle.active(player), .LockOn);
     }
 
     const MAGNITUDE_POWER = [_]u8{ 10, 30, 50, 70, 90, 110, 150 };
