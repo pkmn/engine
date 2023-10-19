@@ -101,6 +101,7 @@ pub const State = struct {
     damage: u16 = 0, // wCurDamage
     effectiveness: u16 = Effectiveness.neutral, // wTypeModifier
     bp: u8, // wPlayerMoveStructPower
+    type: Type, // BATTLE_VARS_MOVE_TYPE
     accuracy: u8, // wEnemyMoveStruct + MOVE_ACC
     move: Move, // wCurPlayerMove
     from: Move = .None,
@@ -112,7 +113,7 @@ pub const State = struct {
     proc: bool = true, // wEffectFailed
 
     comptime {
-        assert(@sizeOf(State) == 14);
+        assert(@sizeOf(State) == 16);
     }
 
     pub fn immune(self: *State) bool {
@@ -410,8 +411,14 @@ fn executeMove(
 
     // FIXME: need damage from doTurn
     const m = Move.get(move);
-    var state: State =
-        .{ .move = move, .mslot = mslot, .first = first, .accuracy = m.accuracy, .bp = m.bp };
+    var state: State = .{
+        .move = move,
+        .mslot = mslot,
+        .first = first,
+        .accuracy = m.accuracy,
+        .bp = m.bp,
+        .type = m.type,
+    };
     try generated.runMove(battle, player, &state, options);
     return null;
 }
@@ -643,7 +650,7 @@ pub fn afterMove(
 
 pub fn checkCriticalHit(battle: anytype, player: Player, state: *State, options: anytype) !void {
     const move = Move.get(state.move);
-    if (move.bp == 0) return;
+    if (state.bp == 0) return;
 
     const side = battle.side(player);
     const pokemon = side.stored();
@@ -681,31 +688,30 @@ pub fn adjustDamage(battle: anytype, player: Player, state: *State, _: anytype) 
     const side = battle.side(player);
     const foe = battle.foe(player);
     const types = foe.active.types;
-    const move = Move.get(state.move);
 
     var d = state.damage;
-    if ((move.type == .Water and battle.field.weather == .Rain) or
-        (move.type == .Fire and battle.field.weather == .Sun))
+    if ((state.type == .Water and battle.field.weather == .Rain) or
+        (state.type == .Fire and battle.field.weather == .Sun))
     {
         d = d *% @intFromEnum(Effectiveness.Super) / 10;
-    } else if ((move.type == .Water and battle.field.weather == .Sun) or
-        ((move.type == .Fire or state.move == .SolarBeam) and battle.field.weather == .Rain))
+    } else if ((state.type == .Water and battle.field.weather == .Sun) or
+        ((state.type == .Fire or state.move == .SolarBeam) and battle.field.weather == .Rain))
     {
         d = d *% @intFromEnum(Effectiveness.Resisted) / 10;
     }
 
-    if (side.active.types.includes(move.type)) d +%= d / 2;
+    if (side.active.types.includes(state.type)) d +%= d / 2;
 
     const neutral = @intFromEnum(Effectiveness.Neutral);
-    const foresight = foe.active.volatiles.Foresight and FORESIGHT.includes(move.type);
+    const foresight = foe.active.volatiles.Foresight and FORESIGHT.includes(state.type);
     const eff1: u16 = if (foresight and types.type1 == .Ghost)
         neutral
     else
-        @intFromEnum(move.type.effectiveness(types.type1));
+        @intFromEnum(state.type.effectiveness(types.type1));
     const eff2: u16 = if (foresight and types.type2 == .Ghost)
         neutral
     else
-        @intFromEnum(move.type.effectiveness(types.type2));
+        @intFromEnum(state.type.effectiveness(types.type2));
 
     // Type effectiveness matchup precedence only matters with (NVE, SE)
     if (!showdown and (eff1 + eff2) == Effectiveness.mismatch and
@@ -1424,7 +1430,7 @@ pub const Effects = struct {
         }
 
         const move = Move.get(last);
-        if (move.bp == 0) return;
+        if (state.bp == 0) return;
         if (move.type.special() != (last == .MirrorCoat)) return;
         if (state.damage == 0) return;
 
@@ -1734,8 +1740,10 @@ pub const Effects = struct {
         _ = .{ battle, player, state, options }; // TODO
     }
 
-    pub fn hiddenPower(battle: anytype, player: Player, state: *State, options: anytype) !void {
-        _ = .{ battle, player, state, options }; // TODO
+    pub fn hiddenPower(battle: anytype, player: Player, state: *State, _: anytype) !void {
+        const side = battle.side(player);
+        state.bp = side.stored().dvs.power();
+        state.type = side.stored().dvs.type;
     }
 
     pub fn hyperBeam(battle: anytype, player: Player, _: *State, options: anytype) !void {
