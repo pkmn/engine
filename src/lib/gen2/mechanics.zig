@@ -1296,6 +1296,13 @@ pub const Effects = struct {
 
     pub fn bellyDrum(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
+        // assert(!state.miss);
+        // var side = battle.side(player);
+        // try boostStat(battle, side, &side.active.stats, &side.active.boosts, "atk", 2);
+        // TODO
+        // |-boost|p1a: Poliwag|atk|2|[silent]
+        // |-fail|p1a: Poliwag
+        //
     }
 
     pub const bide = struct {
