@@ -1735,7 +1735,25 @@ pub const Effects = struct {
     }
 
     pub fn heal(battle: anytype, player: Player, state: *State, options: anytype) !void {
-        _ = .{ battle, player, state, options }; // TODO
+        var side = battle.side(player);
+        var stored = side.stored();
+        const ident = battle.active(player);
+
+        if (stored.stats.hp == stored.hp) return options.log.fail(ident, .None);
+
+        const rest = state.move == .Rest;
+        if (rest) {
+            // Adding the sleep status runs the sleep condition handler to roll duration
+            if (showdown) battle.rng.advance(1);
+            side.active.volatiles.Toxic = false;
+            stored.status = Status.slf(2);
+            recomputeStats(battle, side);
+            try options.log.statusFrom(ident, stored.status, Move.Rest);
+            stored.hp = stored.stats.hp;
+        } else {
+            stored.hp = @min(stored.stats.hp, stored.hp + (stored.stats.hp / 2));
+        }
+        try options.log.heal(ident, stored, if (rest) Heal.Silent else Heal.None);
     }
 
     pub fn healBell(battle: anytype, player: Player, _: *State, options: anytype) !void {
@@ -1747,12 +1765,7 @@ pub const Effects = struct {
 
         // We technically only need to recompute stats if the active Pokémon was burned/paralyzed,
         // but adding a branch to check for that is probably more expensive than just recomputing
-        var stats = unmodifiedStats(battle, side);
-        inline for (STATS) |s| {
-            var mod = STAT_BOOSTS[@as(u4, @intCast(@as(i8, @field(side.active.boosts, s)) + 6))];
-            const val = @field(stats, s) * mod[0] / mod[1];
-            @field(side.active.stats, s) = @max(1, @min(MAX_STAT_VALUE, val));
-        }
+        recomputeStats(battle, side);
     }
 
     pub fn hiddenPower(battle: anytype, player: Player, state: *State, _: anytype) !void {
@@ -2667,6 +2680,15 @@ fn unmodifiedStats(battle: anytype, side: *Side) *Stats(u16) {
     if (!side.active.volatiles.Transform) return &side.stored().stats;
     const id = ID.from(side.active.volatiles.transform);
     return &battle.side(id.player).pokemon[id.id - 1].stats;
+}
+
+fn recomputeStats(battle: anytype, side: *Side) void {
+    var stats = unmodifiedStats(battle, side);
+    inline for (STATS) |s| {
+        var mod = STAT_BOOSTS[@as(u4, @intCast(@as(i8, @field(side.active.boosts, s)) + 6))];
+        const val = @field(stats, s) * mod[0] / mod[1];
+        @field(side.active.stats, s) = @max(1, @min(MAX_STAT_VALUE, val));
+    }
 }
 
 fn boostStat(
