@@ -1424,26 +1424,51 @@ pub const Effects = struct {
     }
 
     pub fn curse(battle: anytype, player: Player, state: *State, options: anytype) !void {
-        _ = .{ battle, player, state, options }; // TODO
+        var side = battle.side(player);
+        var foe = battle.foe(player);
 
-        // var side = battle.side(player);
-        // const ident = battle.active(player);
+        const ident = battle.active(player);
+        const foe_ident = battle.active(player.foe());
 
-        // if (side.active.pokemon.types.includes(.Ghost)) {
-        //     //
-        // } else {
-        //     var stats = &side.active.stats;
-        //     var boosts = &side.active.boosts;
+        if (side.active.types.includes(.Ghost)) {
+            if (foe.active.volatiles.Flying or foe.active.volatiles.Underground) {
+                try options.log.lastmiss();
+                return options.log.miss(battle.active(player));
+            } else if (foe.active.volatiles.Substitute) {
+                return options.log.activateMove(foe_ident, .SubstituteBlock, state.move);
+            } else if (foe.active.volatiles.Curse) {
+                return options.log.fail(foe_ident, .None);
+            }
 
-        //     assert(boosts.atk >= -6 and boosts.atk <= 6);
-        //     assert(boosts.def >= -6 and boosts.def <= 6);
+            foe.active.volatiles.Curse = true;
+            try options.log.start(foe_ident, .Curse);
 
-        //     const atk = boosts.atk == 6 or stats.atk == MAX_STAT_VALUE;
-        //     const def = boosts.def == 6 or stats.def == MAX_STAT_VALUE;
-        //     if (atk and def) return options.log.fail(ident, .None);
+            side.stored().hp -= @max(side.stored().stats.hp / 2, 1);
+            try options.log.damage(ident, side.stored(), .Curse);
+        } else {
+            var stats = &side.active.stats;
+            var boosts = &side.active.boosts;
 
-        //     // TODO
-        // }
+            const max_atk = boosts.atk == 6 or stats.atk == MAX_STAT_VALUE;
+            const max_def = boosts.def == 6 or stats.def == MAX_STAT_VALUE;
+            if (max_atk and max_def) return options.log.fail(ident, .None);
+
+            if (!(boosts.spe == -6 or stats.spe == 1)) {
+                assert(boosts.spe >= -6 and boosts.spe <= 6);
+                try unboostStat(battle, side, stats, boosts, "spe", 1);
+                try options.log.boost(ident, .Speed, @as(i8, -1));
+            }
+            if (!max_atk) {
+                assert(boosts.atk >= -6 and boosts.atk <= 6);
+                try boostStat(battle, side, stats, boosts, "atk", 1);
+                try options.log.boost(ident, .Attack, @as(i8, 1));
+            }
+            if (!max_def) {
+                assert(boosts.def >= -6 and boosts.def <= 6);
+                try boostStat(battle, side, stats, boosts, "def", 1);
+                try options.log.boost(ident, .Defense, @as(i8, 1));
+            }
+        }
     }
 
     pub fn defenseCurl(battle: anytype, player: Player, _: *State, _: anytype) !void {
