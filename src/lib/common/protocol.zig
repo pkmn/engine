@@ -213,6 +213,8 @@ pub const Activate = enum(u8) {
     DestinyBond,
 
     BeatUp, // FIXME of
+
+    Magnitude,
 };
 
 pub const Start = enum(u8) {
@@ -593,6 +595,17 @@ pub fn Log(comptime Writer: type) type {
                 @as(u8, @bitCast(ident)),
                 @intFromEnum(reason),
                 @intFromEnum(m),
+            });
+        }
+
+        pub fn magnitude(self: Self, ident: ID, num: u8) Error!void {
+            if (!enabled) return;
+
+            try self.writer.writeAll(&.{
+                @intFromEnum(ArgType.Activate),
+                @as(u8, @bitCast(ident)),
+                @intFromEnum(Activate.Magnitude),
+                num,
             });
         }
 
@@ -1633,6 +1646,12 @@ test "|-activate|" {
 
     try log.activate(p1.ident(2), .Splash);
     try expectLog1(&.{ N(ArgType.Activate), 0b0010, N(Activate.Splash) }, buf[0..3]);
+    stream.reset();
+
+    // TODO activateMove
+
+    try log.magnitude(p1.ident(3), 5);
+    try expectLog1(&.{ N(ArgType.Activate), 0b0011, N(Activate.Magnitude), 5 }, buf[0..4]);
     stream.reset();
 }
 

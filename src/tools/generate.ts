@@ -656,7 +656,7 @@ const moveFns = async (
     ragedamage: 'Effects.rage.damage', storeenergy: 'Effects.bide.store',
     unleashenergy: 'Effects.bide.unleash', doubleflyingdamage: 'Effects.double.flying',
     doubleundergrounddamage: 'Effects.double.underground',
-    doubleminimizedamage: 'Effects.double.minimize',
+    doubleminimizedamage: 'Effects.double.minimize', getmagnitude: 'Effects.magnitude',
     checkcurl: 'Effects.rollout.check', rolloutpower: 'Effects.rollout.power',
   };
 

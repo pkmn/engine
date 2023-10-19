@@ -655,7 +655,7 @@ pub fn runMove(battle: anytype, player: Player, state: *State, options: anytype)
         .Magnitude => {
             if (!try canMove(battle, player, state, options)) return;
             try checkCriticalHit(battle, player, state, options);
-            // TODO getmagnitude
+            try Effects.magnitude(battle, player, state, options);
             try calcDamage(battle, player, state, options);
             try adjustDamage(battle, player, state, options);
             try randomizeDamage(battle, player, state, options);

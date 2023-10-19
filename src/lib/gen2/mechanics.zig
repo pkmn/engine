@@ -1753,7 +1753,9 @@ pub const Effects = struct {
     const MAGNITUDE_POWER = [_]u8{ 10, 30, 50, 70, 90, 110, 150 };
 
     pub fn magnitude(battle: anytype, player: Player, state: *State, options: anytype) !void {
-        _ = .{ battle, player, state, options }; // TODO
+        const num = try Rolls.magnitude(battle, player, options);
+        try options.log.magnitude(battle.active(player), num);
+        state.bp = MAGNITUDE_POWER[num - 4];
     }
 
     pub fn meanLook(battle: anytype, player: Player, _: *State, options: anytype) !void {
@@ -2843,7 +2845,7 @@ pub const Rolls = struct {
     }
 
     fn magnitude(battle: anytype, player: Player, options: anytype) !u8 {
-        const num = if (options.calc.overridden(player, .magnitude)) |val|
+        const num: u8 = if (options.calc.overridden(player, .magnitude)) |val|
             val + 3
         else if (showdown) num: {
             const r = battle.rng.range(u8, 0, 100);
