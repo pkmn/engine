@@ -1756,8 +1756,18 @@ pub const Effects = struct {
         _ = .{ battle, player, state, options }; // TODO
     }
 
-    pub fn meanLook(battle: anytype, player: Player, state: *State, options: anytype) !void {
-        _ = .{ battle, player, state, options }; // TODO
+    pub fn meanLook(battle: anytype, player: Player, _: *State, options: anytype) !void {
+        var foe = battle.foe(player);
+
+        if (foe.active.volatiles.Flying or foe.active.volatiles.Underground) {
+            if (!showdown) return options.log.fail(battle.active(player.foe()), .None);
+            try options.log.lastmiss();
+            return options.log.miss(battle.active(player));
+        } else if (foe.active.volatiles.Trapped) {
+            return options.log.fail(battle.active(player.foe()), .None);
+        }
+
+        foe.active.volatiles.Trapped = true;
     }
 
     pub fn metronome(
@@ -1781,10 +1791,6 @@ pub const Effects = struct {
     }
 
     pub fn mimic(battle: anytype, player: Player, state: *State, options: anytype) !void {
-        _ = .{ battle, player, state, options }; // TODO
-    }
-
-    pub fn mirrorCoat(battle: anytype, player: Player, state: *State, options: anytype) !void {
         _ = .{ battle, player, state, options }; // TODO
     }
 
@@ -3355,7 +3361,7 @@ pub fn choices(battle: anytype, player: Player, request: Choice.Type, out: []Cho
             }
 
             var slot: u4 = 2;
-            while (!active.volatiles.trapped and slot <= 6) : (slot += 1) {
+            while (!active.volatiles.Trapped and slot <= 6) : (slot += 1) {
                 const id = side.order[slot - 1];
                 if (id == 0 or side.pokemon[id - 1].hp == 0) continue;
                 out[n] = .{ .type = .Switch, .data = slot };

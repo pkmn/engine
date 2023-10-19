@@ -314,8 +314,8 @@ pub const Volatiles = packed struct(u128) {
     Encore: bool = false,
     LockOn: bool = false,
     DestinyBond: bool = false,
+    Trapped: bool = false,
 
-    trapped: bool = false,
     switched: bool = false,
     // TODO: replace with simply looking at Choice on Battle
     switching: bool = false,

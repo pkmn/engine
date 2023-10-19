@@ -49,7 +49,6 @@ The following information is required to simulate a Generation II Pokémon battl
 | `volatiles.bind`               | `PlayerWrapCount`                 | `volatiles.partiallytrapped.duration` |
 | `volatiles.bind_reason`        | `PlayerTrappingMove`              | `volatiles.effectState.sourceEffect`  |
 |                                | `PlayerCharging`                  |                                       |
-| `volatiles.trapped FIXME`      | `FIXME`                           | `pokemon.trapped`                     |
 | `volatiles.switched`           | `TODO`                            | `pokemon.switchFlag`                  |
 | `volatiles.switching`          | `PlayerIsSwitching`               | `pokemon.switchFlag`                  |
 | `volatiles.frozen`             | `PlayerJustGotFrozen`             | `volatiles.frozen`                    |
