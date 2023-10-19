@@ -37,6 +37,7 @@ const Gen12 = rng.Gen12;
 const PointerType = util.PointerType;
 
 const ActivePokemon = data.ActivePokemon;
+const Boosts = data.Boosts;
 const Effectiveness = data.Effectiveness;
 const Item = data.Item;
 const Move = data.Move;
@@ -2414,19 +2415,7 @@ pub const Effects = struct {
             if (@field(boosts, s) == 6 or @field(stats, s) == MAX_STAT_VALUE) {
                 try options.log.boost(battle.active(player), r, 0);
             } else {
-                @field(boosts, s) = @intCast(@min(6, @as(i8, @field(boosts, s)) + 1));
-                var mod = STAT_BOOSTS[@as(u4, @intCast(@as(i8, @field(boosts, s)) + 6))];
-                const stat = @field(unmodifiedStats(battle, side), s);
-                @field(stats, s) = @min(MAX_STAT_VALUE, stat * mod[0] / mod[1]);
-                if (comptime std.mem.eql(u8, s, "atk")) {
-                    if (Status.is(side.stored().status, .BRN)) {
-                        @field(stats, s) = @max(@field(stats, s) / 2, 1);
-                    }
-                } else if (comptime std.mem.eql(u8, s, "atk")) {
-                    if (Status.is(side.stored().status, .PAR)) {
-                        @field(stats, s) = @max(@field(stats, s) / 4, 1);
-                    }
-                }
+                try boostStat(battle, side, stats, boosts, s, 1);
                 try options.log.boost(battle.active(player), r, 1);
             }
         }
@@ -2448,50 +2437,33 @@ pub const Effects = struct {
                 assert(boosts.atk >= -6 and boosts.atk <= 6);
                 if (boosts.atk == 6 or stats.atk == MAX_STAT_VALUE) return log.fail(ident, .None);
                 const n: u2 = if (move.effect == .AttackUp2 or move.effect == .Swagger) 2 else 1;
-                boosts.atk = @as(i4, @intCast(@min(6, @as(i8, boosts.atk) + n)));
+                try boostStat(battle, side, stats, boosts, "atk", n);
                 const reason = if (showdown and move.effect == .Rage) Boost.Rage else Boost.Attack;
-                var mod = STAT_BOOSTS[@as(u4, @intCast(@as(i8, boosts.atk) + 6))];
-                const stat = unmodifiedStats(battle, side).atk;
-                stats.atk = @min(MAX_STAT_VALUE, stat * mod[0] / mod[1]);
-                if (Status.is(side.stored().status, .BRN)) stats.atk = @max(stats.atk / 2, 1);
                 try log.boost(ident, reason, n);
             },
             .DefenseUp1, .DefenseUp2, .SkullBash => {
                 assert(boosts.def >= -6 and boosts.def <= 6);
                 if (boosts.def == 6 or stats.def == MAX_STAT_VALUE) return log.fail(ident, .None);
                 const n: u2 = if (move.effect == .DefenseUp2) 2 else 1;
-                boosts.def = @intCast(@min(6, @as(i8, boosts.def) + n));
-                var mod = STAT_BOOSTS[@as(u4, @intCast(@as(i8, boosts.def) + 6))];
-                const stat = unmodifiedStats(battle, side).def;
-                stats.def = @min(MAX_STAT_VALUE, stat * mod[0] / mod[1]);
+                try boostStat(battle, side, stats, boosts, "def", n);
                 try log.boost(ident, .Defense, n);
             },
             .SpeedUp2 => {
                 assert(boosts.spe >= -6 and boosts.spe <= 6);
                 if (boosts.spe == 6 or stats.spe == MAX_STAT_VALUE) return log.fail(ident, .None);
-                boosts.spe = @intCast(@min(6, @as(i8, boosts.spe) + 2));
-                var mod = STAT_BOOSTS[@as(u4, @intCast(@as(i8, boosts.spe) + 6))];
-                const stat = unmodifiedStats(battle, side).spe;
-                stats.spe = @min(MAX_STAT_VALUE, stat * mod[0] / mod[1]);
-                if (Status.is(side.stored().status, .PAR)) stats.spe = @max(stats.spe / 4, 1);
+                try boostStat(battle, side, stats, boosts, "spe", 2);
                 try log.boost(ident, .Speed, 2);
             },
             .SpAtkUp1 => {
                 assert(boosts.spa >= -6 and boosts.spa <= 6);
                 if (boosts.spa == 6 or stats.spa == MAX_STAT_VALUE) return log.fail(ident, .None);
-                boosts.spa = @intCast(@min(6, @as(i8, boosts.spa) + 1));
-                var mod = STAT_BOOSTS[@as(u4, @intCast(@as(i8, boosts.spa) + 6))];
-                const stat = unmodifiedStats(battle, side).spa;
-                stats.spa = @min(MAX_STAT_VALUE, stat * mod[0] / mod[1]);
+                try boostStat(battle, side, stats, boosts, "spa", 1);
                 try log.boost(ident, .SpecialAttack, 1);
             },
             .SpDefUp2 => {
                 assert(boosts.spd >= -6 and boosts.spd <= 6);
                 if (boosts.spd == 6 or stats.spd == MAX_STAT_VALUE) return log.fail(ident, .None);
-                boosts.spd = @intCast(@min(6, @as(i8, boosts.spd) + 2));
-                var mod = STAT_BOOSTS[@as(u4, @intCast(@as(i8, boosts.spd) + 6))];
-                const stat = unmodifiedStats(battle, side).spd;
-                stats.spd = @min(MAX_STAT_VALUE, stat * mod[0] / mod[1]);
+                try boostStat(battle, side, stats, boosts, "spd", 2);
                 try log.boost(ident, .SpecialDefense, 2);
             },
             .EvasionUp1 => {
@@ -2533,11 +2505,7 @@ pub const Effects = struct {
                     return if (move.effect != .AttackDownChance) try log.fail(foe_ident, .None);
                 }
                 const n: u2 = if (move.effect == .AttackDown2) 2 else 1;
-                boosts.atk = @intCast(@max(-6, @as(i8, boosts.atk) - n));
-                var mod = STAT_BOOSTS[@as(u4, @intCast(@as(i8, boosts.atk) + 6))];
-                const stat = unmodifiedStats(battle, foe).atk;
-                stats.atk = @max(1, stat * mod[0] / mod[1]);
-                if (Status.is(foe.stored().status, .BRN)) stats.atk = @max(stats.atk / 2, 1);
+                try unboostStat(battle, foe, stats, boosts, "atk", n);
                 try log.boost(foe_ident, .Attack, -@as(i8, n));
             },
             .DefenseDown1, .DefenseDown2, .DefenseDownChance => {
@@ -2551,10 +2519,7 @@ pub const Effects = struct {
                     return if (move.effect != .DefenseDownChance) try log.fail(foe_ident, .None);
                 }
                 const n: u2 = if (move.effect == .DefenseDown2) 2 else 1;
-                boosts.def = @intCast(@max(-6, @as(i8, boosts.def) - n));
-                var mod = STAT_BOOSTS[@as(u4, @intCast(@as(i8, boosts.def) + 6))];
-                const stat = unmodifiedStats(battle, foe).def;
-                stats.def = @max(1, stat * mod[0] / mod[1]);
+                try unboostStat(battle, foe, stats, boosts, "def", n);
                 try log.boost(foe_ident, .Defense, -@as(i8, n));
             },
             .SpeedDown1, .SpeedDown2, .SpeedDownChance => {
@@ -2568,13 +2533,8 @@ pub const Effects = struct {
                     return if (move.effect != .SpeedDownChance) try log.fail(foe_ident, .None);
                 }
                 const n: u2 = if (move.effect == .SpeedDown2) 2 else 1;
-                boosts.spe = @intCast(@max(-6, @as(i8, boosts.spe) - 1));
-                var mod = STAT_BOOSTS[@as(u4, @intCast(@as(i8, boosts.spe) + 6))];
-                const stat = unmodifiedStats(battle, foe).spe;
-                stats.spe = @max(1, stat * mod[0] / mod[1]);
-                if (Status.is(foe.stored().status, .PAR)) stats.spe = @max(stats.spe / 4, 1);
+                try unboostStat(battle, foe, stats, boosts, "spe", n);
                 try log.boost(foe_ident, .Speed, -@as(i8, n));
-                assert(boosts.spe >= -6);
             },
             .SpDefDownChance => {
                 assert(boosts.spd >= -6 and boosts.spd <= 6);
@@ -2583,10 +2543,7 @@ pub const Effects = struct {
                     try options.log.lastmiss();
                     return options.log.miss(battle.active(player));
                 } else if (stats.spd == 1) return;
-                boosts.spd = @intCast(@max(-6, @as(i8, boosts.spd) - 1));
-                var mod = STAT_BOOSTS[@as(u4, @intCast(@as(i8, boosts.spd) + 6))];
-                const stat = unmodifiedStats(battle, foe).spd;
-                stats.spd = @max(1, stat * mod[0] / mod[1]);
+                try unboostStat(battle, foe, stats, boosts, "spd", 1);
                 try log.boost(foe_ident, .SpecialDefense, -1);
             },
             .AccuracyDown1, .AccuracyDownChance => {
@@ -2609,6 +2566,52 @@ fn unmodifiedStats(battle: anytype, side: *Side) *Stats(u16) {
     if (!side.active.volatiles.Transform) return &side.stored().stats;
     const id = ID.from(side.active.volatiles.transform);
     return &battle.side(id.player).pokemon[id.id - 1].stats;
+}
+
+fn boostStat(
+    battle: anytype,
+    side: *Side,
+    stats: *Stats(u16),
+    boosts: *Boosts,
+    comptime s: []const u8,
+    n: u2,
+) !void {
+    @field(boosts, s) = @intCast(@min(6, @as(i8, @field(boosts, s)) + n));
+    var mod = STAT_BOOSTS[@as(u4, @intCast(@as(i8, @field(boosts, s)) + 6))];
+    const stat = @field(unmodifiedStats(battle, side), s);
+    @field(stats, s) = @min(MAX_STAT_VALUE, stat * mod[0] / mod[1]);
+    if (comptime std.mem.eql(u8, s, "atk")) {
+        if (Status.is(side.stored().status, .BRN)) {
+            @field(stats, s) = @max(@field(stats, s) / 2, 1);
+        }
+    } else if (comptime std.mem.eql(u8, s, "spe")) {
+        if (Status.is(side.stored().status, .PAR)) {
+            @field(stats, s) = @max(@field(stats, s) / 4, 1);
+        }
+    }
+}
+
+fn unboostStat(
+    battle: anytype,
+    side: *Side,
+    stats: *Stats(u16),
+    boosts: *Boosts,
+    comptime s: []const u8,
+    n: u2,
+) !void {
+    @field(boosts, s) = @intCast(@max(-6, @as(i8, @field(boosts, s)) - n));
+    var mod = STAT_BOOSTS[@as(u4, @intCast(@as(i8, @field(boosts, s)) + 6))];
+    const stat = @field(unmodifiedStats(battle, side), s);
+    @field(stats, s) = @max(1, stat * mod[0] / mod[1]);
+    if (comptime std.mem.eql(u8, s, "atk")) {
+        if (Status.is(side.stored().status, .BRN)) {
+            @field(stats, s) = @max(@field(stats, s) / 2, 1);
+        }
+    } else if (comptime std.mem.eql(u8, s, "spe")) {
+        if (Status.is(side.stored().status, .PAR)) {
+            @field(stats, s) = @max(@field(stats, s) / 4, 1);
+        }
+    }
 }
 
 fn isForced(active: anytype) bool {
