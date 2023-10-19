@@ -249,11 +249,7 @@ fn switchIn(battle: anytype, player: Player, slot: u8, kind: SwitchIn, options: 
     active.types = incoming.types;
     active.species = incoming.species;
 
-    if (Status.is(incoming.status, .PAR)) {
-        active.stats.spe = @max(active.stats.spe / 4, 1);
-    } else if (Status.is(incoming.status, .BRN)) {
-        active.stats.atk = @max(active.stats.atk / 2, 1);
-    }
+    statusModify(incoming.status, &active.stats);
 
     if (kind == .Drag) {
         try options.log.drag(battle.active(player), incoming);
@@ -1730,8 +1726,20 @@ pub const Effects = struct {
         state.bp = ((if (frustration) 255 - val else val) * 10) / 25;
     }
 
-    pub fn haze(battle: anytype, player: Player, state: *State, options: anytype) !void {
-        _ = .{ battle, player, state, options }; // TODO
+    pub fn haze(battle: anytype, player: Player, _: *State, options: anytype) !void {
+        var side = battle.side(player);
+        var stats = unmodifiedStats(battle, side);
+        side.active.boosts = .{};
+        inline for (STATS) |s| @field(side.active.stats, s) = @field(stats, s);
+        statusModify(side.stored().status, &side.active.stats);
+
+        var foe = battle.foe(player);
+        stats = unmodifiedStats(battle, foe);
+        foe.active.boosts = .{};
+        inline for (STATS) |s| @field(foe.active.stats, s) = @field(stats, s);
+        statusModify(foe.stored().status, &foe.active.stats);
+
+        try options.log.clearallboost();
     }
 
     pub fn heal(battle: anytype, player: Player, state: *State, options: anytype) !void {
@@ -2688,6 +2696,14 @@ fn recomputeStats(battle: anytype, side: *Side) void {
         var mod = STAT_BOOSTS[@as(u4, @intCast(@as(i8, @field(side.active.boosts, s)) + 6))];
         const val = @field(stats, s) * mod[0] / mod[1];
         @field(side.active.stats, s) = @max(1, @min(MAX_STAT_VALUE, val));
+    }
+}
+
+fn statusModify(status: u8, stats: *Stats(u16)) void {
+    if (Status.is(status, .PAR)) {
+        stats.spe = @max(stats.spe / 4, 1);
+    } else if (Status.is(status, .BRN)) {
+        stats.atk = @max(stats.atk / 2, 1);
     }
 }
 
