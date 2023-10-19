@@ -1328,7 +1328,16 @@ pub const Effects = struct {
     };
 
     pub fn binding(battle: anytype, player: Player, state: *State, options: anytype) !void {
-        _ = .{ battle, player, state, options }; // TODO
+        var foe = battle.foe(player);
+
+        if (state.miss) return;
+        if (foe.active.volatiles.bind.duration > 0) return;
+        if (foe.active.volatiles.Substitute) return;
+
+        foe.active.volatiles.bind = .{
+            .duration = Rolls.bindingDuration(battle, player, options),
+            .reason = Move.get(state.move).extra.protocol,
+        };
     }
 
     pub fn burnChance(battle: anytype, player: Player, state: *State, options: anytype) !void {
