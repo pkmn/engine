@@ -240,6 +240,37 @@ pub fn Log(comptime Writer: type) type {
             });
         }
 
+        pub fn faint(self: Self, ident: ID, done: bool) Error!void {
+            if (!enabled) return;
+
+            try self.writer.writeAll(&.{ @intFromEnum(ArgType.Faint), @as(u8, @bitCast(ident)) });
+            if (done) try self.writer.writeByte(@intFromEnum(ArgType.None));
+        }
+
+        pub fn turn(self: Self, num: u16) Error!void {
+            if (!enabled) return;
+
+            try self.writer.writeByte(@intFromEnum(ArgType.Turn));
+            try self.writer.writeIntNative(u16, num);
+            try self.writer.writeByte(@intFromEnum(ArgType.None));
+        }
+
+        pub fn win(self: Self, player: Player) Error!void {
+            if (!enabled) return;
+
+            try self.writer.writeAll(&.{
+                @intFromEnum(ArgType.Win),
+                @intFromEnum(player),
+                @intFromEnum(ArgType.None),
+            });
+        }
+
+        pub fn tie(self: Self) Error!void {
+            if (!enabled) return;
+
+            try self.writer.writeAll(&.{ @intFromEnum(ArgType.Tie), @intFromEnum(ArgType.None) });
+        }
+
         pub fn drag(self: Self, ident: ID, pokemon: anytype) Error!void {
             return switchDrag(self, .Drag, ident, pokemon, .None);
         }
@@ -322,6 +353,10 @@ pub fn format(
             .Move => "|move|",
             .Switch => "|switch|",
             .Cant => "|cant|",
+            .Faint => "|faint|",
+            .Turn => "|turn|",
+            .Win => "|win|",
+            .Tie => "|tie|",
             .Drag => "|drag|",
             else => unreachable,
         };
@@ -330,6 +365,7 @@ pub fn format(
             .None,
             .LastStill,
             .LastMiss,
+            .Tie,
             => {},
             .Move => {
                 const source = ID.from(@intCast(a[i]));
@@ -384,6 +420,20 @@ pub fn format(
                 if (@intFromEnum(reason) >= @intFromEnum(Cant.Disable)) {
                     printc(" {s}", .{formatter(gen, .Move, a[i])}, a, b, &i, 1, color);
                 }
+            },
+            .Faint => {
+                const id = ID.from(@intCast(a[i]));
+                printc(" {s}({d})", .{ @tagName(id.player), id.id }, a, b, &i, 1, color);
+            },
+            .Turn => {
+                const turn = switch (endian) {
+                    .Big => @as(u16, a[i]) << 8 | @as(u16, a[i + 1]),
+                    .Little => @as(u16, a[i + 1]) << 8 | @as(u16, a[i]),
+                };
+                printc(" {d}", .{turn}, a, b, &i, 2, color);
+            },
+            .Win => {
+                printc(" {s}", .{@tagName(@as(Player, @enumFromInt(a[i])))}, a, b, &i, 1, color);
             },
             else => unreachable,
         }
@@ -628,6 +678,38 @@ test "|cant|" {
 
     try log.cantMove(p1.ident(2), Cant.Disable, M1.Earthquake);
     try expectLog1(&.{ N(ArgType.Cant), 2, N(Cant.Disable), N(M1.Earthquake) }, buf[0..4]);
+    stream.reset();
+}
+
+test "|faint|" {
+    try log.faint(p2.ident(2), false);
+    try expectLog1(&.{ N(ArgType.Faint), 0b1010 }, buf[0..2]);
+    stream.reset();
+
+    try log.faint(p2.ident(2), true);
+    try expectLog1(&.{ N(ArgType.Faint), 0b1010, N(ArgType.None) }, buf[0..3]);
+    stream.reset();
+}
+
+test "|turn|" {
+    try log.turn(42);
+    var expected = switch (endian) {
+        .Big => &.{ N(ArgType.Turn), 0, 42, N(ArgType.None) },
+        .Little => &.{ N(ArgType.Turn), 42, 0, N(ArgType.None) },
+    };
+    try expectLog1(expected, buf[0..4]);
+    stream.reset();
+}
+
+test "|win|" {
+    try log.win(.P2);
+    try expectLog1(&.{ N(ArgType.Win), 1, N(ArgType.None) }, buf[0..3]);
+    stream.reset();
+}
+
+test "|tie|" {
+    try log.tie();
+    try expectLog1(&.{ N(ArgType.Tie), N(ArgType.None) }, buf[0..2]);
     stream.reset();
 }
 
