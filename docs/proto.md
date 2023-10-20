@@ -1,6 +1,3 @@
-
-
-
 ### `|move|` (`0x03`)
 
 In Generation IV, the lowest 3 ("slot") bits of `Target` may be `0b000`, in which case the move
@@ -50,6 +47,27 @@ either targets a side (in the case of Future Sight, Doom Desire, or Stealth Rock
 
 ```zig
 // TODO: Generaiton III/IV support Damp [of]
+```
+
+### `|-damage|` (`0x0A`)
+
+- probably don't need `[of]` because ident should always be directly inferrable\
+- NB: upper case and lower case Recoil vs. recoil
+- binding means we need to save the full u8 move in Bind reason - technically shouldnt
+  need bind reason either (unless multiple pokeomon can bind same one in doubles?)
+
+```zig
+fn damageItem
+fn damageAbility
+```
+
+### `|-heal|` (`0x0B`)
+
+- might need `[wisher]` ie `Wish` for `Heal`
+
+```zig
+fn healAbility
+fn healMove
 ```
 
 ---

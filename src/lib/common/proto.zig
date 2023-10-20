@@ -137,6 +137,35 @@ pub const Cant = enum(u8) {
     Damp,
 };
 
+pub const Damage = enum(u8) {
+    None,
+    Poison,
+    Burn,
+    Confusion,
+    LeechSeed,
+    Recoil,
+    Curse,
+    Nightmare,
+    Sandstorm,
+    Spikes,
+    Hail,
+    StealthRock,
+    recoil,
+    Move,
+    Ability,
+    Item,
+};
+
+pub const Heal = enum(u8) {
+    None,
+    Silent,
+    Drain,
+    Ingrain,
+    Item,
+    Ability,
+    Move,
+};
+
 /// Null object pattern implementation of `Log` backed by a `std.io.null_writer`.
 /// Ignores anything sent to it, though protocol logging should additionally be turned off
 /// entirely with `options.log`.
@@ -269,6 +298,29 @@ pub fn Log(comptime Writer: type) type {
             if (!enabled) return;
 
             try self.writer.writeAll(&.{ @intFromEnum(ArgType.Tie), @intFromEnum(ArgType.None) });
+        }
+
+        pub fn damage(self: Self, ident: ID, pokemon: anytype, reason: Damage) Error!void {
+            if (!enabled) return;
+
+            assert(@intFromEnum(reason) <= @intFromEnum(Damage.Move));
+            try self.writer.writeAll(&.{ @intFromEnum(ArgType.Damage), @as(u8, @bitCast(ident)) });
+            try self.writer.writeIntNative(u16, pokemon.hp);
+            try self.writer.writeIntNative(u16, pokemon.stats.hp);
+            try self.writer.writeAll(&.{ pokemon.status, @intFromEnum(reason) });
+        }
+
+        pub fn damageMove(self: Self, ident: ID, pokemon: anytype, m: anytype) Error!void {
+            if (!enabled) return;
+
+            try self.writer.writeAll(&.{ @intFromEnum(ArgType.Damage), @as(u8, @bitCast(ident)) });
+            try self.writer.writeIntNative(u16, pokemon.hp);
+            try self.writer.writeIntNative(u16, pokemon.stats.hp);
+            try self.writer.writeAll(&.{
+                pokemon.status,
+                @intFromEnum(Damage.Move),
+                @intFromEnum(m),
+            });
         }
 
         pub fn drag(self: Self, ident: ID, pokemon: anytype) Error!void {
