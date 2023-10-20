@@ -1,0 +1,3500 @@
+|-activate|pXa: A|Protect
+|-activate|pXa: A|Substitute|[block] Charm
+|-activate|pXa: A|Substitute|[block] Confuse Ray
+|-activate|pXa: A|Substitute|[block] Cotton Spore
+|-activate|pXa: A|Substitute|[block] Flash
+|-activate|pXa: A|Substitute|[block] Glare
+|-activate|pXa: A|Substitute|[block] Growl
+|-activate|pXa: A|Substitute|[block] Hypnosis
+|-activate|pXa: A|Substitute|[block] Kinesis
+|-activate|pXa: A|Substitute|[block] Leech Seed
+|-activate|pXa: A|Substitute|[block] Leer
+|-activate|pXa: A|Substitute|[block] Lock-On
+|-activate|pXa: A|Substitute|[block] Lovely Kiss
+|-activate|pXa: A|Substitute|[block] Mind Reader
+|-activate|pXa: A|Substitute|[block] Nightmare
+|-activate|pXa: A|Substitute|[block] Pain Split
+|-activate|pXa: A|Substitute|[block] Poison Gas
+|-activate|pXa: A|Substitute|[block] Poison Powder
+|-activate|pXa: A|Substitute|[block] Sand Attack
+|-activate|pXa: A|Substitute|[block] Scary Face
+|-activate|pXa: A|Substitute|[block] Screech
+|-activate|pXa: A|Substitute|[block] Sing
+|-activate|pXa: A|Substitute|[block] Sketch
+|-activate|pXa: A|Substitute|[block] Sleep Powder
+|-activate|pXa: A|Substitute|[block] Smokescreen
+|-activate|pXa: A|Substitute|[block] Spore
+|-activate|pXa: A|Substitute|[block] String Shot
+|-activate|pXa: A|Substitute|[block] Stun Spore
+|-activate|pXa: A|Substitute|[block] Supersonic
+|-activate|pXa: A|Substitute|[block] Sweet Kiss
+|-activate|pXa: A|Substitute|[block] Sweet Scent
+|-activate|pXa: A|Substitute|[block] Tail Whip
+|-activate|pXa: A|Substitute|[block] Thunder Wave
+|-activate|pXa: A|Substitute|[block] Toxic
+|-activate|pXa: A|Substitute|[damage]
+|-activate|pXa: A|confusion
+|-activate|pXa: A|item: Focus Band
+|-activate|pXa: A|item: Mystery Berry|Aeroblast
+|-activate|pXa: A|item: Mystery Berry|Ancient Power
+|-activate|pXa: A|item: Mystery Berry|Confuse Ray
+|-activate|pXa: A|item: Mystery Berry|Destiny Bond
+|-activate|pXa: A|item: Mystery Berry|Double Slap
+|-activate|pXa: A|item: Mystery Berry|Dynamic Punch
+|-activate|pXa: A|item: Mystery Berry|Giga Drain
+|-activate|pXa: A|item: Mystery Berry|Heal Bell
+|-activate|pXa: A|item: Mystery Berry|Horn Drill
+|-activate|pXa: A|item: Mystery Berry|Karate Chop
+|-activate|pXa: A|item: Mystery Berry|Metal Claw
+|-activate|pXa: A|item: Mystery Berry|Razor Wind
+|-activate|pXa: A|item: Mystery Berry|Sketch
+|-activate|pXa: A|item: Mystery Berry|Sonic Boom
+|-activate|pXa: A|item: Mystery Berry|Substitute
+|-activate|pXa: A|move: Attract|[of] pXa: A
+|-activate|pXa: A|move: Beat Up|[of] A
+|-activate|pXa: A|move: Bide
+|-activate|pXa: A|move: Bind|[of] pXa: A
+|-activate|pXa: A|move: Clamp|[of] pXa: A
+|-activate|pXa: A|move: Destiny Bond
+|-activate|pXa: A|move: Endure
+|-activate|pXa: A|move: Fire Spin|[of] pXa: A
+|-activate|pXa: A|move: Lock-On|[of] pXa: A
+|-activate|pXa: A|move: Magnitude|X
+|-activate|pXa: A|move: Mimic|Absorb
+|-activate|pXa: A|move: Mimic|Acid
+|-activate|pXa: A|move: Mimic|Acid Armor
+|-activate|pXa: A|move: Mimic|Aeroblast
+|-activate|pXa: A|move: Mimic|Agility
+|-activate|pXa: A|move: Mimic|Amnesia
+|-activate|pXa: A|move: Mimic|Ancient Power
+|-activate|pXa: A|move: Mimic|Attract
+|-activate|pXa: A|move: Mimic|Aurora Beam
+|-activate|pXa: A|move: Mimic|Barrage
+|-activate|pXa: A|move: Mimic|Barrier
+|-activate|pXa: A|move: Mimic|Baton Pass
+|-activate|pXa: A|move: Mimic|Bide
+|-activate|pXa: A|move: Mimic|Bind
+|-activate|pXa: A|move: Mimic|Blizzard
+|-activate|pXa: A|move: Mimic|Body Slam
+|-activate|pXa: A|move: Mimic|Bone Club
+|-activate|pXa: A|move: Mimic|Bonemerang
+|-activate|pXa: A|move: Mimic|Bubble
+|-activate|pXa: A|move: Mimic|Bubble Beam
+|-activate|pXa: A|move: Mimic|Charm
+|-activate|pXa: A|move: Mimic|Clamp
+|-activate|pXa: A|move: Mimic|Comet Punch
+|-activate|pXa: A|move: Mimic|Confuse Ray
+|-activate|pXa: A|move: Mimic|Confusion
+|-activate|pXa: A|move: Mimic|Constrict
+|-activate|pXa: A|move: Mimic|Conversion
+|-activate|pXa: A|move: Mimic|Conversion X
+|-activate|pXa: A|move: Mimic|Cotton Spore
+|-activate|pXa: A|move: Mimic|Cross Chop
+|-activate|pXa: A|move: Mimic|Crunch
+|-activate|pXa: A|move: Mimic|Curse
+|-activate|pXa: A|move: Mimic|Cut
+|-activate|pXa: A|move: Mimic|Defense Curl
+|-activate|pXa: A|move: Mimic|Destiny Bond
+|-activate|pXa: A|move: Mimic|Detect
+|-activate|pXa: A|move: Mimic|Dig
+|-activate|pXa: A|move: Mimic|Dizzy Punch
+|-activate|pXa: A|move: Mimic|Double Kick
+|-activate|pXa: A|move: Mimic|Double Slap
+|-activate|pXa: A|move: Mimic|Dragon Breath
+|-activate|pXa: A|move: Mimic|Dragon Rage
+|-activate|pXa: A|move: Mimic|Dream Eater
+|-activate|pXa: A|move: Mimic|Dynamic Punch
+|-activate|pXa: A|move: Mimic|Egg Bomb
+|-activate|pXa: A|move: Mimic|Ember
+|-activate|pXa: A|move: Mimic|Endure
+|-activate|pXa: A|move: Mimic|Extreme Speed
+|-activate|pXa: A|move: Mimic|False Swipe
+|-activate|pXa: A|move: Mimic|Fire Blast
+|-activate|pXa: A|move: Mimic|Fire Punch
+|-activate|pXa: A|move: Mimic|Fire Spin
+|-activate|pXa: A|move: Mimic|Fissure
+|-activate|pXa: A|move: Mimic|Flame Wheel
+|-activate|pXa: A|move: Mimic|Flash
+|-activate|pXa: A|move: Mimic|Fly
+|-activate|pXa: A|move: Mimic|Foresight
+|-activate|pXa: A|move: Mimic|Frustration
+|-activate|pXa: A|move: Mimic|Fury Attack
+|-activate|pXa: A|move: Mimic|Fury Cutter
+|-activate|pXa: A|move: Mimic|Fury Swipes
+|-activate|pXa: A|move: Mimic|Future Sight
+|-activate|pXa: A|move: Mimic|Giga Drain
+|-activate|pXa: A|move: Mimic|Glare
+|-activate|pXa: A|move: Mimic|Growth
+|-activate|pXa: A|move: Mimic|Guillotine
+|-activate|pXa: A|move: Mimic|Gust
+|-activate|pXa: A|move: Mimic|Harden
+|-activate|pXa: A|move: Mimic|Haze
+|-activate|pXa: A|move: Mimic|Headbutt
+|-activate|pXa: A|move: Mimic|Heal Bell
+|-activate|pXa: A|move: Mimic|Hidden Power
+|-activate|pXa: A|move: Mimic|High Jump Kick
+|-activate|pXa: A|move: Mimic|Horn Drill
+|-activate|pXa: A|move: Mimic|Hyper Beam
+|-activate|pXa: A|move: Mimic|Hyper Fang
+|-activate|pXa: A|move: Mimic|Hypnosis
+|-activate|pXa: A|move: Mimic|Ice Punch
+|-activate|pXa: A|move: Mimic|Iron Tail
+|-activate|pXa: A|move: Mimic|Karate Chop
+|-activate|pXa: A|move: Mimic|Kinesis
+|-activate|pXa: A|move: Mimic|Leech Life
+|-activate|pXa: A|move: Mimic|Leech Seed
+|-activate|pXa: A|move: Mimic|Leer
+|-activate|pXa: A|move: Mimic|Lick
+|-activate|pXa: A|move: Mimic|Lock-On
+|-activate|pXa: A|move: Mimic|Low Kick
+|-activate|pXa: A|move: Mimic|Mach Punch
+|-activate|pXa: A|move: Mimic|Magnitude
+|-activate|pXa: A|move: Mimic|Mean Look
+|-activate|pXa: A|move: Mimic|Meditate
+|-activate|pXa: A|move: Mimic|Mega Drain
+|-activate|pXa: A|move: Mimic|Mega Kick
+|-activate|pXa: A|move: Mimic|Megahorn
+|-activate|pXa: A|move: Mimic|Metal Claw
+|-activate|pXa: A|move: Mimic|Metronome
+|-activate|pXa: A|move: Mimic|Mind Reader
+|-activate|pXa: A|move: Mimic|Minimize
+|-activate|pXa: A|move: Mimic|Mirror Coat
+|-activate|pXa: A|move: Mimic|Mirror Move
+|-activate|pXa: A|move: Mimic|Mist
+|-activate|pXa: A|move: Mimic|Moonlight
+|-activate|pXa: A|move: Mimic|Mud-Slap
+|-activate|pXa: A|move: Mimic|Night Shade
+|-activate|pXa: A|move: Mimic|Nightmare
+|-activate|pXa: A|move: Mimic|Octazooka
+|-activate|pXa: A|move: Mimic|Pain Split
+|-activate|pXa: A|move: Mimic|Pay Day
+|-activate|pXa: A|move: Mimic|Peck
+|-activate|pXa: A|move: Mimic|Perish Song
+|-activate|pXa: A|move: Mimic|Petal Dance
+|-activate|pXa: A|move: Mimic|Poison Gas
+|-activate|pXa: A|move: Mimic|Poison Powder
+|-activate|pXa: A|move: Mimic|Poison Sting
+|-activate|pXa: A|move: Mimic|Powder Snow
+|-activate|pXa: A|move: Mimic|Present
+|-activate|pXa: A|move: Mimic|Protect
+|-activate|pXa: A|move: Mimic|Psybeam
+|-activate|pXa: A|move: Mimic|Psych Up
+|-activate|pXa: A|move: Mimic|Psychic
+|-activate|pXa: A|move: Mimic|Psywave
+|-activate|pXa: A|move: Mimic|Pursuit
+|-activate|pXa: A|move: Mimic|Quick Attack
+|-activate|pXa: A|move: Mimic|Rage
+|-activate|pXa: A|move: Mimic|Rain Dance
+|-activate|pXa: A|move: Mimic|Rapid Spin
+|-activate|pXa: A|move: Mimic|Razor Leaf
+|-activate|pXa: A|move: Mimic|Razor Wind
+|-activate|pXa: A|move: Mimic|Recover
+|-activate|pXa: A|move: Mimic|Rest
+|-activate|pXa: A|move: Mimic|Return
+|-activate|pXa: A|move: Mimic|Reversal
+|-activate|pXa: A|move: Mimic|Rock Slide
+|-activate|pXa: A|move: Mimic|Rock Smash
+|-activate|pXa: A|move: Mimic|Rolling Kick
+|-activate|pXa: A|move: Mimic|Rollout
+|-activate|pXa: A|move: Mimic|Sacred Fire
+|-activate|pXa: A|move: Mimic|Safeguard
+|-activate|pXa: A|move: Mimic|Sandstorm
+|-activate|pXa: A|move: Mimic|Scary Face
+|-activate|pXa: A|move: Mimic|Scratch
+|-activate|pXa: A|move: Mimic|Screech
+|-activate|pXa: A|move: Mimic|Seismic Toss
+|-activate|pXa: A|move: Mimic|Sharpen
+|-activate|pXa: A|move: Mimic|Sing
+|-activate|pXa: A|move: Mimic|Skull Bash
+|-activate|pXa: A|move: Mimic|Sky Attack
+|-activate|pXa: A|move: Mimic|Slam
+|-activate|pXa: A|move: Mimic|Sleep Talk
+|-activate|pXa: A|move: Mimic|Sludge
+|-activate|pXa: A|move: Mimic|Sludge Bomb
+|-activate|pXa: A|move: Mimic|Smokescreen
+|-activate|pXa: A|move: Mimic|Snore
+|-activate|pXa: A|move: Mimic|Soft-Boiled
+|-activate|pXa: A|move: Mimic|Solar Beam
+|-activate|pXa: A|move: Mimic|Spark
+|-activate|pXa: A|move: Mimic|Spider Web
+|-activate|pXa: A|move: Mimic|Spike Cannon
+|-activate|pXa: A|move: Mimic|Spite
+|-activate|pXa: A|move: Mimic|Stomp
+|-activate|pXa: A|move: Mimic|Submission
+|-activate|pXa: A|move: Mimic|Substitute
+|-activate|pXa: A|move: Mimic|Sunny Day
+|-activate|pXa: A|move: Mimic|Super Fang
+|-activate|pXa: A|move: Mimic|Supersonic
+|-activate|pXa: A|move: Mimic|Surf
+|-activate|pXa: A|move: Mimic|Sweet Kiss
+|-activate|pXa: A|move: Mimic|Sweet Scent
+|-activate|pXa: A|move: Mimic|Swords Dance
+|-activate|pXa: A|move: Mimic|Synthesis
+|-activate|pXa: A|move: Mimic|Tackle
+|-activate|pXa: A|move: Mimic|Take Down
+|-activate|pXa: A|move: Mimic|Thief
+|-activate|pXa: A|move: Mimic|Thrash
+|-activate|pXa: A|move: Mimic|Thunder
+|-activate|pXa: A|move: Mimic|Thunder Punch
+|-activate|pXa: A|move: Mimic|Thunder Shock
+|-activate|pXa: A|move: Mimic|Thunderbolt
+|-activate|pXa: A|move: Mimic|Toxic
+|-activate|pXa: A|move: Mimic|Transform
+|-activate|pXa: A|move: Mimic|Tri Attack
+|-activate|pXa: A|move: Mimic|Twister
+|-activate|pXa: A|move: Mimic|Vise Grip
+|-activate|pXa: A|move: Mimic|Water Gun
+|-activate|pXa: A|move: Mimic|Whirlpool
+|-activate|pXa: A|move: Mimic|Whirlwind
+|-activate|pXa: A|move: Mimic|Wing Attack
+|-activate|pXa: A|move: Mimic|Withdraw
+|-activate|pXa: A|move: Mimic|Wrap
+|-activate|pXa: A|move: Mimic|Zap Cannon
+|-activate|pXa: A|move: Mind Reader|[of] pXa: A
+|-activate|pXa: A|move: Mist
+|-activate|pXa: A|move: Safeguard
+|-activate|pXa: A|move: Spite|absorb|X
+|-activate|pXa: A|move: Spite|acidarmor|X
+|-activate|pXa: A|move: Spite|acid|X
+|-activate|pXa: A|move: Spite|aeroblast|X
+|-activate|pXa: A|move: Spite|agility|X
+|-activate|pXa: A|move: Spite|amnesia|X
+|-activate|pXa: A|move: Spite|ancientpower|X
+|-activate|pXa: A|move: Spite|attract|X
+|-activate|pXa: A|move: Spite|aurorabeam|X
+|-activate|pXa: A|move: Spite|barrage|X
+|-activate|pXa: A|move: Spite|barrier|X
+|-activate|pXa: A|move: Spite|beatup|X
+|-activate|pXa: A|move: Spite|bellydrum|X
+|-activate|pXa: A|move: Spite|bide|X
+|-activate|pXa: A|move: Spite|bind|X
+|-activate|pXa: A|move: Spite|bite|X
+|-activate|pXa: A|move: Spite|blizzard|X
+|-activate|pXa: A|move: Spite|bodyslam|X
+|-activate|pXa: A|move: Spite|boneclub|X
+|-activate|pXa: A|move: Spite|bonerush|X
+|-activate|pXa: A|move: Spite|bubblebeam|X
+|-activate|pXa: A|move: Spite|bubble|X
+|-activate|pXa: A|move: Spite|charm|X
+|-activate|pXa: A|move: Spite|clamp|X
+|-activate|pXa: A|move: Spite|cometpunch|X
+|-activate|pXa: A|move: Spite|confuseray|X
+|-activate|pXa: A|move: Spite|confusion|X
+|-activate|pXa: A|move: Spite|constrict|X
+|-activate|pXa: A|move: Spite|conversionX|X
+|-activate|pXa: A|move: Spite|conversion|X
+|-activate|pXa: A|move: Spite|cottonspore|X
+|-activate|pXa: A|move: Spite|crabhammer|X
+|-activate|pXa: A|move: Spite|crosschop|X
+|-activate|pXa: A|move: Spite|crunch|X
+|-activate|pXa: A|move: Spite|curse|X
+|-activate|pXa: A|move: Spite|defensecurl|X
+|-activate|pXa: A|move: Spite|destinybond|X
+|-activate|pXa: A|move: Spite|detect|X
+|-activate|pXa: A|move: Spite|dig|X
+|-activate|pXa: A|move: Spite|disable|X
+|-activate|pXa: A|move: Spite|dizzypunch|X
+|-activate|pXa: A|move: Spite|doubleedge|X
+|-activate|pXa: A|move: Spite|doublekick|X
+|-activate|pXa: A|move: Spite|doubleslap|X
+|-activate|pXa: A|move: Spite|doubleteam|X
+|-activate|pXa: A|move: Spite|dragonbreath|X
+|-activate|pXa: A|move: Spite|dragonrage|X
+|-activate|pXa: A|move: Spite|dreameater|X
+|-activate|pXa: A|move: Spite|drillpeck|X
+|-activate|pXa: A|move: Spite|dynamicpunch|X
+|-activate|pXa: A|move: Spite|earthquake|X
+|-activate|pXa: A|move: Spite|eggbomb|X
+|-activate|pXa: A|move: Spite|ember|X
+|-activate|pXa: A|move: Spite|encore|X
+|-activate|pXa: A|move: Spite|endure|X
+|-activate|pXa: A|move: Spite|extremespeed|X
+|-activate|pXa: A|move: Spite|falseswipe|X
+|-activate|pXa: A|move: Spite|feintattack|X
+|-activate|pXa: A|move: Spite|fireblast|X
+|-activate|pXa: A|move: Spite|firepunch|X
+|-activate|pXa: A|move: Spite|firespin|X
+|-activate|pXa: A|move: Spite|fissure|X
+|-activate|pXa: A|move: Spite|flail|X
+|-activate|pXa: A|move: Spite|flamethrower|X
+|-activate|pXa: A|move: Spite|flamewheel|X
+|-activate|pXa: A|move: Spite|flash|X
+|-activate|pXa: A|move: Spite|fly|X
+|-activate|pXa: A|move: Spite|focusenergy|X
+|-activate|pXa: A|move: Spite|foresight|X
+|-activate|pXa: A|move: Spite|frustration|X
+|-activate|pXa: A|move: Spite|furyattack|X
+|-activate|pXa: A|move: Spite|furycutter|X
+|-activate|pXa: A|move: Spite|furyswipes|X
+|-activate|pXa: A|move: Spite|futuresight|X
+|-activate|pXa: A|move: Spite|gigadrain|X
+|-activate|pXa: A|move: Spite|glare|X
+|-activate|pXa: A|move: Spite|growl|X
+|-activate|pXa: A|move: Spite|growth|X
+|-activate|pXa: A|move: Spite|guillotine|X
+|-activate|pXa: A|move: Spite|gust|X
+|-activate|pXa: A|move: Spite|harden|X
+|-activate|pXa: A|move: Spite|haze|X
+|-activate|pXa: A|move: Spite|headbutt|X
+|-activate|pXa: A|move: Spite|healbell|X
+|-activate|pXa: A|move: Spite|hiddenpower|X
+|-activate|pXa: A|move: Spite|highjumpkick|X
+|-activate|pXa: A|move: Spite|hornattack|X
+|-activate|pXa: A|move: Spite|horndrill|X
+|-activate|pXa: A|move: Spite|hydropump|X
+|-activate|pXa: A|move: Spite|hyperbeam|X
+|-activate|pXa: A|move: Spite|hyperfang|X
+|-activate|pXa: A|move: Spite|hypnosis|X
+|-activate|pXa: A|move: Spite|icebeam|X
+|-activate|pXa: A|move: Spite|icepunch|X
+|-activate|pXa: A|move: Spite|icywind|X
+|-activate|pXa: A|move: Spite|irontail|X
+|-activate|pXa: A|move: Spite|jumpkick|X
+|-activate|pXa: A|move: Spite|karatechop|X
+|-activate|pXa: A|move: Spite|leechlife|X
+|-activate|pXa: A|move: Spite|leechseed|X
+|-activate|pXa: A|move: Spite|leer|X
+|-activate|pXa: A|move: Spite|lick|X
+|-activate|pXa: A|move: Spite|lightscreen|X
+|-activate|pXa: A|move: Spite|lockon|X
+|-activate|pXa: A|move: Spite|lovelykiss|X
+|-activate|pXa: A|move: Spite|machpunch|X
+|-activate|pXa: A|move: Spite|magnitude|X
+|-activate|pXa: A|move: Spite|meanlook|X
+|-activate|pXa: A|move: Spite|meditate|X
+|-activate|pXa: A|move: Spite|megadrain|X
+|-activate|pXa: A|move: Spite|megahorn|X
+|-activate|pXa: A|move: Spite|megapunch|X
+|-activate|pXa: A|move: Spite|metalclaw|X
+|-activate|pXa: A|move: Spite|metronome|X
+|-activate|pXa: A|move: Spite|milkdrink|X
+|-activate|pXa: A|move: Spite|mindreader|X
+|-activate|pXa: A|move: Spite|minimize|X
+|-activate|pXa: A|move: Spite|mirrorcoat|X
+|-activate|pXa: A|move: Spite|mirrormove|X
+|-activate|pXa: A|move: Spite|mist|X
+|-activate|pXa: A|move: Spite|moonlight|X
+|-activate|pXa: A|move: Spite|morningsun|X
+|-activate|pXa: A|move: Spite|mudslap|X
+|-activate|pXa: A|move: Spite|nightmare|X
+|-activate|pXa: A|move: Spite|nightshade|X
+|-activate|pXa: A|move: Spite|octazooka|X
+|-activate|pXa: A|move: Spite|outrage|X
+|-activate|pXa: A|move: Spite|painsplit|X
+|-activate|pXa: A|move: Spite|payday|X
+|-activate|pXa: A|move: Spite|peck|X
+|-activate|pXa: A|move: Spite|perishsong|X
+|-activate|pXa: A|move: Spite|petaldance|X
+|-activate|pXa: A|move: Spite|pinmissile|X
+|-activate|pXa: A|move: Spite|poisongas|X
+|-activate|pXa: A|move: Spite|poisonpowder|X
+|-activate|pXa: A|move: Spite|poisonsting|X
+|-activate|pXa: A|move: Spite|pound|X
+|-activate|pXa: A|move: Spite|powdersnow|X
+|-activate|pXa: A|move: Spite|present|X
+|-activate|pXa: A|move: Spite|psybeam|X
+|-activate|pXa: A|move: Spite|psychic|X
+|-activate|pXa: A|move: Spite|psychup|X
+|-activate|pXa: A|move: Spite|psywave|X
+|-activate|pXa: A|move: Spite|pursuit|X
+|-activate|pXa: A|move: Spite|quickattack|X
+|-activate|pXa: A|move: Spite|rage|X
+|-activate|pXa: A|move: Spite|raindance|X
+|-activate|pXa: A|move: Spite|rapidspin|X
+|-activate|pXa: A|move: Spite|razorleaf|X
+|-activate|pXa: A|move: Spite|razorwind|X
+|-activate|pXa: A|move: Spite|recover|X
+|-activate|pXa: A|move: Spite|reflect|X
+|-activate|pXa: A|move: Spite|rest|X
+|-activate|pXa: A|move: Spite|return|X
+|-activate|pXa: A|move: Spite|reversal|X
+|-activate|pXa: A|move: Spite|rockslide|X
+|-activate|pXa: A|move: Spite|rocksmash|X
+|-activate|pXa: A|move: Spite|rockthrow|X
+|-activate|pXa: A|move: Spite|rollingkick|X
+|-activate|pXa: A|move: Spite|rollout|X
+|-activate|pXa: A|move: Spite|sacredfire|X
+|-activate|pXa: A|move: Spite|safeguard|X
+|-activate|pXa: A|move: Spite|sandattack|X
+|-activate|pXa: A|move: Spite|sandstorm|X
+|-activate|pXa: A|move: Spite|scaryface|X
+|-activate|pXa: A|move: Spite|scratch|X
+|-activate|pXa: A|move: Spite|screech|X
+|-activate|pXa: A|move: Spite|seismictoss|X
+|-activate|pXa: A|move: Spite|shadowball|X
+|-activate|pXa: A|move: Spite|sharpen|X
+|-activate|pXa: A|move: Spite|sing|X
+|-activate|pXa: A|move: Spite|skullbash|X
+|-activate|pXa: A|move: Spite|skyattack|X
+|-activate|pXa: A|move: Spite|slam|X
+|-activate|pXa: A|move: Spite|slash|X
+|-activate|pXa: A|move: Spite|sleeppowder|X
+|-activate|pXa: A|move: Spite|sleeptalk|X
+|-activate|pXa: A|move: Spite|sludgebomb|X
+|-activate|pXa: A|move: Spite|sludge|X
+|-activate|pXa: A|move: Spite|smog|X
+|-activate|pXa: A|move: Spite|smokescreen|X
+|-activate|pXa: A|move: Spite|softboiled|X
+|-activate|pXa: A|move: Spite|solarbeam|X
+|-activate|pXa: A|move: Spite|sonicboom|X
+|-activate|pXa: A|move: Spite|spark|X
+|-activate|pXa: A|move: Spite|spiderweb|X
+|-activate|pXa: A|move: Spite|spikes|X
+|-activate|pXa: A|move: Spite|spite|X
+|-activate|pXa: A|move: Spite|splash|X
+|-activate|pXa: A|move: Spite|spore|X
+|-activate|pXa: A|move: Spite|steelwing|X
+|-activate|pXa: A|move: Spite|stomp|X
+|-activate|pXa: A|move: Spite|strength|X
+|-activate|pXa: A|move: Spite|stringshot|X
+|-activate|pXa: A|move: Spite|stunspore|X
+|-activate|pXa: A|move: Spite|submission|X
+|-activate|pXa: A|move: Spite|substitute|X
+|-activate|pXa: A|move: Spite|sunnyday|X
+|-activate|pXa: A|move: Spite|superfang|X
+|-activate|pXa: A|move: Spite|surf|X
+|-activate|pXa: A|move: Spite|swagger|X
+|-activate|pXa: A|move: Spite|sweetkiss|X
+|-activate|pXa: A|move: Spite|sweetscent|X
+|-activate|pXa: A|move: Spite|swift|X
+|-activate|pXa: A|move: Spite|swordsdance|X
+|-activate|pXa: A|move: Spite|synthesis|X
+|-activate|pXa: A|move: Spite|tackle|X
+|-activate|pXa: A|move: Spite|tailwhip|X
+|-activate|pXa: A|move: Spite|takedown|X
+|-activate|pXa: A|move: Spite|teleport|X
+|-activate|pXa: A|move: Spite|thief|X
+|-activate|pXa: A|move: Spite|thrash|X
+|-activate|pXa: A|move: Spite|thunderbolt|X
+|-activate|pXa: A|move: Spite|thunderpunch|X
+|-activate|pXa: A|move: Spite|thundershock|X
+|-activate|pXa: A|move: Spite|thunderwave|X
+|-activate|pXa: A|move: Spite|toxic|X
+|-activate|pXa: A|move: Spite|triattack|X
+|-activate|pXa: A|move: Spite|triplekick|X
+|-activate|pXa: A|move: Spite|twineedle|X
+|-activate|pXa: A|move: Spite|twister|X
+|-activate|pXa: A|move: Spite|vinewhip|X
+|-activate|pXa: A|move: Spite|visegrip|X
+|-activate|pXa: A|move: Spite|vitalthrow|X
+|-activate|pXa: A|move: Spite|waterfall|X
+|-activate|pXa: A|move: Spite|watergun|X
+|-activate|pXa: A|move: Spite|whirlpool|X
+|-activate|pXa: A|move: Spite|wingattack|X
+|-activate|pXa: A|move: Spite|withdraw|X
+|-activate|pXa: A|move: Spite|wrap|X
+|-activate|pXa: A|move: Spite|zapcannon|X
+|-activate|pXa: A|move: Whirlpool|[of] pXa: A
+|-activate|pXa: A|move: Wrap|[of] pXa: A
+|-activate|pXa: A|trapped
+|-anim|pXa: A|Solar Beam|pXa: A
+|-anim|pXa: A|Solar Beam|pXa: A|[miss]
+|-boost|pXa: A|atk|X
+|-boost|pXa: A|atk|X|[from] item: Berserk Gene
+|-boost|pXa: A|atk|X|[silent]
+|-boost|pXa: A|def|X
+|-boost|pXa: A|evasion|X
+|-boost|pXa: A|spa|X
+|-boost|pXa: A|spd|X
+|-boost|pXa: A|spe|X
+|-clearallboost
+|-copyboost|pXa: A|pXa: A|[from] move: Psych Up
+|-crit|pXa: A
+|-curestatus|pXa: A|brn|[msg]
+|-curestatus|pXa: A|frz|[msg]
+|-curestatus|pXa: A|par|[msg]
+|-curestatus|pXa: A|psn|[msg]
+|-curestatus|pXa: A|slp|[msg]
+|-curestatus|pXa: A|tox|[msg]
+|-cureteam|pXa: A|[from] move: Heal Bell
+|-damage|pXa: A|X fnt
+|-damage|pXa: A|X fnt|[from] Curse
+|-damage|pXa: A|X fnt|[from] Curse|[of] pXa: A
+|-damage|pXa: A|X fnt|[from] Leech Seed|[of] pXa: A
+|-damage|pXa: A|X fnt|[from] Nightmare
+|-damage|pXa: A|X fnt|[from] Nightmare|[of] pXa: A
+|-damage|pXa: A|X fnt|[from] Recoil|[of] pXa: A
+|-damage|pXa: A|X fnt|[from] Sandstorm
+|-damage|pXa: A|X fnt|[from] Spikes
+|-damage|pXa: A|X fnt|[from] brn
+|-damage|pXa: A|X fnt|[from] brn|[of] pX: A
+|-damage|pXa: A|X fnt|[from] brn|[of] pXa: A
+|-damage|pXa: A|X fnt|[from] confusion
+|-damage|pXa: A|X fnt|[from] move: Bind|[partiallytrapped]
+|-damage|pXa: A|X fnt|[from] move: Clamp|[partiallytrapped]
+|-damage|pXa: A|X fnt|[from] move: Fire Spin|[partiallytrapped]
+|-damage|pXa: A|X fnt|[from] move: Whirlpool|[partiallytrapped]
+|-damage|pXa: A|X fnt|[from] move: Wrap|[partiallytrapped]
+|-damage|pXa: A|X fnt|[from] psn
+|-damage|pXa: A|X fnt|[from] psn|[of] pX: A
+|-damage|pXa: A|X fnt|[from] psn|[of] pXa: A
+|-damage|pXa: A|X/X
+|-damage|pXa: A|X/X brn
+|-damage|pXa: A|X/X brn|[from] Leech Seed|[of] pXa: A
+|-damage|pXa: A|X/X brn|[from] Recoil|[of] pXa: A
+|-damage|pXa: A|X/X brn|[from] Sandstorm
+|-damage|pXa: A|X/X brn|[from] Spikes
+|-damage|pXa: A|X/X brn|[from] brn
+|-damage|pXa: A|X/X brn|[from] brn|[of] pX: A
+|-damage|pXa: A|X/X brn|[from] brn|[of] pXa: A
+|-damage|pXa: A|X/X brn|[from] confusion
+|-damage|pXa: A|X/X brn|[from] move: Bind|[partiallytrapped]
+|-damage|pXa: A|X/X brn|[from] move: Clamp|[partiallytrapped]
+|-damage|pXa: A|X/X brn|[from] move: Fire Spin|[partiallytrapped]
+|-damage|pXa: A|X/X brn|[from] move: Whirlpool|[partiallytrapped]
+|-damage|pXa: A|X/X brn|[from] move: Wrap|[partiallytrapped]
+|-damage|pXa: A|X/X frz
+|-damage|pXa: A|X/X frz|[from] Leech Seed|[of] pXa: A
+|-damage|pXa: A|X/X frz|[from] Sandstorm
+|-damage|pXa: A|X/X frz|[from] move: Bind|[partiallytrapped]
+|-damage|pXa: A|X/X frz|[from] move: Clamp|[partiallytrapped]
+|-damage|pXa: A|X/X frz|[from] move: Whirlpool|[partiallytrapped]
+|-damage|pXa: A|X/X par
+|-damage|pXa: A|X/X par|[from] Leech Seed|[of] pXa: A
+|-damage|pXa: A|X/X par|[from] Recoil|[of] pXa: A
+|-damage|pXa: A|X/X par|[from] Sandstorm
+|-damage|pXa: A|X/X par|[from] Spikes
+|-damage|pXa: A|X/X par|[from] confusion
+|-damage|pXa: A|X/X par|[from] move: Bind|[partiallytrapped]
+|-damage|pXa: A|X/X par|[from] move: Clamp|[partiallytrapped]
+|-damage|pXa: A|X/X par|[from] move: Fire Spin|[partiallytrapped]
+|-damage|pXa: A|X/X par|[from] move: Whirlpool|[partiallytrapped]
+|-damage|pXa: A|X/X par|[from] move: Wrap|[partiallytrapped]
+|-damage|pXa: A|X/X psn
+|-damage|pXa: A|X/X psn|[from] Leech Seed|[of] pXa: A
+|-damage|pXa: A|X/X psn|[from] Recoil|[of] pXa: A
+|-damage|pXa: A|X/X psn|[from] Sandstorm
+|-damage|pXa: A|X/X psn|[from] Spikes
+|-damage|pXa: A|X/X psn|[from] confusion
+|-damage|pXa: A|X/X psn|[from] move: Bind|[partiallytrapped]
+|-damage|pXa: A|X/X psn|[from] move: Clamp|[partiallytrapped]
+|-damage|pXa: A|X/X psn|[from] move: Fire Spin|[partiallytrapped]
+|-damage|pXa: A|X/X psn|[from] move: Whirlpool|[partiallytrapped]
+|-damage|pXa: A|X/X psn|[from] move: Wrap|[partiallytrapped]
+|-damage|pXa: A|X/X psn|[from] psn
+|-damage|pXa: A|X/X psn|[from] psn|[of] pX: A
+|-damage|pXa: A|X/X psn|[from] psn|[of] pXa: A
+|-damage|pXa: A|X/X slp
+|-damage|pXa: A|X/X slp|[from] Curse|[of] pXa: A
+|-damage|pXa: A|X/X slp|[from] Leech Seed|[of] pXa: A
+|-damage|pXa: A|X/X slp|[from] Nightmare
+|-damage|pXa: A|X/X slp|[from] Nightmare|[of] pXa: A
+|-damage|pXa: A|X/X slp|[from] Sandstorm
+|-damage|pXa: A|X/X slp|[from] Spikes
+|-damage|pXa: A|X/X slp|[from] confusion
+|-damage|pXa: A|X/X slp|[from] move: Bind|[partiallytrapped]
+|-damage|pXa: A|X/X slp|[from] move: Clamp|[partiallytrapped]
+|-damage|pXa: A|X/X slp|[from] move: Fire Spin|[partiallytrapped]
+|-damage|pXa: A|X/X slp|[from] move: Whirlpool|[partiallytrapped]
+|-damage|pXa: A|X/X slp|[from] move: Wrap|[partiallytrapped]
+|-damage|pXa: A|X/X tox
+|-damage|pXa: A|X/X tox|[from] Leech Seed|[of] pXa: A
+|-damage|pXa: A|X/X tox|[from] Recoil|[of] pXa: A
+|-damage|pXa: A|X/X tox|[from] Sandstorm
+|-damage|pXa: A|X/X tox|[from] confusion
+|-damage|pXa: A|X/X tox|[from] move: Bind|[partiallytrapped]
+|-damage|pXa: A|X/X tox|[from] move: Clamp|[partiallytrapped]
+|-damage|pXa: A|X/X tox|[from] move: Whirlpool|[partiallytrapped]
+|-damage|pXa: A|X/X tox|[from] move: Wrap|[partiallytrapped]
+|-damage|pXa: A|X/X tox|[from] psn
+|-damage|pXa: A|X/X|[from] Curse
+|-damage|pXa: A|X/X|[from] Curse|[of] pXa: A
+|-damage|pXa: A|X/X|[from] Leech Seed|[of] pXa: A
+|-damage|pXa: A|X/X|[from] Recoil|[of] pXa: A
+|-damage|pXa: A|X/X|[from] Sandstorm
+|-damage|pXa: A|X/X|[from] Spikes
+|-damage|pXa: A|X/X|[from] confusion
+|-damage|pXa: A|X/X|[from] move: Bind|[partiallytrapped]
+|-damage|pXa: A|X/X|[from] move: Clamp|[partiallytrapped]
+|-damage|pXa: A|X/X|[from] move: Fire Spin|[partiallytrapped]
+|-damage|pXa: A|X/X|[from] move: Whirlpool|[partiallytrapped]
+|-damage|pXa: A|X/X|[from] move: Wrap|[partiallytrapped]
+|-enditem|pXa: A|Berry Juice
+|-enditem|pXa: A|Berry|[eat]
+|-enditem|pXa: A|Berserk Gene
+|-enditem|pXa: A|Bitter Berry|[eat]
+|-enditem|pXa: A|Burnt Berry|[eat]
+|-enditem|pXa: A|Gold Berry|[eat]
+|-enditem|pXa: A|Ice Berry|[eat]
+|-enditem|pXa: A|Mint Berry|[eat]
+|-enditem|pXa: A|Miracle Berry|[eat]
+|-enditem|pXa: A|Mystery Berry|[eat]
+|-enditem|pXa: A|PRZ Cure Berry|[eat]
+|-enditem|pXa: A|PSN Cure Berry|[eat]
+|-end|pXa: A|Attract|[silent]
+|-end|pXa: A|Bind|[partiallytrapped]
+|-end|pXa: A|Clamp|[partiallytrapped]
+|-end|pXa: A|Encore
+|-end|pXa: A|Fire Spin|[partiallytrapped]
+|-end|pXa: A|Leech Seed|[from] move: Rapid Spin|[of] pXa: A
+|-end|pXa: A|Nightmare|[silent]
+|-end|pXa: A|Substitute
+|-end|pXa: A|Whirlpool|[partiallytrapped]
+|-end|pXa: A|Wrap|[partiallytrapped]
+|-end|pXa: A|confusion
+|-end|pXa: A|move: Bide
+|-end|pXa: A|move: Bide|[silent]
+|-end|pXa: A|move: Disable
+|-end|pXa: A|move: Future Sight
+|-fail|pXa: A
+|-fail|pXa: A|move: Substitute
+|-fail|pXa: A|move: Substitute|[weak]
+|-fail|pXa: A|par
+|-fail|pXa: A|psn
+|-fail|pXa: A|slp
+|-fail|pXa: A|tox
+|-fieldactivate|move: Pay Day
+|-fieldactivate|move: Perish Song
+|-heal|pXa: A|X/X
+|-heal|pXa: A|X/X brn
+|-heal|pXa: A|X/X brn|[from] drain|[of] pXa: A
+|-heal|pXa: A|X/X brn|[from] item: Berry
+|-heal|pXa: A|X/X brn|[from] item: Berry Juice
+|-heal|pXa: A|X/X brn|[from] item: Gold Berry
+|-heal|pXa: A|X/X brn|[from] item: Leftovers
+|-heal|pXa: A|X/X brn|[silent]
+|-heal|pXa: A|X/X frz|[from] item: Berry
+|-heal|pXa: A|X/X frz|[from] item: Berry Juice
+|-heal|pXa: A|X/X frz|[from] item: Gold Berry
+|-heal|pXa: A|X/X frz|[from] item: Leftovers
+|-heal|pXa: A|X/X frz|[silent]
+|-heal|pXa: A|X/X par
+|-heal|pXa: A|X/X par|[from] drain|[of] pXa: A
+|-heal|pXa: A|X/X par|[from] item: Berry
+|-heal|pXa: A|X/X par|[from] item: Berry Juice
+|-heal|pXa: A|X/X par|[from] item: Gold Berry
+|-heal|pXa: A|X/X par|[from] item: Leftovers
+|-heal|pXa: A|X/X par|[silent]
+|-heal|pXa: A|X/X psn
+|-heal|pXa: A|X/X psn|[from] drain|[of] pXa: A
+|-heal|pXa: A|X/X psn|[from] item: Berry
+|-heal|pXa: A|X/X psn|[from] item: Berry Juice
+|-heal|pXa: A|X/X psn|[from] item: Gold Berry
+|-heal|pXa: A|X/X psn|[from] item: Leftovers
+|-heal|pXa: A|X/X psn|[silent]
+|-heal|pXa: A|X/X slp
+|-heal|pXa: A|X/X slp|[from] drain|[of] pXa: A
+|-heal|pXa: A|X/X slp|[from] item: Berry
+|-heal|pXa: A|X/X slp|[from] item: Berry Juice
+|-heal|pXa: A|X/X slp|[from] item: Gold Berry
+|-heal|pXa: A|X/X slp|[from] item: Leftovers
+|-heal|pXa: A|X/X slp|[silent]
+|-heal|pXa: A|X/X tox
+|-heal|pXa: A|X/X tox|[from] drain|[of] pXa: A
+|-heal|pXa: A|X/X tox|[from] item: Berry
+|-heal|pXa: A|X/X tox|[from] item: Berry Juice
+|-heal|pXa: A|X/X tox|[from] item: Gold Berry
+|-heal|pXa: A|X/X tox|[from] item: Leftovers
+|-heal|pXa: A|X/X tox|[silent]
+|-heal|pXa: A|X/X|[from] drain|[of] pXa: A
+|-heal|pXa: A|X/X|[from] item: Berry
+|-heal|pXa: A|X/X|[from] item: Berry Juice
+|-heal|pXa: A|X/X|[from] item: Gold Berry
+|-heal|pXa: A|X/X|[from] item: Leftovers
+|-heal|pXa: A|X/X|[silent]
+|-hitcount|pXa: A|X
+|-immune|pXa: A
+|-item|pXa: A|Bright Powder|[from] move: Thief|[of] pXa: A
+|-item|pXa: A|Burnt Berry|[from] move: Thief|[of] pXa: A
+|-item|pXa: A|Dragon Fang|[from] move: Thief|[of] pXa: A
+|-item|pXa: A|Dragon Scale|[from] move: Thief|[of] pXa: A
+|-item|pXa: A|Metal Powder|[from] move: Thief|[of] pXa: A
+|-item|pXa: A|Mint Berry|[from] move: Thief|[of] pXa: A
+|-item|pXa: A|Moon Stone|[from] move: Thief|[of] pXa: A
+|-item|pXa: A|Pink Bow|[from] move: Thief|[of] pXa: A
+|-item|pXa: A|Sport Ball|[from] move: Thief|[of] pXa: A
+|-item|pXa: A|Thick Club|[from] move: Thief|[of] pXa: A
+|-item|pXa: A|Twisted Spoon|[from] move: Thief|[of] pXa: A
+|-item|pXa: A|Up-Grade|[from] move: Thief|[of] pXa: A
+|-item|pXa: A|Water Stone|[from] move: Thief|[of] pXa: A
+|-miss|pX: A|pXa: A
+|-miss|pXa: A
+|-miss|pXa: A|pXa: A
+|-mustrecharge|pXa: A
+|-nothing
+|-ohko
+|-prepare|pXa: A|Dig
+|-prepare|pXa: A|Fly
+|-prepare|pXa: A|Razor Wind
+|-prepare|pXa: A|Skull Bash
+|-prepare|pXa: A|Sky Attack
+|-prepare|pXa: A|Solar Beam
+|-resisted|pXa: A
+|-setboost|pXa: A|atk|X|[from] move: Belly Drum
+|-sethp|pXa: A|X/X brn|[from] move: Pain Split
+|-sethp|pXa: A|X/X brn|[from] move: Pain Split|[silent]
+|-sethp|pXa: A|X/X frz|[from] move: Pain Split|[silent]
+|-sethp|pXa: A|X/X par|[from] move: Pain Split
+|-sethp|pXa: A|X/X par|[from] move: Pain Split|[silent]
+|-sethp|pXa: A|X/X psn|[from] move: Pain Split
+|-sethp|pXa: A|X/X psn|[from] move: Pain Split|[silent]
+|-sethp|pXa: A|X/X slp|[from] move: Pain Split|[silent]
+|-sethp|pXa: A|X/X tox|[from] move: Pain Split
+|-sethp|pXa: A|X/X tox|[from] move: Pain Split|[silent]
+|-sethp|pXa: A|X/X|[from] move: Pain Split
+|-sethp|pXa: A|X/X|[from] move: Pain Split|[silent]
+|-sideend|pX: Bot X|Reflect
+|-sideend|pX: Bot X|Safeguard
+|-sideend|pX: Bot X|Spikes|[from] move: Rapid Spin|[of] pXa: A
+|-sideend|pX: Bot X|move: Light Screen
+|-sidestart|pX: Bot X|Reflect
+|-sidestart|pX: Bot X|Safeguard
+|-sidestart|pX: Bot X|Spikes
+|-sidestart|pX: Bot X|move: Light Screen
+|-singlemove|pXa: A|Destiny Bond
+|-singlemove|pXa: A|Rage
+|-singleturn|pXa: A|Protect
+|-singleturn|pXa: A|move: Endure
+|-start|pXa: A|Attract
+|-start|pXa: A|Curse|[of] pXa: A
+|-start|pXa: A|Disable|Acid
+|-start|pXa: A|Disable|Amnesia
+|-start|pXa: A|Disable|Ancient Power
+|-start|pXa: A|Disable|Barrage
+|-start|pXa: A|Disable|Barrier
+|-start|pXa: A|Disable|Beat Up
+|-start|pXa: A|Disable|Bide
+|-start|pXa: A|Disable|Bind
+|-start|pXa: A|Disable|Bite
+|-start|pXa: A|Disable|Body Slam
+|-start|pXa: A|Disable|Bone Club
+|-start|pXa: A|Disable|Bone Rush
+|-start|pXa: A|Disable|Bonemerang
+|-start|pXa: A|Disable|Bubble
+|-start|pXa: A|Disable|Bubble Beam
+|-start|pXa: A|Disable|Charm
+|-start|pXa: A|Disable|Confuse Ray
+|-start|pXa: A|Disable|Constrict
+|-start|pXa: A|Disable|Conversion
+|-start|pXa: A|Disable|Conversion X
+|-start|pXa: A|Disable|Cotton Spore
+|-start|pXa: A|Disable|Counter
+|-start|pXa: A|Disable|Crabhammer
+|-start|pXa: A|Disable|Cross Chop
+|-start|pXa: A|Disable|Curse
+|-start|pXa: A|Disable|Cut
+|-start|pXa: A|Disable|Defense Curl
+|-start|pXa: A|Disable|Destiny Bond
+|-start|pXa: A|Disable|Detect
+|-start|pXa: A|Disable|Dig
+|-start|pXa: A|Disable|Disable
+|-start|pXa: A|Disable|Dizzy Punch
+|-start|pXa: A|Disable|Double Kick
+|-start|pXa: A|Disable|Double Team
+|-start|pXa: A|Disable|Double-Edge
+|-start|pXa: A|Disable|Dragon Breath
+|-start|pXa: A|Disable|Dragon Rage
+|-start|pXa: A|Disable|Dream Eater
+|-start|pXa: A|Disable|Drill Peck
+|-start|pXa: A|Disable|Dynamic Punch
+|-start|pXa: A|Disable|Earthquake
+|-start|pXa: A|Disable|Egg Bomb
+|-start|pXa: A|Disable|Endure
+|-start|pXa: A|Disable|Extreme Speed
+|-start|pXa: A|Disable|False Swipe
+|-start|pXa: A|Disable|Feint Attack
+|-start|pXa: A|Disable|Fire Blast
+|-start|pXa: A|Disable|Fire Punch
+|-start|pXa: A|Disable|Fire Spin
+|-start|pXa: A|Disable|Fissure
+|-start|pXa: A|Disable|Flail
+|-start|pXa: A|Disable|Flame Wheel
+|-start|pXa: A|Disable|Flash
+|-start|pXa: A|Disable|Fly
+|-start|pXa: A|Disable|Focus Energy
+|-start|pXa: A|Disable|Foresight
+|-start|pXa: A|Disable|Frustration
+|-start|pXa: A|Disable|Fury Attack
+|-start|pXa: A|Disable|Fury Cutter
+|-start|pXa: A|Disable|Fury Swipes
+|-start|pXa: A|Disable|Giga Drain
+|-start|pXa: A|Disable|Glare
+|-start|pXa: A|Disable|Growl
+|-start|pXa: A|Disable|Growth
+|-start|pXa: A|Disable|Guillotine
+|-start|pXa: A|Disable|Gust
+|-start|pXa: A|Disable|Haze
+|-start|pXa: A|Disable|Headbutt
+|-start|pXa: A|Disable|Hidden Power
+|-start|pXa: A|Disable|High Jump Kick
+|-start|pXa: A|Disable|Horn Drill
+|-start|pXa: A|Disable|Hyper Beam
+|-start|pXa: A|Disable|Hyper Fang
+|-start|pXa: A|Disable|Ice Beam
+|-start|pXa: A|Disable|Icy Wind
+|-start|pXa: A|Disable|Iron Tail
+|-start|pXa: A|Disable|Jump Kick
+|-start|pXa: A|Disable|Karate Chop
+|-start|pXa: A|Disable|Kinesis
+|-start|pXa: A|Disable|Leech Life
+|-start|pXa: A|Disable|Leech Seed
+|-start|pXa: A|Disable|Leer
+|-start|pXa: A|Disable|Lock-On
+|-start|pXa: A|Disable|Lovely Kiss
+|-start|pXa: A|Disable|Mach Punch
+|-start|pXa: A|Disable|Magnitude
+|-start|pXa: A|Disable|Mean Look
+|-start|pXa: A|Disable|Meditate
+|-start|pXa: A|Disable|Mega Drain
+|-start|pXa: A|Disable|Mega Kick
+|-start|pXa: A|Disable|Mega Punch
+|-start|pXa: A|Disable|Metal Claw
+|-start|pXa: A|Disable|Milk Drink
+|-start|pXa: A|Disable|Mind Reader
+|-start|pXa: A|Disable|Minimize
+|-start|pXa: A|Disable|Mirror Move
+|-start|pXa: A|Disable|Moonlight
+|-start|pXa: A|Disable|Morning Sun
+|-start|pXa: A|Disable|Mud-Slap
+|-start|pXa: A|Disable|Night Shade
+|-start|pXa: A|Disable|Nightmare
+|-start|pXa: A|Disable|Pain Split
+|-start|pXa: A|Disable|Pay Day
+|-start|pXa: A|Disable|Peck
+|-start|pXa: A|Disable|Perish Song
+|-start|pXa: A|Disable|Petal Dance
+|-start|pXa: A|Disable|Pin Missile
+|-start|pXa: A|Disable|Poison Gas
+|-start|pXa: A|Disable|Poison Powder
+|-start|pXa: A|Disable|Pound
+|-start|pXa: A|Disable|Powder Snow
+|-start|pXa: A|Disable|Present
+|-start|pXa: A|Disable|Psybeam
+|-start|pXa: A|Disable|Psych Up
+|-start|pXa: A|Disable|Psychic
+|-start|pXa: A|Disable|Pursuit
+|-start|pXa: A|Disable|Quick Attack
+|-start|pXa: A|Disable|Rage
+|-start|pXa: A|Disable|Rain Dance
+|-start|pXa: A|Disable|Rapid Spin
+|-start|pXa: A|Disable|Razor Leaf
+|-start|pXa: A|Disable|Razor Wind
+|-start|pXa: A|Disable|Recover
+|-start|pXa: A|Disable|Reflect
+|-start|pXa: A|Disable|Rest
+|-start|pXa: A|Disable|Return
+|-start|pXa: A|Disable|Reversal
+|-start|pXa: A|Disable|Rock Slide
+|-start|pXa: A|Disable|Rock Smash
+|-start|pXa: A|Disable|Rollout
+|-start|pXa: A|Disable|Sacred Fire
+|-start|pXa: A|Disable|Safeguard
+|-start|pXa: A|Disable|Sand Attack
+|-start|pXa: A|Disable|Scratch
+|-start|pXa: A|Disable|Screech
+|-start|pXa: A|Disable|Seismic Toss
+|-start|pXa: A|Disable|Shadow Ball
+|-start|pXa: A|Disable|Sharpen
+|-start|pXa: A|Disable|Sing
+|-start|pXa: A|Disable|Skull Bash
+|-start|pXa: A|Disable|Sky Attack
+|-start|pXa: A|Disable|Slam
+|-start|pXa: A|Disable|Slash
+|-start|pXa: A|Disable|Sleep Powder
+|-start|pXa: A|Disable|Sleep Talk
+|-start|pXa: A|Disable|Sludge
+|-start|pXa: A|Disable|Smog
+|-start|pXa: A|Disable|Smokescreen
+|-start|pXa: A|Disable|Snore
+|-start|pXa: A|Disable|Soft-Boiled
+|-start|pXa: A|Disable|Solar Beam
+|-start|pXa: A|Disable|Sonic Boom
+|-start|pXa: A|Disable|Spider Web
+|-start|pXa: A|Disable|Spike Cannon
+|-start|pXa: A|Disable|Spikes
+|-start|pXa: A|Disable|Spite
+|-start|pXa: A|Disable|Splash
+|-start|pXa: A|Disable|Spore
+|-start|pXa: A|Disable|Steel Wing
+|-start|pXa: A|Disable|Strength
+|-start|pXa: A|Disable|String Shot
+|-start|pXa: A|Disable|Stun Spore
+|-start|pXa: A|Disable|Submission
+|-start|pXa: A|Disable|Sunny Day
+|-start|pXa: A|Disable|Super Fang
+|-start|pXa: A|Disable|Supersonic
+|-start|pXa: A|Disable|Surf
+|-start|pXa: A|Disable|Sweet Kiss
+|-start|pXa: A|Disable|Sweet Scent
+|-start|pXa: A|Disable|Swift
+|-start|pXa: A|Disable|Synthesis
+|-start|pXa: A|Disable|Tackle
+|-start|pXa: A|Disable|Tail Whip
+|-start|pXa: A|Disable|Thunder
+|-start|pXa: A|Disable|Thunder Punch
+|-start|pXa: A|Disable|Thunder Shock
+|-start|pXa: A|Disable|Thunder Wave
+|-start|pXa: A|Disable|Thunderbolt
+|-start|pXa: A|Disable|Toxic
+|-start|pXa: A|Disable|Twister
+|-start|pXa: A|Disable|Vine Whip
+|-start|pXa: A|Disable|Vise Grip
+|-start|pXa: A|Disable|Vital Throw
+|-start|pXa: A|Disable|Water Gun
+|-start|pXa: A|Disable|Waterfall
+|-start|pXa: A|Disable|Wing Attack
+|-start|pXa: A|Disable|Withdraw
+|-start|pXa: A|Disable|Wrap
+|-start|pXa: A|Encore
+|-start|pXa: A|Foresight
+|-start|pXa: A|Future Sight
+|-start|pXa: A|Mist
+|-start|pXa: A|Nightmare
+|-start|pXa: A|Substitute
+|-start|pXa: A|confusion
+|-start|pXa: A|confusion|[silent]
+|-start|pXa: A|move: Bide
+|-start|pXa: A|move: Focus Energy
+|-start|pXa: A|move: Leech Seed
+|-start|pXa: A|perishX
+|-start|pXa: A|perishX|[silent]
+|-start|pXa: A|typechange|Bug
+|-start|pXa: A|typechange|Dark
+|-start|pXa: A|typechange|Dragon
+|-start|pXa: A|typechange|Electric
+|-start|pXa: A|typechange|Fighting
+|-start|pXa: A|typechange|Fire
+|-start|pXa: A|typechange|Flying
+|-start|pXa: A|typechange|Ghost
+|-start|pXa: A|typechange|Grass
+|-start|pXa: A|typechange|Ground
+|-start|pXa: A|typechange|Ice
+|-start|pXa: A|typechange|Normal
+|-start|pXa: A|typechange|Poison
+|-start|pXa: A|typechange|Psychic
+|-start|pXa: A|typechange|Rock
+|-start|pXa: A|typechange|Steel
+|-start|pXa: A|typechange|Water
+|-status|pXa: A|brn
+|-status|pXa: A|frz
+|-status|pXa: A|par
+|-status|pXa: A|psn
+|-status|pXa: A|psn|[silent]
+|-status|pXa: A|slp|[from] move: Hypnosis
+|-status|pXa: A|slp|[from] move: Lovely Kiss
+|-status|pXa: A|slp|[from] move: Rest
+|-status|pXa: A|slp|[from] move: Sing
+|-status|pXa: A|slp|[from] move: Sleep Powder
+|-status|pXa: A|slp|[from] move: Spore
+|-status|pXa: A|tox
+|-supereffective|pXa: A
+|-transform|pXa: A|pXa: A
+|-unboost|pXa: A|accuracy|X
+|-unboost|pXa: A|atk|X
+|-unboost|pXa: A|def|X
+|-unboost|pXa: A|evasion|X
+|-unboost|pXa: A|spd|X
+|-unboost|pXa: A|spe|X
+|-weather|RainDance
+|-weather|RainDance|[upkeep]
+|-weather|Sandstorm
+|-weather|Sandstorm|[upkeep]
+|-weather|SunnyDay
+|-weather|SunnyDay|[upkeep]
+|-weather|none
+|cant|pXa: A|Attract
+|cant|pXa: A|Disable|Barrage
+|cant|pXa: A|Disable|Bide
+|cant|pXa: A|Disable|Bind
+|cant|pXa: A|Disable|Bonemerang
+|cant|pXa: A|Disable|Charm
+|cant|pXa: A|Disable|Confuse Ray
+|cant|pXa: A|Disable|Curse
+|cant|pXa: A|Disable|Defense Curl
+|cant|pXa: A|Disable|Double Kick
+|cant|pXa: A|Disable|Dream Eater
+|cant|pXa: A|Disable|Feint Attack
+|cant|pXa: A|Disable|Flash
+|cant|pXa: A|Disable|Fly
+|cant|pXa: A|Disable|Fury Cutter
+|cant|pXa: A|Disable|Jump Kick
+|cant|pXa: A|Disable|Lock-On
+|cant|pXa: A|Disable|Mind Reader
+|cant|pXa: A|Disable|Mirror Move
+|cant|pXa: A|Disable|Nightmare
+|cant|pXa: A|Disable|Pain Split
+|cant|pXa: A|Disable|Pay Day
+|cant|pXa: A|Disable|Perish Song
+|cant|pXa: A|Disable|Psychic
+|cant|pXa: A|Disable|Pursuit
+|cant|pXa: A|Disable|Razor Wind
+|cant|pXa: A|Disable|Reflect
+|cant|pXa: A|Disable|Reversal
+|cant|pXa: A|Disable|Rollout
+|cant|pXa: A|Disable|Sand Attack
+|cant|pXa: A|Disable|Sharpen
+|cant|pXa: A|Disable|Skull Bash
+|cant|pXa: A|Disable|Sky Attack
+|cant|pXa: A|Disable|Slam
+|cant|pXa: A|Disable|Smokescreen
+|cant|pXa: A|Disable|Soft-Boiled
+|cant|pXa: A|Disable|Solar Beam
+|cant|pXa: A|Disable|Splash
+|cant|pXa: A|Disable|Submission
+|cant|pXa: A|Disable|Swift
+|cant|pXa: A|Disable|Synthesis
+|cant|pXa: A|Disable|Vise Grip
+|cant|pXa: A|Disable|Vital Throw
+|cant|pXa: A|Disable|Withdraw
+|cant|pXa: A|flinch
+|cant|pXa: A|frz
+|cant|pXa: A|nopp|Crunch
+|cant|pXa: A|nopp|Detect
+|cant|pXa: A|nopp|Egg Bomb
+|cant|pXa: A|nopp|Guillotine
+|cant|pXa: A|nopp|Horn Drill
+|cant|pXa: A|nopp|Mind Reader
+|cant|pXa: A|nopp|Rain Dance
+|cant|pXa: A|nopp|Return
+|cant|pXa: A|nopp|Sonic Boom
+|cant|pXa: A|par
+|cant|pXa: A|recharge
+|cant|pXa: A|slp
+|drag|pXa: A|Abra, LX, F|X/X
+|drag|pXa: A|Abra, LX, M|X/X
+|drag|pXa: A|Aerodactyl, LX, F|X/X
+|drag|pXa: A|Aerodactyl, LX, M|X/X
+|drag|pXa: A|Aipom, LX, M|X/X
+|drag|pXa: A|Aipom, LX, M|X/X par
+|drag|pXa: A|Alakazam, LX, F|X/X
+|drag|pXa: A|Alakazam, LX, M|X/X
+|drag|pXa: A|Ampharos, LX, F|X/X
+|drag|pXa: A|Arbok, LX, F|X/X
+|drag|pXa: A|Arbok, LX, M|X/X
+|drag|pXa: A|Arbok, LX, M|X/X par
+|drag|pXa: A|Arcanine, LX, F|X/X
+|drag|pXa: A|Arcanine, LX, M|X/X
+|drag|pXa: A|Ariados, LX, F|X/X
+|drag|pXa: A|Ariados, LX, M|X/X
+|drag|pXa: A|Articuno, LX|X/X
+|drag|pXa: A|Articuno, LX|X/X par
+|drag|pXa: A|Articuno, LX|X/X slp
+|drag|pXa: A|Azumarill, LX, F|X/X
+|drag|pXa: A|Azumarill, LX, M|X/X
+|drag|pXa: A|Azumarill, LX, M|X/X psn
+|drag|pXa: A|Bayleef, LX, F|X/X
+|drag|pXa: A|Bayleef, LX, M|X/X
+|drag|pXa: A|Beedrill, LX, F|X/X
+|drag|pXa: A|Beedrill, LX, M|X/X
+|drag|pXa: A|Bellossom, LX, F|X/X
+|drag|pXa: A|Bellsprout, LX, F|X/X
+|drag|pXa: A|Bellsprout, LX, F|X/X slp
+|drag|pXa: A|Bellsprout, LX, M|X/X
+|drag|pXa: A|Blastoise, LX, F|X/X
+|drag|pXa: A|Blastoise, LX, M|X/X
+|drag|pXa: A|Blissey, LX, F|X/X
+|drag|pXa: A|Bulbasaur, LX, M|X/X
+|drag|pXa: A|Butterfree, LX, F|X/X
+|drag|pXa: A|Butterfree, LX, M|X/X
+|drag|pXa: A|Butterfree, LX, M|X/X slp
+|drag|pXa: A|Caterpie, LX, F|X/X
+|drag|pXa: A|Caterpie, LX, M|X/X
+|drag|pXa: A|Celebi, LX|X/X
+|drag|pXa: A|Celebi, LX|X/X par
+|drag|pXa: A|Chansey, LX, F|X/X
+|drag|pXa: A|Charizard, LX, F|X/X
+|drag|pXa: A|Charizard, LX, M|X/X
+|drag|pXa: A|Charmander, LX, F|X/X
+|drag|pXa: A|Charmander, LX, M|X/X
+|drag|pXa: A|Charmeleon, LX, F|X/X
+|drag|pXa: A|Charmeleon, LX, M|X/X
+|drag|pXa: A|Chikorita, LX, F|X/X
+|drag|pXa: A|Chinchou, LX, F|X/X
+|drag|pXa: A|Chinchou, LX, M|X/X
+|drag|pXa: A|Clefable, LX, F|X/X
+|drag|pXa: A|Clefable, LX, M|X/X
+|drag|pXa: A|Clefairy, LX, F|X/X
+|drag|pXa: A|Clefairy, LX, F|X/X psn
+|drag|pXa: A|Clefairy, LX, M|X/X
+|drag|pXa: A|Clefairy, LX, M|X/X par
+|drag|pXa: A|Clefairy, LX, M|X/X slp
+|drag|pXa: A|Cleffa, LX, F|X/X
+|drag|pXa: A|Cleffa, LX, M|X/X
+|drag|pXa: A|Cloyster, LX, F|X/X
+|drag|pXa: A|Cloyster, LX, F|X/X par
+|drag|pXa: A|Cloyster, LX, M|X/X
+|drag|pXa: A|Corsola, LX, F|X/X
+|drag|pXa: A|Corsola, LX, M|X/X
+|drag|pXa: A|Crobat, LX, F|X/X
+|drag|pXa: A|Crobat, LX, M|X/X
+|drag|pXa: A|Croconaw, LX, F|X/X
+|drag|pXa: A|Croconaw, LX, M|X/X
+|drag|pXa: A|Cubone, LX, F|X/X
+|drag|pXa: A|Cubone, LX, M|X/X
+|drag|pXa: A|Cyndaquil, LX, F|X/X
+|drag|pXa: A|Cyndaquil, LX, M|X/X
+|drag|pXa: A|Delibird, LX, F|X/X
+|drag|pXa: A|Delibird, LX, M|X/X
+|drag|pXa: A|Dewgong, LX, F|X/X
+|drag|pXa: A|Dewgong, LX, M|X/X
+|drag|pXa: A|Diglett, LX, F|X/X
+|drag|pXa: A|Diglett, LX, M|X/X
+|drag|pXa: A|Ditto, LX|X/X
+|drag|pXa: A|Dodrio, LX, F|X/X
+|drag|pXa: A|Dodrio, LX, M|X/X
+|drag|pXa: A|Doduo, LX, F|X/X
+|drag|pXa: A|Donphan, LX, F|X/X
+|drag|pXa: A|Donphan, LX, M|X/X
+|drag|pXa: A|Dragonair, LX, F|X/X
+|drag|pXa: A|Dragonite, LX, F|X/X
+|drag|pXa: A|Dragonite, LX, M|X/X
+|drag|pXa: A|Dratini, LX, F|X/X
+|drag|pXa: A|Dratini, LX, M|X/X
+|drag|pXa: A|Dugtrio, LX, F|X/X
+|drag|pXa: A|Dugtrio, LX, M|X/X
+|drag|pXa: A|Dunsparce, LX, F|X/X
+|drag|pXa: A|Dunsparce, LX, M|X/X
+|drag|pXa: A|Eevee, LX, F|X/X
+|drag|pXa: A|Eevee, LX, M|X/X
+|drag|pXa: A|Ekans, LX, F|X/X
+|drag|pXa: A|Ekans, LX, M|X/X
+|drag|pXa: A|Electabuzz, LX, F|X/X
+|drag|pXa: A|Electabuzz, LX, M|X/X
+|drag|pXa: A|Electrode, LX|X/X
+|drag|pXa: A|Elekid, LX, M|X/X
+|drag|pXa: A|Entei, LX|X/X
+|drag|pXa: A|Espeon, LX, F|X/X
+|drag|pXa: A|Espeon, LX, M|X/X
+|drag|pXa: A|Exeggcute, LX, F|X/X
+|drag|pXa: A|Exeggcute, LX, M|X/X
+|drag|pXa: A|Exeggutor, LX, F|X/X
+|drag|pXa: A|Exeggutor, LX, M|X/X
+|drag|pXa: A|Farfetch’d, LX, F|X/X
+|drag|pXa: A|Farfetch’d, LX, M|X/X
+|drag|pXa: A|Farfetch’d, LX, M|X/X slp
+|drag|pXa: A|Fearow, LX, M|X/X
+|drag|pXa: A|Feraligatr, LX, F|X/X
+|drag|pXa: A|Feraligatr, LX, M|X/X
+|drag|pXa: A|Flaaffy, LX, F|X/X
+|drag|pXa: A|Flareon, LX, F|X/X
+|drag|pXa: A|Flareon, LX, M|X/X
+|drag|pXa: A|Forretress, LX, F|X/X
+|drag|pXa: A|Forretress, LX, M|X/X
+|drag|pXa: A|Furret, LX, F|X/X
+|drag|pXa: A|Furret, LX, M|X/X
+|drag|pXa: A|Gastly, LX, F|X/X
+|drag|pXa: A|Gastly, LX, M|X/X
+|drag|pXa: A|Gengar, LX, F|X/X
+|drag|pXa: A|Gengar, LX, M|X/X
+|drag|pXa: A|Gengar, LX, M|X/X par
+|drag|pXa: A|Geodude, LX, F|X/X
+|drag|pXa: A|Geodude, LX, M|X/X
+|drag|pXa: A|Girafarig, LX, F|X/X
+|drag|pXa: A|Girafarig, LX, M|X/X
+|drag|pXa: A|Gligar, LX, F|X/X
+|drag|pXa: A|Gligar, LX, M|X/X
+|drag|pXa: A|Gloom, LX, F|X/X
+|drag|pXa: A|Gloom, LX, M|X/X
+|drag|pXa: A|Golbat, LX, M|X/X
+|drag|pXa: A|Golbat, LX, M|X/X par
+|drag|pXa: A|Goldeen, LX, F|X/X
+|drag|pXa: A|Goldeen, LX, M|X/X
+|drag|pXa: A|Golduck, LX, F|X/X
+|drag|pXa: A|Golduck, LX, M|X/X
+|drag|pXa: A|Golduck, LX, M|X/X slp
+|drag|pXa: A|Golem, LX, F|X/X
+|drag|pXa: A|Golem, LX, M|X/X
+|drag|pXa: A|Granbull, LX, F|X/X
+|drag|pXa: A|Granbull, LX, M|X/X
+|drag|pXa: A|Graveler, LX, F|X/X
+|drag|pXa: A|Graveler, LX, M|X/X
+|drag|pXa: A|Grimer, LX, F|X/X
+|drag|pXa: A|Grimer, LX, M|X/X
+|drag|pXa: A|Growlithe, LX, F|X/X
+|drag|pXa: A|Growlithe, LX, M|X/X
+|drag|pXa: A|Gyarados, LX, F|X/X
+|drag|pXa: A|Gyarados, LX, M|X/X
+|drag|pXa: A|Haunter, LX, F|X/X
+|drag|pXa: A|Haunter, LX, M|X/X
+|drag|pXa: A|Heracross, LX, F|X/X
+|drag|pXa: A|Heracross, LX, M|X/X
+|drag|pXa: A|Hitmonchan, LX, M|X/X
+|drag|pXa: A|Hitmonlee, LX, M|X/X
+|drag|pXa: A|Hitmontop, LX, M|X/X
+|drag|pXa: A|Ho-Oh, LX|X/X
+|drag|pXa: A|Ho-Oh, LX|X/X slp
+|drag|pXa: A|Hoothoot, LX, F|X/X
+|drag|pXa: A|Hoothoot, LX, M|X/X
+|drag|pXa: A|Hoppip, LX, M|X/X
+|drag|pXa: A|Horsea, LX, F|X/X
+|drag|pXa: A|Horsea, LX, F|X/X slp
+|drag|pXa: A|Horsea, LX, M|X/X
+|drag|pXa: A|Houndoom, LX, F|X/X
+|drag|pXa: A|Houndoom, LX, M|X/X
+|drag|pXa: A|Houndoom, LX, M|X/X par
+|drag|pXa: A|Houndour, LX, F|X/X
+|drag|pXa: A|Houndour, LX, M|X/X
+|drag|pXa: A|Hypno, LX, F|X/X
+|drag|pXa: A|Hypno, LX, M|X/X
+|drag|pXa: A|Igglybuff, LX, F|X/X
+|drag|pXa: A|Igglybuff, LX, F|X/X psn
+|drag|pXa: A|Igglybuff, LX, M|X/X
+|drag|pXa: A|Ivysaur, LX, F|X/X
+|drag|pXa: A|Ivysaur, LX, F|X/X par
+|drag|pXa: A|Ivysaur, LX, M|X/X
+|drag|pXa: A|Jigglypuff, LX, M|X/X
+|drag|pXa: A|Jumpluff, LX, F|X/X
+|drag|pXa: A|Jumpluff, LX, M|X/X
+|drag|pXa: A|Jynx, LX, F|X/X
+|drag|pXa: A|Kabuto, LX, F|X/X
+|drag|pXa: A|Kabuto, LX, M|X/X
+|drag|pXa: A|Kabutops, LX, F|X/X
+|drag|pXa: A|Kabutops, LX, M|X/X
+|drag|pXa: A|Kadabra, LX, F|X/X
+|drag|pXa: A|Kadabra, LX, M|X/X
+|drag|pXa: A|Kakuna, LX, M|X/X
+|drag|pXa: A|Kangaskhan, LX, F|X/X
+|drag|pXa: A|Kangaskhan, LX, F|X/X par
+|drag|pXa: A|Kingdra, LX, F|X/X
+|drag|pXa: A|Kingdra, LX, M|X/X
+|drag|pXa: A|Kingler, LX, M|X/X
+|drag|pXa: A|Koffing, LX, F|X/X
+|drag|pXa: A|Koffing, LX, M|X/X
+|drag|pXa: A|Krabby, LX, F|X/X
+|drag|pXa: A|Lanturn, LX, F|X/X
+|drag|pXa: A|Lanturn, LX, M|X/X
+|drag|pXa: A|Lapras, LX, F|X/X
+|drag|pXa: A|Lapras, LX, M|X/X
+|drag|pXa: A|Larvitar, LX, F|X/X
+|drag|pXa: A|Larvitar, LX, M|X/X
+|drag|pXa: A|Ledian, LX, F|X/X
+|drag|pXa: A|Ledian, LX, M|X/X
+|drag|pXa: A|Ledyba, LX, F|X/X
+|drag|pXa: A|Ledyba, LX, M|X/X
+|drag|pXa: A|Lickitung, LX, F|X/X
+|drag|pXa: A|Lickitung, LX, M|X/X
+|drag|pXa: A|Lugia, LX|X/X
+|drag|pXa: A|Lugia, LX|X/X par
+|drag|pXa: A|Machamp, LX, F|X/X
+|drag|pXa: A|Machamp, LX, M|X/X
+|drag|pXa: A|Machoke, LX, F|X/X
+|drag|pXa: A|Machoke, LX, M|X/X
+|drag|pXa: A|Machop, LX, M|X/X
+|drag|pXa: A|Magby, LX, F|X/X
+|drag|pXa: A|Magby, LX, M|X/X
+|drag|pXa: A|Magcargo, LX, M|X/X
+|drag|pXa: A|Magikarp, LX, F|X/X
+|drag|pXa: A|Magmar, LX, F|X/X
+|drag|pXa: A|Magmar, LX, M|X/X
+|drag|pXa: A|Magnemite, LX|X/X
+|drag|pXa: A|Magneton, LX|X/X
+|drag|pXa: A|Mankey, LX, F|X/X
+|drag|pXa: A|Mankey, LX, M|X/X
+|drag|pXa: A|Mankey, LX, M|X/X par
+|drag|pXa: A|Mantine, LX, F|X/X
+|drag|pXa: A|Mantine, LX, M|X/X
+|drag|pXa: A|Mantine, LX, M|X/X par
+|drag|pXa: A|Mareep, LX, M|X/X
+|drag|pXa: A|Marill, LX, F|X/X
+|drag|pXa: A|Marill, LX, M|X/X
+|drag|pXa: A|Marowak, LX, F|X/X
+|drag|pXa: A|Marowak, LX, M|X/X
+|drag|pXa: A|Meganium, LX, F|X/X
+|drag|pXa: A|Meganium, LX, M|X/X
+|drag|pXa: A|Meowth, LX, F|X/X
+|drag|pXa: A|Metapod, LX, F|X/X
+|drag|pXa: A|Mew, LX|X/X
+|drag|pXa: A|Mewtwo, LX|X/X
+|drag|pXa: A|Mewtwo, LX|X/X par
+|drag|pXa: A|Miltank, LX, F|X/X
+|drag|pXa: A|Misdreavus, LX, F|X/X
+|drag|pXa: A|Misdreavus, LX, M|X/X
+|drag|pXa: A|Moltres, LX|X/X
+|drag|pXa: A|Moltres, LX|X/X par
+|drag|pXa: A|Mr. Mime, LX, F|X/X
+|drag|pXa: A|Mr. Mime, LX, F|X/X psn
+|drag|pXa: A|Mr. Mime, LX, M|X/X
+|drag|pXa: A|Muk, LX, F|X/X
+|drag|pXa: A|Muk, LX, M|X/X
+|drag|pXa: A|Murkrow, LX, F|X/X
+|drag|pXa: A|Murkrow, LX, M|X/X
+|drag|pXa: A|Natu, LX, F|X/X
+|drag|pXa: A|Natu, LX, M|X/X
+|drag|pXa: A|Natu, LX, M|X/X brn
+|drag|pXa: A|Nidoking, LX, M|X/X
+|drag|pXa: A|Nidoqueen, LX, F|X/X
+|drag|pXa: A|Nidoqueen, LX, F|X/X slp
+|drag|pXa: A|Nidoran-F, LX, F|X/X
+|drag|pXa: A|Nidoran-M, LX, M|X/X
+|drag|pXa: A|Nidorina, LX, F|X/X
+|drag|pXa: A|Nidorina, LX, F|X/X par
+|drag|pXa: A|Nidorino, LX, M|X/X
+|drag|pXa: A|Ninetales, LX, F|X/X
+|drag|pXa: A|Ninetales, LX, M|X/X
+|drag|pXa: A|Noctowl, LX, F|X/X
+|drag|pXa: A|Noctowl, LX, M|X/X
+|drag|pXa: A|Octillery, LX, F|X/X
+|drag|pXa: A|Octillery, LX, F|X/X par
+|drag|pXa: A|Octillery, LX, M|X/X
+|drag|pXa: A|Oddish, LX, F|X/X
+|drag|pXa: A|Oddish, LX, M|X/X par
+|drag|pXa: A|Omanyte, LX, F|X/X
+|drag|pXa: A|Omanyte, LX, M|X/X
+|drag|pXa: A|Omastar, LX, F|X/X
+|drag|pXa: A|Omastar, LX, M|X/X
+|drag|pXa: A|Omastar, LX, M|X/X par
+|drag|pXa: A|Onix, LX, F|X/X
+|drag|pXa: A|Onix, LX, M|X/X
+|drag|pXa: A|Paras, LX, F|X/X
+|drag|pXa: A|Paras, LX, M|X/X
+|drag|pXa: A|Parasect, LX, F|X/X
+|drag|pXa: A|Parasect, LX, M|X/X
+|drag|pXa: A|Persian, LX, F|X/X
+|drag|pXa: A|Persian, LX, M|X/X
+|drag|pXa: A|Phanpy, LX, F|X/X
+|drag|pXa: A|Phanpy, LX, M|X/X
+|drag|pXa: A|Pichu, LX, F|X/X
+|drag|pXa: A|Pichu, LX, M|X/X
+|drag|pXa: A|Pidgeot, LX, F|X/X
+|drag|pXa: A|Pidgeot, LX, M|X/X
+|drag|pXa: A|Pidgeotto, LX, F|X/X
+|drag|pXa: A|Pidgeotto, LX, F|X/X par
+|drag|pXa: A|Pidgeotto, LX, M|X/X
+|drag|pXa: A|Pidgey, LX, M|X/X
+|drag|pXa: A|Pikachu, LX, F|X/X
+|drag|pXa: A|Pikachu, LX, M|X/X
+|drag|pXa: A|Piloswine, LX, F|X/X
+|drag|pXa: A|Piloswine, LX, M|X/X
+|drag|pXa: A|Pineco, LX, F|X/X
+|drag|pXa: A|Pinsir, LX, F|X/X
+|drag|pXa: A|Pinsir, LX, M|X/X
+|drag|pXa: A|Politoed, LX, F|X/X
+|drag|pXa: A|Politoed, LX, M|X/X
+|drag|pXa: A|Poliwag, LX, F|X/X
+|drag|pXa: A|Poliwag, LX, M|X/X
+|drag|pXa: A|Poliwhirl, LX, F|X/X
+|drag|pXa: A|Poliwhirl, LX, M|X/X
+|drag|pXa: A|Poliwrath, LX, F|X/X
+|drag|pXa: A|Poliwrath, LX, M|X/X
+|drag|pXa: A|Poliwrath, LX, M|X/X par
+|drag|pXa: A|Ponyta, LX, F|X/X
+|drag|pXa: A|Ponyta, LX, M|X/X
+|drag|pXa: A|Ponyta, LX, M|X/X par
+|drag|pXa: A|Porygon, LX|X/X
+|drag|pXa: A|PorygonX, LX|X/X
+|drag|pXa: A|Primeape, LX, F|X/X
+|drag|pXa: A|Primeape, LX, F|X/X psn
+|drag|pXa: A|Primeape, LX, M|X/X
+|drag|pXa: A|Primeape, LX, M|X/X par
+|drag|pXa: A|Primeape, LX, M|X/X psn
+|drag|pXa: A|Psyduck, LX, F|X/X
+|drag|pXa: A|Psyduck, LX, M|X/X
+|drag|pXa: A|Pupitar, LX, F|X/X
+|drag|pXa: A|Pupitar, LX, M|X/X
+|drag|pXa: A|Quagsire, LX, F|X/X
+|drag|pXa: A|Quagsire, LX, M|X/X
+|drag|pXa: A|Quilava, LX, F|X/X
+|drag|pXa: A|Quilava, LX, M|X/X
+|drag|pXa: A|Qwilfish, LX, F|X/X
+|drag|pXa: A|Qwilfish, LX, M|X/X
+|drag|pXa: A|Raichu, LX, F|X/X
+|drag|pXa: A|Raichu, LX, M|X/X
+|drag|pXa: A|Raikou, LX|X/X
+|drag|pXa: A|Rapidash, LX, F|X/X
+|drag|pXa: A|Rapidash, LX, M|X/X
+|drag|pXa: A|Raticate, LX, F|X/X
+|drag|pXa: A|Raticate, LX, M|X/X
+|drag|pXa: A|Rattata, LX, F|X/X
+|drag|pXa: A|Rattata, LX, M|X/X
+|drag|pXa: A|Remoraid, LX, M|X/X
+|drag|pXa: A|Rhydon, LX, F|X/X
+|drag|pXa: A|Rhydon, LX, F|X/X slp
+|drag|pXa: A|Rhydon, LX, M|X/X
+|drag|pXa: A|Rhyhorn, LX, F|X/X
+|drag|pXa: A|Rhyhorn, LX, M|X/X
+|drag|pXa: A|Sandshrew, LX, F|X/X
+|drag|pXa: A|Sandshrew, LX, M|X/X
+|drag|pXa: A|Sandslash, LX, F|X/X
+|drag|pXa: A|Sandslash, LX, M|X/X
+|drag|pXa: A|Scizor, LX, F|X/X
+|drag|pXa: A|Scizor, LX, F|X/X par
+|drag|pXa: A|Scizor, LX, M|X/X
+|drag|pXa: A|Scyther, LX, F|X/X
+|drag|pXa: A|Scyther, LX, M|X/X
+|drag|pXa: A|Seadra, LX, F|X/X
+|drag|pXa: A|Seadra, LX, M|X/X
+|drag|pXa: A|Seaking, LX, M|X/X
+|drag|pXa: A|Seel, LX, F|X/X
+|drag|pXa: A|Seel, LX, M|X/X
+|drag|pXa: A|Sentret, LX, F|X/X
+|drag|pXa: A|Sentret, LX, M|X/X
+|drag|pXa: A|Shellder, LX, F|X/X
+|drag|pXa: A|Shellder, LX, M|X/X
+|drag|pXa: A|Shuckle, LX, F|X/X
+|drag|pXa: A|Shuckle, LX, M|X/X
+|drag|pXa: A|Skarmory, LX, F|X/X
+|drag|pXa: A|Skarmory, LX, F|X/X par
+|drag|pXa: A|Skarmory, LX, M|X/X
+|drag|pXa: A|Skiploom, LX, F|X/X
+|drag|pXa: A|Skiploom, LX, M|X/X
+|drag|pXa: A|Slowbro, LX, F|X/X
+|drag|pXa: A|Slowbro, LX, M|X/X
+|drag|pXa: A|Slowking, LX, F|X/X
+|drag|pXa: A|Slowking, LX, M|X/X
+|drag|pXa: A|Slowpoke, LX, M|X/X
+|drag|pXa: A|Slugma, LX, F|X/X
+|drag|pXa: A|Slugma, LX, M|X/X
+|drag|pXa: A|Smeargle, LX, F|X/X
+|drag|pXa: A|Smeargle, LX, M|X/X
+|drag|pXa: A|Smeargle, LX, M|X/X slp
+|drag|pXa: A|Smoochum, LX, F|X/X
+|drag|pXa: A|Sneasel, LX, F|X/X
+|drag|pXa: A|Sneasel, LX, M|X/X
+|drag|pXa: A|Snorlax, LX, F|X/X
+|drag|pXa: A|Snorlax, LX, M|X/X
+|drag|pXa: A|Spearow, LX, F|X/X
+|drag|pXa: A|Spearow, LX, F|X/X slp
+|drag|pXa: A|Spearow, LX, M|X/X
+|drag|pXa: A|Spinarak, LX, F|X/X
+|drag|pXa: A|Spinarak, LX, M|X/X
+|drag|pXa: A|Squirtle, LX, F|X/X
+|drag|pXa: A|Squirtle, LX, M|X/X
+|drag|pXa: A|Stantler, LX, F|X/X
+|drag|pXa: A|Stantler, LX, M|X/X
+|drag|pXa: A|Starmie, LX|X/X
+|drag|pXa: A|Staryu, LX|X/X
+|drag|pXa: A|Staryu, LX|X/X par
+|drag|pXa: A|Steelix, LX, M|X/X
+|drag|pXa: A|Sudowoodo, LX, F|X/X
+|drag|pXa: A|Sudowoodo, LX, M|X/X
+|drag|pXa: A|Suicune, LX|X/X
+|drag|pXa: A|Suicune, LX|X/X psn
+|drag|pXa: A|Sunflora, LX, F|X/X
+|drag|pXa: A|Sunflora, LX, M|X/X
+|drag|pXa: A|Sunkern, LX, F|X/X
+|drag|pXa: A|Sunkern, LX, M|X/X
+|drag|pXa: A|Swinub, LX, F|X/X
+|drag|pXa: A|Swinub, LX, M|X/X
+|drag|pXa: A|Tangela, LX, F|X/X
+|drag|pXa: A|Tauros, LX, M|X/X
+|drag|pXa: A|Teddiursa, LX, F|X/X
+|drag|pXa: A|Teddiursa, LX, M|X/X
+|drag|pXa: A|Tentacool, LX, F|X/X
+|drag|pXa: A|Tentacool, LX, M|X/X
+|drag|pXa: A|Tentacruel, LX, F|X/X
+|drag|pXa: A|Tentacruel, LX, M|X/X
+|drag|pXa: A|Togepi, LX, F|X/X
+|drag|pXa: A|Togepi, LX, M|X/X
+|drag|pXa: A|Togetic, LX, F|X/X
+|drag|pXa: A|Togetic, LX, M|X/X
+|drag|pXa: A|Totodile, LX, F|X/X
+|drag|pXa: A|Typhlosion, LX, F|X/X
+|drag|pXa: A|Typhlosion, LX, M|X/X
+|drag|pXa: A|Tyranitar, LX, F|X/X
+|drag|pXa: A|Tyranitar, LX, F|X/X par
+|drag|pXa: A|Tyranitar, LX, M|X/X
+|drag|pXa: A|Tyrogue, LX, M|X/X
+|drag|pXa: A|Umbreon, LX, F|X/X
+|drag|pXa: A|Umbreon, LX, F|X/X par
+|drag|pXa: A|Umbreon, LX, M|X/X
+|drag|pXa: A|Unown, LX|X/X
+|drag|pXa: A|Unown, LX|X/X par
+|drag|pXa: A|Ursaring, LX, F|X/X
+|drag|pXa: A|Ursaring, LX, M|X/X
+|drag|pXa: A|Ursaring, LX, M|X/X slp
+|drag|pXa: A|Vaporeon, LX, F|X/X
+|drag|pXa: A|Vaporeon, LX, M|X/X
+|drag|pXa: A|Venomoth, LX, F|X/X
+|drag|pXa: A|Venomoth, LX, M|X/X
+|drag|pXa: A|Venonat, LX, F|X/X
+|drag|pXa: A|Venonat, LX, F|X/X par
+|drag|pXa: A|Venonat, LX, M|X/X
+|drag|pXa: A|Venusaur, LX, F|X/X
+|drag|pXa: A|Venusaur, LX, M|X/X
+|drag|pXa: A|Victreebel, LX, F|X/X
+|drag|pXa: A|Victreebel, LX, M|X/X
+|drag|pXa: A|Vileplume, LX, F|X/X
+|drag|pXa: A|Vileplume, LX, M|X/X
+|drag|pXa: A|Voltorb, LX|X/X
+|drag|pXa: A|Vulpix, LX, F|X/X
+|drag|pXa: A|Vulpix, LX, M|X/X
+|drag|pXa: A|Wartortle, LX, F|X/X
+|drag|pXa: A|Wartortle, LX, M|X/X
+|drag|pXa: A|Weedle, LX, F|X/X
+|drag|pXa: A|Weedle, LX, M|X/X
+|drag|pXa: A|Weepinbell, LX, F|X/X
+|drag|pXa: A|Weepinbell, LX, M|X/X
+|drag|pXa: A|Weepinbell, LX, M|X/X slp
+|drag|pXa: A|Weezing, LX, F|X/X
+|drag|pXa: A|Weezing, LX, M|X/X
+|drag|pXa: A|Wigglytuff, LX, F|X/X
+|drag|pXa: A|Wigglytuff, LX, M|X/X
+|drag|pXa: A|Wobbuffet, LX, F|X/X
+|drag|pXa: A|Wobbuffet, LX, M|X/X
+|drag|pXa: A|Wooper, LX, F|X/X
+|drag|pXa: A|Wooper, LX, F|X/X par
+|drag|pXa: A|Wooper, LX, M|X/X
+|drag|pXa: A|Xatu, LX, F|X/X
+|drag|pXa: A|Xatu, LX, M|X/X
+|drag|pXa: A|Yanma, LX, F|X/X
+|drag|pXa: A|Yanma, LX, M|X/X
+|drag|pXa: A|Yanma, LX, M|X/X slp
+|drag|pXa: A|Zapdos, LX|X/X
+|drag|pXa: A|Zubat, LX, F|X/X
+|drag|pXa: A|Zubat, LX, M|X/X
+|faint|pXa: A
+|move|pXa: A|Absorb|pXa: A
+|move|pXa: A|Absorb|pXa: A|[from]Metronome
+|move|pXa: A|Absorb|pXa: A|[from]Mirror Move
+|move|pXa: A|Absorb|pXa: A|[miss]
+|move|pXa: A|Acid Armor|pXa: A
+|move|pXa: A|Acid Armor|pXa: A|[from]Metronome
+|move|pXa: A|Acid Armor|pXa: A|[from]Mirror Move
+|move|pXa: A|Acid|pXa: A
+|move|pXa: A|Acid|pXa: A|[from]Metronome
+|move|pXa: A|Acid|pXa: A|[from]Mirror Move
+|move|pXa: A|Acid|pXa: A|[from]Mirror Move|[miss]
+|move|pXa: A|Acid|pXa: A|[from]Sleep Talk
+|move|pXa: A|Acid|pXa: A|[miss]
+|move|pXa: A|Aeroblast|pXa: A
+|move|pXa: A|Aeroblast|pXa: A|[from]Metronome
+|move|pXa: A|Aeroblast|pXa: A|[from]Metronome|[miss]
+|move|pXa: A|Aeroblast|pXa: A|[from]Mirror Move
+|move|pXa: A|Aeroblast|pXa: A|[from]Mirror Move|[miss]
+|move|pXa: A|Aeroblast|pXa: A|[from]Sleep Talk
+|move|pXa: A|Aeroblast|pXa: A|[miss]
+|move|pXa: A|Aeroblast|pXa: A|[miss]|[miss]
+|move|pXa: A|Agility|pXa: A
+|move|pXa: A|Agility|pXa: A|[from]Metronome
+|move|pXa: A|Agility|pXa: A|[from]Mirror Move
+|move|pXa: A|Amnesia|pXa: A
+|move|pXa: A|Amnesia|pXa: A|[from]Metronome
+|move|pXa: A|Amnesia|pXa: A|[from]Mirror Move
+|move|pXa: A|Ancient Power|pXa: A
+|move|pXa: A|Ancient Power|pXa: A|[from]Metronome
+|move|pXa: A|Ancient Power|pXa: A|[from]Mirror Move
+|move|pXa: A|Ancient Power|pXa: A|[miss]
+|move|pXa: A|Ancient Power|pXa: A|[miss]|[miss]
+|move|pXa: A|Attract|pXa: A
+|move|pXa: A|Attract|pXa: A|[from]Metronome
+|move|pXa: A|Attract|pXa: A|[miss]
+|move|pXa: A|Aurora Beam|pXa: A
+|move|pXa: A|Aurora Beam|pXa: A|[from]Metronome
+|move|pXa: A|Aurora Beam|pXa: A|[from]Mirror Move
+|move|pXa: A|Aurora Beam|pXa: A|[from]Sleep Talk
+|move|pXa: A|Aurora Beam|pXa: A|[miss]
+|move|pXa: A|Barrage|pXa: A
+|move|pXa: A|Barrage|pXa: A|[from]Metronome
+|move|pXa: A|Barrage|pXa: A|[from]Mirror Move
+|move|pXa: A|Barrage|pXa: A|[from]Mirror Move|[miss]
+|move|pXa: A|Barrage|pXa: A|[from]Sleep Talk
+|move|pXa: A|Barrage|pXa: A|[miss]
+|move|pXa: A|Barrier|pXa: A
+|move|pXa: A|Barrier|pXa: A|[from]Metronome
+|move|pXa: A|Barrier|pXa: A|[from]Mirror Move
+|move|pXa: A|Baton Pass|pXa: A
+|move|pXa: A|Baton Pass|pXa: A|[from]Metronome
+|move|pXa: A|Baton Pass||[from]Metronome|[still]
+|move|pXa: A|Baton Pass||[still]
+|move|pXa: A|Beat Up|pXa: A
+|move|pXa: A|Beat Up|pXa: A|[from]Metronome
+|move|pXa: A|Beat Up|pXa: A|[from]Mirror Move
+|move|pXa: A|Beat Up|pXa: A|[miss]
+|move|pXa: A|Belly Drum|pXa: A
+|move|pXa: A|Belly Drum|pXa: A|[from]Metronome
+|move|pXa: A|Belly Drum|pXa: A|[from]Mirror Move
+|move|pXa: A|Belly Drum|pXa: A|[miss]
+|move|pXa: A|Bide|pXa: A
+|move|pXa: A|Bide|pXa: A|[from]Metronome
+|move|pXa: A|Bide|pXa: A|[from]Metronome|[miss]
+|move|pXa: A|Bide|pXa: A|[from]Mirror Move
+|move|pXa: A|Bide|pXa: A|[miss]
+|move|pXa: A|Bind|pXa: A
+|move|pXa: A|Bind|pXa: A|[from]Metronome
+|move|pXa: A|Bind|pXa: A|[from]Metronome|[miss]
+|move|pXa: A|Bind|pXa: A|[from]Mirror Move
+|move|pXa: A|Bind|pXa: A|[from]Mirror Move|[miss]
+|move|pXa: A|Bind|pXa: A|[miss]
+|move|pXa: A|Bite|pXa: A
+|move|pXa: A|Bite|pXa: A|[from]Metronome
+|move|pXa: A|Bite|pXa: A|[from]Mirror Move
+|move|pXa: A|Bite|pXa: A|[miss]
+|move|pXa: A|Blizzard|pXa: A
+|move|pXa: A|Blizzard|pXa: A|[from]Metronome
+|move|pXa: A|Blizzard|pXa: A|[from]Metronome|[miss]
+|move|pXa: A|Blizzard|pXa: A|[from]Mirror Move
+|move|pXa: A|Blizzard|pXa: A|[miss]
+|move|pXa: A|Body Slam|pXa: A
+|move|pXa: A|Body Slam|pXa: A|[from]Metronome
+|move|pXa: A|Body Slam|pXa: A|[from]Metronome|[miss]
+|move|pXa: A|Body Slam|pXa: A|[from]Mirror Move
+|move|pXa: A|Body Slam|pXa: A|[miss]
+|move|pXa: A|Bone Club|pXa: A
+|move|pXa: A|Bone Club|pXa: A|[from]Metronome
+|move|pXa: A|Bone Club|pXa: A|[from]Metronome|[miss]
+|move|pXa: A|Bone Club|pXa: A|[miss]
+|move|pXa: A|Bone Rush|pXa: A
+|move|pXa: A|Bone Rush|pXa: A|[from]Metronome
+|move|pXa: A|Bone Rush|pXa: A|[from]Metronome|[miss]
+|move|pXa: A|Bone Rush|pXa: A|[miss]
+|move|pXa: A|Bonemerang|pXa: A
+|move|pXa: A|Bonemerang|pXa: A|[from]Metronome
+|move|pXa: A|Bonemerang|pXa: A|[from]Metronome|[miss]
+|move|pXa: A|Bonemerang|pXa: A|[from]Mirror Move
+|move|pXa: A|Bonemerang|pXa: A|[miss]
+|move|pXa: A|Bubble Beam|pXa: A
+|move|pXa: A|Bubble Beam|pXa: A|[from]Metronome
+|move|pXa: A|Bubble Beam|pXa: A|[from]Metronome|[miss]
+|move|pXa: A|Bubble Beam|pXa: A|[from]Mirror Move
+|move|pXa: A|Bubble Beam|pXa: A|[miss]
+|move|pXa: A|Bubble|pXa: A
+|move|pXa: A|Bubble|pXa: A|[from]Metronome
+|move|pXa: A|Bubble|pXa: A|[from]Metronome|[miss]
+|move|pXa: A|Bubble|pXa: A|[from]Mirror Move
+|move|pXa: A|Bubble|pXa: A|[from]Sleep Talk
+|move|pXa: A|Bubble|pXa: A|[miss]
+|move|pXa: A|Charm|pXa: A
+|move|pXa: A|Charm|pXa: A|[from]Metronome
+|move|pXa: A|Charm|pXa: A|[from]Mirror Move
+|move|pXa: A|Charm|pXa: A|[miss]
+|move|pXa: A|Charm|pXa: A|[miss]|[miss]
+|move|pXa: A|Clamp|pXa: A
+|move|pXa: A|Clamp|pXa: A|[from]Metronome
+|move|pXa: A|Clamp|pXa: A|[from]Metronome|[miss]
+|move|pXa: A|Clamp|pXa: A|[from]Mirror Move
+|move|pXa: A|Clamp|pXa: A|[miss]
+|move|pXa: A|Comet Punch|pXa: A
+|move|pXa: A|Comet Punch|pXa: A|[from]Metronome
+|move|pXa: A|Comet Punch|pXa: A|[from]Mirror Move
+|move|pXa: A|Comet Punch|pXa: A|[from]Mirror Move|[miss]
+|move|pXa: A|Comet Punch|pXa: A|[miss]
+|move|pXa: A|Confuse Ray|pXa: A
+|move|pXa: A|Confuse Ray|pXa: A|[from]Metronome
+|move|pXa: A|Confuse Ray|pXa: A|[from]Metronome|[miss]
+|move|pXa: A|Confuse Ray|pXa: A|[from]Mirror Move
+|move|pXa: A|Confuse Ray|pXa: A|[from]Sleep Talk|[miss]
+|move|pXa: A|Confuse Ray|pXa: A|[miss]
+|move|pXa: A|Confusion|pXa: A
+|move|pXa: A|Confusion|pXa: A|[from]Metronome
+|move|pXa: A|Confusion|pXa: A|[from]Mirror Move
+|move|pXa: A|Confusion|pXa: A|[miss]
+|move|pXa: A|Constrict|pXa: A
+|move|pXa: A|Constrict|pXa: A|[from]Metronome
+|move|pXa: A|Constrict|pXa: A|[from]Metronome|[miss]
+|move|pXa: A|Constrict|pXa: A|[from]Mirror Move
+|move|pXa: A|Constrict|pXa: A|[miss]
+|move|pXa: A|Conversion X|pXa: A
+|move|pXa: A|Conversion X|pXa: A|[from]Metronome
+|move|pXa: A|Conversion X|pXa: A|[from]Mirror Move
+|move|pXa: A|Conversion X|pXa: A|[miss]
+|move|pXa: A|Conversion|pXa: A
+|move|pXa: A|Conversion|pXa: A|[from]Metronome
+|move|pXa: A|Conversion|pXa: A|[from]Mirror Move
+|move|pXa: A|Cotton Spore|pXa: A
+|move|pXa: A|Cotton Spore|pXa: A|[from]Metronome
+|move|pXa: A|Cotton Spore|pXa: A|[from]Metronome|[miss]
+|move|pXa: A|Cotton Spore|pXa: A|[from]Mirror Move
+|move|pXa: A|Cotton Spore|pXa: A|[miss]
+|move|pXa: A|Cotton Spore|pXa: A|[miss]|[miss]
+|move|pXa: A|Counter|pXa: A
+|move|pXa: A|Counter|pXa: A|[from]Mirror Move
+|move|pXa: A|Counter|pXa: A|[miss]
+|move|pXa: A|Crabhammer|pXa: A
+|move|pXa: A|Crabhammer|pXa: A|[from]Metronome
+|move|pXa: A|Crabhammer|pXa: A|[from]Mirror Move
+|move|pXa: A|Crabhammer|pXa: A|[from]Mirror Move|[miss]
+|move|pXa: A|Crabhammer|pXa: A|[miss]
+|move|pXa: A|Crabhammer|pXa: A|[miss]|[miss]
+|move|pXa: A|Cross Chop|pXa: A
+|move|pXa: A|Cross Chop|pXa: A|[from]Metronome
+|move|pXa: A|Cross Chop|pXa: A|[from]Metronome|[miss]
+|move|pXa: A|Cross Chop|pXa: A|[from]Mirror Move|[miss]
+|move|pXa: A|Cross Chop|pXa: A|[miss]
+|move|pXa: A|Cross Chop|pXa: A|[miss]|[miss]
+|move|pXa: A|Crunch|pXa: A
+|move|pXa: A|Crunch|pXa: A|[from]Metronome
+|move|pXa: A|Crunch|pXa: A|[from]Metronome|[miss]
+|move|pXa: A|Crunch|pXa: A|[miss]
+|move|pXa: A|Curse|pXa: A
+|move|pXa: A|Curse|pXa: A|[from]Metronome
+|move|pXa: A|Curse|pXa: A|[from]Mirror Move
+|move|pXa: A|Curse|pXa: A|[from]Sleep Talk
+|move|pXa: A|Curse|pXa: A|[miss]
+|move|pXa: A|Cut|pXa: A
+|move|pXa: A|Cut|pXa: A|[from]Metronome
+|move|pXa: A|Cut|pXa: A|[from]Mirror Move
+|move|pXa: A|Cut|pXa: A|[from]Mirror Move|[miss]
+|move|pXa: A|Cut|pXa: A|[miss]
+|move|pXa: A|Defense Curl|pXa: A
+|move|pXa: A|Defense Curl|pXa: A|[from]Metronome
+|move|pXa: A|Destiny Bond|pXa: A
+|move|pXa: A|Detect|pXa: A
+|move|pXa: A|Detect|pXa: A|[from]Mirror Move
+|move|pXa: A|Dig|pXa: A
+|move|pXa: A|Dig|pXa: A|[miss]
+|move|pXa: A|Dig||[from]Metronome|[still]
+|move|pXa: A|Dig||[from]Mirror Move|[still]
+|move|pXa: A|Dig||[still]
+|move|pXa: A|Dig||[still]|[miss]
+|move|pXa: A|Disable|pXa: A
+|move|pXa: A|Disable|pXa: A|[from]Metronome
+|move|pXa: A|Disable|pXa: A|[from]Metronome|[miss]
+|move|pXa: A|Disable|pXa: A|[from]Mirror Move
+|move|pXa: A|Disable|pXa: A|[from]Mirror Move|[miss]
+|move|pXa: A|Disable|pXa: A|[from]Sleep Talk|[miss]
+|move|pXa: A|Disable|pXa: A|[miss]
+|move|pXa: A|Dizzy Punch|pXa: A
+|move|pXa: A|Dizzy Punch|pXa: A|[from]Metronome
+|move|pXa: A|Dizzy Punch|pXa: A|[from]Mirror Move
+|move|pXa: A|Dizzy Punch|pXa: A|[miss]
+|move|pXa: A|Double Kick|pXa: A
+|move|pXa: A|Double Kick|pXa: A|[from]Metronome
+|move|pXa: A|Double Kick|pXa: A|[from]Metronome|[miss]
+|move|pXa: A|Double Kick|pXa: A|[from]Mirror Move
+|move|pXa: A|Double Kick|pXa: A|[miss]
+|move|pXa: A|Double Slap|pXa: A
+|move|pXa: A|Double Slap|pXa: A|[from]Metronome
+|move|pXa: A|Double Slap|pXa: A|[from]Metronome|[miss]
+|move|pXa: A|Double Slap|pXa: A|[from]Mirror Move
+|move|pXa: A|Double Slap|pXa: A|[from]Mirror Move|[miss]
+|move|pXa: A|Double Slap|pXa: A|[miss]
+|move|pXa: A|Double Team|pXa: A
+|move|pXa: A|Double Team|pXa: A|[from]Metronome
+|move|pXa: A|Double Team|pXa: A|[from]Mirror Move
+|move|pXa: A|Double Team|pXa: A|[miss]
+|move|pXa: A|Double-Edge|pXa: A
+|move|pXa: A|Double-Edge|pXa: A|[from]Metronome
+|move|pXa: A|Double-Edge|pXa: A|[from]Metronome|[miss]
+|move|pXa: A|Double-Edge|pXa: A|[from]Mirror Move
+|move|pXa: A|Double-Edge|pXa: A|[miss]
+|move|pXa: A|Dragon Breath|pXa: A
+|move|pXa: A|Dragon Breath|pXa: A|[from]Metronome
+|move|pXa: A|Dragon Breath|pXa: A|[from]Mirror Move
+|move|pXa: A|Dragon Breath|pXa: A|[miss]
+|move|pXa: A|Dragon Rage|pXa: A
+|move|pXa: A|Dragon Rage|pXa: A|[from]Metronome
+|move|pXa: A|Dragon Rage|pXa: A|[from]Mirror Move
+|move|pXa: A|Dragon Rage|pXa: A|[miss]
+|move|pXa: A|Dream Eater|pXa: A
+|move|pXa: A|Dream Eater|pXa: A|[from]Metronome
+|move|pXa: A|Dream Eater|pXa: A|[from]Mirror Move
+|move|pXa: A|Dream Eater|pXa: A|[from]Sleep Talk
+|move|pXa: A|Dream Eater|pXa: A|[miss]
+|move|pXa: A|Drill Peck|pXa: A
+|move|pXa: A|Drill Peck|pXa: A|[from]Metronome
+|move|pXa: A|Drill Peck|pXa: A|[from]Mirror Move
+|move|pXa: A|Drill Peck|pXa: A|[from]Mirror Move|[miss]
+|move|pXa: A|Drill Peck|pXa: A|[from]Sleep Talk
+|move|pXa: A|Drill Peck|pXa: A|[miss]
+|move|pXa: A|Dynamic Punch|pXa: A
+|move|pXa: A|Dynamic Punch|pXa: A|[from]Metronome
+|move|pXa: A|Dynamic Punch|pXa: A|[from]Metronome|[miss]
+|move|pXa: A|Dynamic Punch|pXa: A|[from]Mirror Move
+|move|pXa: A|Dynamic Punch|pXa: A|[miss]
+|move|pXa: A|Earthquake|pXa: A
+|move|pXa: A|Earthquake|pXa: A|[from]Metronome
+|move|pXa: A|Earthquake|pXa: A|[from]Mirror Move
+|move|pXa: A|Earthquake|pXa: A|[from]Mirror Move|[miss]
+|move|pXa: A|Earthquake|pXa: A|[miss]
+|move|pXa: A|Egg Bomb|pXa: A
+|move|pXa: A|Egg Bomb|pXa: A|[from]Metronome
+|move|pXa: A|Egg Bomb|pXa: A|[from]Metronome|[miss]
+|move|pXa: A|Egg Bomb|pXa: A|[from]Mirror Move
+|move|pXa: A|Egg Bomb|pXa: A|[from]Mirror Move|[miss]
+|move|pXa: A|Egg Bomb|pXa: A|[miss]
+|move|pXa: A|Ember|pXa: A
+|move|pXa: A|Ember|pXa: A|[from]Metronome
+|move|pXa: A|Ember|pXa: A|[from]Mirror Move
+|move|pXa: A|Ember|pXa: A|[from]Sleep Talk
+|move|pXa: A|Ember|pXa: A|[miss]
+|move|pXa: A|Encore|pXa: A
+|move|pXa: A|Encore|pXa: A|[from]Metronome
+|move|pXa: A|Encore|pXa: A|[from]Mirror Move
+|move|pXa: A|Encore|pXa: A|[miss]
+|move|pXa: A|Endure|pXa: A
+|move|pXa: A|Endure|pXa: A|[from]Mirror Move
+|move|pXa: A|Endure|pXa: A|[miss]
+|move|pXa: A|Explosion|pXa: A
+|move|pXa: A|Explosion|pXa: A|[miss]
+|move|pXa: A|Extreme Speed|pXa: A
+|move|pXa: A|Extreme Speed|pXa: A|[from]Metronome
+|move|pXa: A|Extreme Speed|pXa: A|[from]Metronome|[miss]
+|move|pXa: A|Extreme Speed|pXa: A|[from]Mirror Move
+|move|pXa: A|Extreme Speed|pXa: A|[miss]
+|move|pXa: A|False Swipe|pXa: A
+|move|pXa: A|False Swipe|pXa: A|[from]Metronome
+|move|pXa: A|False Swipe|pXa: A|[from]Mirror Move
+|move|pXa: A|False Swipe|pXa: A|[miss]
+|move|pXa: A|Feint Attack|pXa: A
+|move|pXa: A|Feint Attack|pXa: A|[from]Metronome
+|move|pXa: A|Feint Attack|pXa: A|[from]Mirror Move
+|move|pXa: A|Feint Attack|pXa: A|[miss]
+|move|pXa: A|Fire Blast|pXa: A
+|move|pXa: A|Fire Blast|pXa: A|[from]Metronome
+|move|pXa: A|Fire Blast|pXa: A|[from]Metronome|[miss]
+|move|pXa: A|Fire Blast|pXa: A|[from]Mirror Move
+|move|pXa: A|Fire Blast|pXa: A|[from]Mirror Move|[miss]
+|move|pXa: A|Fire Blast|pXa: A|[miss]
+|move|pXa: A|Fire Punch|pXa: A
+|move|pXa: A|Fire Punch|pXa: A|[from]Metronome
+|move|pXa: A|Fire Punch|pXa: A|[from]Mirror Move
+|move|pXa: A|Fire Punch|pXa: A|[from]Sleep Talk
+|move|pXa: A|Fire Punch|pXa: A|[miss]
+|move|pXa: A|Fire Spin|pXa: A
+|move|pXa: A|Fire Spin|pXa: A|[from]Metronome
+|move|pXa: A|Fire Spin|pXa: A|[from]Metronome|[miss]
+|move|pXa: A|Fire Spin|pXa: A|[from]Mirror Move
+|move|pXa: A|Fire Spin|pXa: A|[from]Mirror Move|[miss]
+|move|pXa: A|Fire Spin|pXa: A|[miss]
+|move|pXa: A|Fissure|pXa: A
+|move|pXa: A|Fissure|pXa: A|[from]Metronome|[miss]
+|move|pXa: A|Fissure|pXa: A|[from]Mirror Move
+|move|pXa: A|Fissure|pXa: A|[from]Mirror Move|[miss]
+|move|pXa: A|Fissure|pXa: A|[miss]
+|move|pXa: A|Flail|pXa: A
+|move|pXa: A|Flail|pXa: A|[from]Metronome
+|move|pXa: A|Flail|pXa: A|[from]Mirror Move
+|move|pXa: A|Flail|pXa: A|[miss]
+|move|pXa: A|Flame Wheel|pXa: A
+|move|pXa: A|Flame Wheel|pXa: A|[from]Metronome
+|move|pXa: A|Flame Wheel|pXa: A|[from]Mirror Move
+|move|pXa: A|Flame Wheel|pXa: A|[miss]
+|move|pXa: A|Flamethrower|pXa: A
+|move|pXa: A|Flamethrower|pXa: A|[from]Metronome
+|move|pXa: A|Flamethrower|pXa: A|[from]Metronome|[miss]
+|move|pXa: A|Flamethrower|pXa: A|[from]Mirror Move
+|move|pXa: A|Flamethrower|pXa: A|[miss]
+|move|pXa: A|Flash|pXa: A
+|move|pXa: A|Flash|pXa: A|[from]Metronome
+|move|pXa: A|Flash|pXa: A|[from]Mirror Move
+|move|pXa: A|Flash|pXa: A|[from]Mirror Move|[miss]
+|move|pXa: A|Flash|pXa: A|[miss]
+|move|pXa: A|Fly|pXa: A
+|move|pXa: A|Fly|pXa: A|[miss]
+|move|pXa: A|Fly||[from]Metronome|[still]
+|move|pXa: A|Fly||[from]Mirror Move|[still]
+|move|pXa: A|Fly||[still]
+|move|pXa: A|Fly||[still]|[miss]
+|move|pXa: A|Focus Energy|pXa: A
+|move|pXa: A|Focus Energy|pXa: A|[from]Metronome
+|move|pXa: A|Focus Energy|pXa: A|[from]Mirror Move
+|move|pXa: A|Focus Energy|pXa: A|[miss]
+|move|pXa: A|Foresight|pXa: A
+|move|pXa: A|Foresight|pXa: A|[from]Metronome
+|move|pXa: A|Foresight|pXa: A|[from]Mirror Move
+|move|pXa: A|Foresight|pXa: A|[from]Mirror Move|[miss]
+|move|pXa: A|Foresight|pXa: A|[miss]
+|move|pXa: A|Frustration|pXa: A
+|move|pXa: A|Frustration|pXa: A|[from]Metronome
+|move|pXa: A|Frustration|pXa: A|[from]Mirror Move
+|move|pXa: A|Frustration|pXa: A|[from]Sleep Talk
+|move|pXa: A|Frustration|pXa: A|[miss]
+|move|pXa: A|Frustration|pXa: A|[miss]|[miss]
+|move|pXa: A|Fury Attack|pXa: A
+|move|pXa: A|Fury Attack|pXa: A|[from]Metronome
+|move|pXa: A|Fury Attack|pXa: A|[from]Mirror Move
+|move|pXa: A|Fury Attack|pXa: A|[from]Mirror Move|[miss]
+|move|pXa: A|Fury Attack|pXa: A|[miss]
+|move|pXa: A|Fury Cutter|pXa: A
+|move|pXa: A|Fury Cutter|pXa: A|[from]Metronome
+|move|pXa: A|Fury Cutter|pXa: A|[from]Metronome|[miss]
+|move|pXa: A|Fury Cutter|pXa: A|[from]Mirror Move
+|move|pXa: A|Fury Cutter|pXa: A|[miss]
+|move|pXa: A|Fury Swipes|pXa: A
+|move|pXa: A|Fury Swipes|pXa: A|[from]Metronome
+|move|pXa: A|Fury Swipes|pXa: A|[from]Metronome|[miss]
+|move|pXa: A|Fury Swipes|pXa: A|[from]Mirror Move
+|move|pXa: A|Fury Swipes|pXa: A|[from]Mirror Move|[miss]
+|move|pXa: A|Fury Swipes|pXa: A|[miss]
+|move|pXa: A|Future Sight|pXa: A
+|move|pXa: A|Future Sight|pXa: A|[from]Metronome
+|move|pXa: A|Future Sight|pXa: A|[from]Mirror Move
+|move|pXa: A|Future Sight|pXa: A|[miss]
+|move|pXa: A|Giga Drain|pXa: A
+|move|pXa: A|Giga Drain|pXa: A|[from]Metronome
+|move|pXa: A|Giga Drain|pXa: A|[from]Mirror Move
+|move|pXa: A|Giga Drain|pXa: A|[from]Mirror Move|[miss]
+|move|pXa: A|Giga Drain|pXa: A|[miss]
+|move|pXa: A|Glare|pXa: A
+|move|pXa: A|Glare|pXa: A|[from]Metronome
+|move|pXa: A|Glare|pXa: A|[from]Mirror Move
+|move|pXa: A|Glare|pXa: A|[from]Mirror Move|[miss]
+|move|pXa: A|Glare|pXa: A|[miss]
+|move|pXa: A|Glare||[still]
+|move|pXa: A|Growl|pXa: A
+|move|pXa: A|Growl|pXa: A|[from]Metronome
+|move|pXa: A|Growl|pXa: A|[from]Metronome|[miss]
+|move|pXa: A|Growl|pXa: A|[from]Mirror Move
+|move|pXa: A|Growl|pXa: A|[miss]
+|move|pXa: A|Growth|pXa: A
+|move|pXa: A|Growth|pXa: A|[from]Metronome
+|move|pXa: A|Growth|pXa: A|[from]Mirror Move
+|move|pXa: A|Guillotine|pXa: A
+|move|pXa: A|Guillotine|pXa: A|[from]Metronome
+|move|pXa: A|Guillotine|pXa: A|[from]Metronome|[miss]
+|move|pXa: A|Guillotine|pXa: A|[from]Mirror Move
+|move|pXa: A|Guillotine|pXa: A|[from]Mirror Move|[miss]
+|move|pXa: A|Guillotine|pXa: A|[miss]
+|move|pXa: A|Gust|pXa: A
+|move|pXa: A|Gust|pXa: A|[from]Metronome
+|move|pXa: A|Gust|pXa: A|[from]Mirror Move
+|move|pXa: A|Gust|pXa: A|[miss]
+|move|pXa: A|Harden|pXa: A
+|move|pXa: A|Harden|pXa: A|[from]Metronome
+|move|pXa: A|Harden|pXa: A|[from]Mirror Move
+|move|pXa: A|Haze|pXa: A
+|move|pXa: A|Haze|pXa: A|[from]Metronome
+|move|pXa: A|Haze|pXa: A|[from]Mirror Move
+|move|pXa: A|Headbutt|pXa: A
+|move|pXa: A|Headbutt|pXa: A|[from]Metronome
+|move|pXa: A|Headbutt|pXa: A|[from]Mirror Move
+|move|pXa: A|Headbutt|pXa: A|[miss]
+|move|pXa: A|Heal Bell|pXa: A
+|move|pXa: A|Heal Bell|pXa: A|[from]Metronome
+|move|pXa: A|Heal Bell|pXa: A|[from]Mirror Move
+|move|pXa: A|Hidden Power|pXa: A
+|move|pXa: A|Hidden Power|pXa: A|[from]Metronome
+|move|pXa: A|Hidden Power|pXa: A|[from]Mirror Move
+|move|pXa: A|Hidden Power|pXa: A|[miss]
+|move|pXa: A|High Jump Kick|pXa: A
+|move|pXa: A|High Jump Kick|pXa: A|[from]Metronome
+|move|pXa: A|High Jump Kick|pXa: A|[from]Mirror Move
+|move|pXa: A|High Jump Kick|pXa: A|[miss]
+|move|pXa: A|Horn Attack|pXa: A
+|move|pXa: A|Horn Attack|pXa: A|[from]Metronome
+|move|pXa: A|Horn Attack|pXa: A|[from]Metronome|[miss]
+|move|pXa: A|Horn Attack|pXa: A|[from]Mirror Move
+|move|pXa: A|Horn Attack|pXa: A|[miss]
+|move|pXa: A|Horn Drill|pXa: A
+|move|pXa: A|Horn Drill|pXa: A|[from]Metronome|[miss]
+|move|pXa: A|Horn Drill|pXa: A|[from]Mirror Move
+|move|pXa: A|Horn Drill|pXa: A|[from]Mirror Move|[miss]
+|move|pXa: A|Horn Drill|pXa: A|[miss]
+|move|pXa: A|Hydro Pump|pXa: A
+|move|pXa: A|Hydro Pump|pXa: A|[from]Metronome
+|move|pXa: A|Hydro Pump|pXa: A|[from]Mirror Move
+|move|pXa: A|Hydro Pump|pXa: A|[miss]
+|move|pXa: A|Hyper Beam|pXa: A
+|move|pXa: A|Hyper Beam|pXa: A|[from]Metronome
+|move|pXa: A|Hyper Beam|pXa: A|[from]Mirror Move
+|move|pXa: A|Hyper Beam|pXa: A|[miss]
+|move|pXa: A|Hyper Fang|pXa: A
+|move|pXa: A|Hyper Fang|pXa: A|[from]Metronome
+|move|pXa: A|Hyper Fang|pXa: A|[from]Mirror Move
+|move|pXa: A|Hyper Fang|pXa: A|[miss]
+|move|pXa: A|Hypnosis|pXa: A
+|move|pXa: A|Hypnosis|pXa: A|[from]Metronome
+|move|pXa: A|Hypnosis|pXa: A|[from]Metronome|[miss]
+|move|pXa: A|Hypnosis|pXa: A|[from]Mirror Move
+|move|pXa: A|Hypnosis|pXa: A|[from]Mirror Move|[miss]
+|move|pXa: A|Hypnosis|pXa: A|[miss]
+|move|pXa: A|Hypnosis|pXa: A|[miss]|[miss]
+|move|pXa: A|Hypnosis||[from]Metronome|[still]
+|move|pXa: A|Hypnosis||[still]
+|move|pXa: A|Ice Beam|pXa: A
+|move|pXa: A|Ice Beam|pXa: A|[from]Metronome
+|move|pXa: A|Ice Beam|pXa: A|[miss]
+|move|pXa: A|Ice Punch|pXa: A
+|move|pXa: A|Ice Punch|pXa: A|[from]Metronome
+|move|pXa: A|Ice Punch|pXa: A|[from]Mirror Move
+|move|pXa: A|Ice Punch|pXa: A|[miss]
+|move|pXa: A|Icy Wind|pXa: A
+|move|pXa: A|Icy Wind|pXa: A|[from]Metronome
+|move|pXa: A|Icy Wind|pXa: A|[from]Metronome|[miss]
+|move|pXa: A|Icy Wind|pXa: A|[from]Mirror Move
+|move|pXa: A|Icy Wind|pXa: A|[miss]
+|move|pXa: A|Iron Tail|pXa: A
+|move|pXa: A|Iron Tail|pXa: A|[from]Metronome
+|move|pXa: A|Iron Tail|pXa: A|[from]Metronome|[miss]
+|move|pXa: A|Iron Tail|pXa: A|[from]Mirror Move
+|move|pXa: A|Iron Tail|pXa: A|[from]Mirror Move|[miss]
+|move|pXa: A|Iron Tail|pXa: A|[miss]
+|move|pXa: A|Jump Kick|pXa: A
+|move|pXa: A|Jump Kick|pXa: A|[from]Metronome
+|move|pXa: A|Jump Kick|pXa: A|[from]Mirror Move
+|move|pXa: A|Jump Kick|pXa: A|[miss]
+|move|pXa: A|Jump Kick|pXa: A|[miss]|[miss]
+|move|pXa: A|Karate Chop|pXa: A
+|move|pXa: A|Karate Chop|pXa: A|[from]Metronome
+|move|pXa: A|Karate Chop|pXa: A|[from]Metronome|[miss]
+|move|pXa: A|Karate Chop|pXa: A|[from]Mirror Move
+|move|pXa: A|Karate Chop|pXa: A|[miss]
+|move|pXa: A|Kinesis|pXa: A
+|move|pXa: A|Kinesis|pXa: A|[from]Metronome
+|move|pXa: A|Kinesis|pXa: A|[from]Mirror Move
+|move|pXa: A|Kinesis|pXa: A|[from]Mirror Move|[miss]
+|move|pXa: A|Kinesis|pXa: A|[from]Sleep Talk|[miss]
+|move|pXa: A|Kinesis|pXa: A|[miss]
+|move|pXa: A|Leech Life|pXa: A
+|move|pXa: A|Leech Life|pXa: A|[from]Metronome
+|move|pXa: A|Leech Life|pXa: A|[from]Mirror Move
+|move|pXa: A|Leech Life|pXa: A|[from]Mirror Move|[miss]
+|move|pXa: A|Leech Life|pXa: A|[from]Sleep Talk
+|move|pXa: A|Leech Life|pXa: A|[miss]
+|move|pXa: A|Leech Seed|pXa: A
+|move|pXa: A|Leech Seed|pXa: A|[from]Metronome
+|move|pXa: A|Leech Seed|pXa: A|[from]Metronome|[miss]
+|move|pXa: A|Leech Seed|pXa: A|[from]Mirror Move
+|move|pXa: A|Leech Seed|pXa: A|[from]Mirror Move|[miss]
+|move|pXa: A|Leech Seed|pXa: A|[miss]
+|move|pXa: A|Leer|pXa: A
+|move|pXa: A|Leer|pXa: A|[from]Metronome
+|move|pXa: A|Leer|pXa: A|[from]Metronome|[miss]
+|move|pXa: A|Leer|pXa: A|[from]Mirror Move
+|move|pXa: A|Leer|pXa: A|[miss]
+|move|pXa: A|Lick|pXa: A
+|move|pXa: A|Lick|pXa: A|[from]Metronome
+|move|pXa: A|Lick|pXa: A|[from]Mirror Move
+|move|pXa: A|Lick|pXa: A|[miss]
+|move|pXa: A|Light Screen|pXa: A
+|move|pXa: A|Light Screen|pXa: A|[from]Metronome
+|move|pXa: A|Light Screen|pXa: A|[from]Mirror Move
+|move|pXa: A|Lock-On|pXa: A
+|move|pXa: A|Lock-On|pXa: A|[from]Metronome
+|move|pXa: A|Lock-On|pXa: A|[from]Metronome|[miss]
+|move|pXa: A|Lock-On|pXa: A|[from]Mirror Move
+|move|pXa: A|Lock-On|pXa: A|[miss]
+|move|pXa: A|Lovely Kiss|pXa: A
+|move|pXa: A|Lovely Kiss|pXa: A|[from]Metronome
+|move|pXa: A|Lovely Kiss|pXa: A|[from]Metronome|[miss]
+|move|pXa: A|Lovely Kiss|pXa: A|[from]Mirror Move
+|move|pXa: A|Lovely Kiss|pXa: A|[from]Mirror Move|[miss]
+|move|pXa: A|Lovely Kiss|pXa: A|[miss]
+|move|pXa: A|Lovely Kiss||[still]
+|move|pXa: A|Low Kick|pXa: A
+|move|pXa: A|Low Kick|pXa: A|[from]Metronome
+|move|pXa: A|Low Kick|pXa: A|[from]Metronome|[miss]
+|move|pXa: A|Low Kick|pXa: A|[from]Mirror Move
+|move|pXa: A|Low Kick|pXa: A|[miss]
+|move|pXa: A|Mach Punch|pXa: A
+|move|pXa: A|Mach Punch|pXa: A|[from]Metronome
+|move|pXa: A|Mach Punch|pXa: A|[from]Metronome|[miss]
+|move|pXa: A|Mach Punch|pXa: A|[from]Mirror Move
+|move|pXa: A|Mach Punch|pXa: A|[miss]
+|move|pXa: A|Magnitude|pXa: A
+|move|pXa: A|Magnitude|pXa: A|[from]Metronome
+|move|pXa: A|Magnitude|pXa: A|[from]Mirror Move
+|move|pXa: A|Magnitude|pXa: A|[miss]
+|move|pXa: A|Mean Look|pXa: A
+|move|pXa: A|Mean Look|pXa: A|[from]Metronome
+|move|pXa: A|Mean Look|pXa: A|[miss]
+|move|pXa: A|Meditate|pXa: A
+|move|pXa: A|Meditate|pXa: A|[from]Metronome
+|move|pXa: A|Meditate|pXa: A|[from]Mirror Move
+|move|pXa: A|Meditate|pXa: A|[miss]
+|move|pXa: A|Mega Drain|pXa: A
+|move|pXa: A|Mega Drain|pXa: A|[from]Metronome
+|move|pXa: A|Mega Drain|pXa: A|[from]Mirror Move
+|move|pXa: A|Mega Drain|pXa: A|[miss]
+|move|pXa: A|Mega Kick|pXa: A
+|move|pXa: A|Mega Kick|pXa: A|[from]Metronome
+|move|pXa: A|Mega Kick|pXa: A|[from]Metronome|[miss]
+|move|pXa: A|Mega Kick|pXa: A|[from]Mirror Move
+|move|pXa: A|Mega Kick|pXa: A|[from]Mirror Move|[miss]
+|move|pXa: A|Mega Kick|pXa: A|[miss]
+|move|pXa: A|Mega Punch|pXa: A
+|move|pXa: A|Mega Punch|pXa: A|[from]Mirror Move
+|move|pXa: A|Mega Punch|pXa: A|[from]Sleep Talk
+|move|pXa: A|Mega Punch|pXa: A|[miss]
+|move|pXa: A|Megahorn|pXa: A
+|move|pXa: A|Megahorn|pXa: A|[from]Metronome
+|move|pXa: A|Megahorn|pXa: A|[from]Metronome|[miss]
+|move|pXa: A|Megahorn|pXa: A|[from]Mirror Move
+|move|pXa: A|Megahorn|pXa: A|[from]Mirror Move|[miss]
+|move|pXa: A|Megahorn|pXa: A|[from]Sleep Talk
+|move|pXa: A|Megahorn|pXa: A|[from]Sleep Talk|[miss]
+|move|pXa: A|Megahorn|pXa: A|[miss]
+|move|pXa: A|Metal Claw|pXa: A
+|move|pXa: A|Metal Claw|pXa: A|[from]Metronome
+|move|pXa: A|Metal Claw|pXa: A|[from]Mirror Move
+|move|pXa: A|Metal Claw|pXa: A|[miss]
+|move|pXa: A|Metronome|pXa: A
+|move|pXa: A|Milk Drink|pXa: A
+|move|pXa: A|Milk Drink|pXa: A|[from]Metronome
+|move|pXa: A|Milk Drink|pXa: A|[from]Mirror Move
+|move|pXa: A|Mimic|pXa: A
+|move|pXa: A|Mimic|pXa: A|[miss]
+|move|pXa: A|Mind Reader|pXa: A
+|move|pXa: A|Mind Reader|pXa: A|[from]Metronome
+|move|pXa: A|Mind Reader|pXa: A|[from]Metronome|[miss]
+|move|pXa: A|Mind Reader|pXa: A|[from]Mirror Move
+|move|pXa: A|Mind Reader|pXa: A|[miss]
+|move|pXa: A|Minimize|pXa: A
+|move|pXa: A|Minimize|pXa: A|[from]Metronome
+|move|pXa: A|Minimize|pXa: A|[from]Mirror Move
+|move|pXa: A|Minimize|pXa: A|[miss]
+|move|pXa: A|Mirror Coat|pXa: A
+|move|pXa: A|Mirror Coat|pXa: A|[from]Mirror Move
+|move|pXa: A|Mirror Coat|pXa: A|[from]Sleep Talk
+|move|pXa: A|Mirror Coat|pXa: A|[miss]
+|move|pXa: A|Mirror Coat|pXa: A|[miss]|[miss]
+|move|pXa: A|Mirror Move|pXa: A
+|move|pXa: A|Mirror Move|pXa: A|[from]Metronome
+|move|pXa: A|Mist|pXa: A
+|move|pXa: A|Mist|pXa: A|[from]Metronome
+|move|pXa: A|Mist|pXa: A|[from]Mirror Move
+|move|pXa: A|Moonlight|pXa: A
+|move|pXa: A|Moonlight|pXa: A|[from]Metronome
+|move|pXa: A|Moonlight|pXa: A|[from]Mirror Move
+|move|pXa: A|Moonlight|pXa: A|[from]Sleep Talk
+|move|pXa: A|Moonlight|pXa: A|[miss]
+|move|pXa: A|Morning Sun|pXa: A
+|move|pXa: A|Morning Sun|pXa: A|[from]Metronome
+|move|pXa: A|Morning Sun|pXa: A|[from]Mirror Move
+|move|pXa: A|Morning Sun|pXa: A|[from]Sleep Talk
+|move|pXa: A|Mud-Slap|pXa: A
+|move|pXa: A|Mud-Slap|pXa: A|[from]Metronome
+|move|pXa: A|Mud-Slap|pXa: A|[from]Mirror Move
+|move|pXa: A|Mud-Slap|pXa: A|[miss]
+|move|pXa: A|Night Shade|pXa: A
+|move|pXa: A|Night Shade|pXa: A|[from]Metronome
+|move|pXa: A|Night Shade|pXa: A|[from]Mirror Move
+|move|pXa: A|Night Shade|pXa: A|[miss]
+|move|pXa: A|Nightmare|pXa: A
+|move|pXa: A|Nightmare|pXa: A|[from]Metronome
+|move|pXa: A|Nightmare|pXa: A|[miss]
+|move|pXa: A|Octazooka|pXa: A
+|move|pXa: A|Octazooka|pXa: A|[from]Metronome
+|move|pXa: A|Octazooka|pXa: A|[from]Mirror Move
+|move|pXa: A|Octazooka|pXa: A|[miss]
+|move|pXa: A|Outrage|pXa: A
+|move|pXa: A|Outrage|pXa: A|[from]Metronome
+|move|pXa: A|Outrage|pXa: A|[from]Mirror Move
+|move|pXa: A|Outrage|pXa: A|[miss]
+|move|pXa: A|Pain Split|pXa: A
+|move|pXa: A|Pain Split|pXa: A|[from]Metronome
+|move|pXa: A|Pain Split|pXa: A|[from]Mirror Move
+|move|pXa: A|Pain Split|pXa: A|[from]Mirror Move|[miss]
+|move|pXa: A|Pain Split|pXa: A|[miss]
+|move|pXa: A|Pay Day|pXa: A
+|move|pXa: A|Pay Day|pXa: A|[from]Metronome
+|move|pXa: A|Pay Day|pXa: A|[from]Mirror Move
+|move|pXa: A|Pay Day|pXa: A|[miss]
+|move|pXa: A|Peck|pXa: A
+|move|pXa: A|Peck|pXa: A|[from]Metronome
+|move|pXa: A|Peck|pXa: A|[from]Mirror Move
+|move|pXa: A|Peck|pXa: A|[miss]
+|move|pXa: A|Perish Song|pXa: A
+|move|pXa: A|Perish Song|pXa: A|[from]Metronome
+|move|pXa: A|Perish Song|pXa: A|[miss]
+|move|pXa: A|Petal Dance|pXa: A
+|move|pXa: A|Petal Dance|pXa: A|[from]Metronome
+|move|pXa: A|Petal Dance|pXa: A|[from]Metronome|[miss]
+|move|pXa: A|Petal Dance|pXa: A|[miss]
+|move|pXa: A|Pin Missile|pXa: A
+|move|pXa: A|Pin Missile|pXa: A|[from]Metronome
+|move|pXa: A|Pin Missile|pXa: A|[from]Mirror Move|[miss]
+|move|pXa: A|Pin Missile|pXa: A|[miss]
+|move|pXa: A|Poison Gas|pXa: A
+|move|pXa: A|Poison Gas|pXa: A|[from]Metronome
+|move|pXa: A|Poison Gas|pXa: A|[from]Mirror Move|[miss]
+|move|pXa: A|Poison Gas|pXa: A|[miss]
+|move|pXa: A|Poison Gas||[from]Metronome|[still]
+|move|pXa: A|Poison Gas||[still]
+|move|pXa: A|Poison Powder|pXa: A
+|move|pXa: A|Poison Powder|pXa: A|[from]Metronome
+|move|pXa: A|Poison Powder|pXa: A|[from]Metronome|[miss]
+|move|pXa: A|Poison Powder|pXa: A|[from]Mirror Move
+|move|pXa: A|Poison Powder|pXa: A|[from]Mirror Move|[miss]
+|move|pXa: A|Poison Powder|pXa: A|[miss]
+|move|pXa: A|Poison Powder||[still]
+|move|pXa: A|Poison Sting|pXa: A
+|move|pXa: A|Poison Sting|pXa: A|[from]Metronome
+|move|pXa: A|Poison Sting|pXa: A|[from]Mirror Move
+|move|pXa: A|Poison Sting|pXa: A|[miss]
+|move|pXa: A|Pound|pXa: A
+|move|pXa: A|Pound|pXa: A|[from]Metronome
+|move|pXa: A|Pound|pXa: A|[from]Mirror Move
+|move|pXa: A|Pound|pXa: A|[miss]
+|move|pXa: A|Powder Snow|pXa: A
+|move|pXa: A|Powder Snow|pXa: A|[from]Metronome
+|move|pXa: A|Powder Snow|pXa: A|[from]Metronome|[miss]
+|move|pXa: A|Powder Snow|pXa: A|[from]Mirror Move
+|move|pXa: A|Powder Snow|pXa: A|[miss]
+|move|pXa: A|Present|pXa: A
+|move|pXa: A|Present|pXa: A|[from]Metronome
+|move|pXa: A|Present|pXa: A|[from]Metronome|[miss]
+|move|pXa: A|Present|pXa: A|[from]Mirror Move
+|move|pXa: A|Present|pXa: A|[from]Mirror Move|[miss]
+|move|pXa: A|Present|pXa: A|[miss]
+|move|pXa: A|Protect|pXa: A
+|move|pXa: A|Protect|pXa: A|[from]Mirror Move
+|move|pXa: A|Psybeam|pXa: A
+|move|pXa: A|Psybeam|pXa: A|[from]Metronome
+|move|pXa: A|Psybeam|pXa: A|[from]Mirror Move
+|move|pXa: A|Psybeam|pXa: A|[miss]
+|move|pXa: A|Psych Up|pXa: A
+|move|pXa: A|Psych Up|pXa: A|[from]Metronome
+|move|pXa: A|Psych Up|pXa: A|[from]Mirror Move
+|move|pXa: A|Psych Up|pXa: A|[miss]
+|move|pXa: A|Psychic|pXa: A
+|move|pXa: A|Psychic|pXa: A|[from]Metronome
+|move|pXa: A|Psychic|pXa: A|[from]Mirror Move
+|move|pXa: A|Psychic|pXa: A|[from]Sleep Talk
+|move|pXa: A|Psychic|pXa: A|[miss]
+|move|pXa: A|Psywave|pXa: A
+|move|pXa: A|Psywave|pXa: A|[from]Metronome
+|move|pXa: A|Psywave|pXa: A|[from]Mirror Move
+|move|pXa: A|Psywave|pXa: A|[from]Mirror Move|[miss]
+|move|pXa: A|Psywave|pXa: A|[miss]
+|move|pXa: A|Pursuit|pXa: A
+|move|pXa: A|Pursuit|pXa: A|[from]Metronome
+|move|pXa: A|Pursuit|pXa: A|[from]Mirror Move
+|move|pXa: A|Pursuit|pXa: A|[miss]
+|move|pXa: A|Quick Attack|pXa: A
+|move|pXa: A|Quick Attack|pXa: A|[from]Metronome
+|move|pXa: A|Quick Attack|pXa: A|[from]Mirror Move
+|move|pXa: A|Quick Attack|pXa: A|[miss]
+|move|pXa: A|Rage|pXa: A
+|move|pXa: A|Rage|pXa: A|[from]Metronome
+|move|pXa: A|Rage|pXa: A|[miss]
+|move|pXa: A|Rain Dance|pXa: A
+|move|pXa: A|Rain Dance|pXa: A|[from]Metronome
+|move|pXa: A|Rain Dance|pXa: A|[from]Mirror Move
+|move|pXa: A|Rapid Spin|pXa: A
+|move|pXa: A|Rapid Spin|pXa: A|[from]Metronome
+|move|pXa: A|Rapid Spin|pXa: A|[from]Mirror Move
+|move|pXa: A|Rapid Spin|pXa: A|[miss]
+|move|pXa: A|Razor Leaf|pXa: A
+|move|pXa: A|Razor Leaf|pXa: A|[from]Metronome
+|move|pXa: A|Razor Leaf|pXa: A|[from]Mirror Move
+|move|pXa: A|Razor Leaf|pXa: A|[from]Mirror Move|[miss]
+|move|pXa: A|Razor Leaf|pXa: A|[miss]
+|move|pXa: A|Razor Wind|pXa: A
+|move|pXa: A|Razor Wind|pXa: A|[miss]
+|move|pXa: A|Razor Wind||[from]Metronome|[still]
+|move|pXa: A|Razor Wind||[from]Mirror Move|[still]
+|move|pXa: A|Razor Wind||[still]
+|move|pXa: A|Recover|pXa: A
+|move|pXa: A|Recover|pXa: A|[from]Metronome
+|move|pXa: A|Recover|pXa: A|[from]Mirror Move
+|move|pXa: A|Recover|pXa: A|[from]Sleep Talk
+|move|pXa: A|Reflect|pXa: A
+|move|pXa: A|Reflect|pXa: A|[from]Metronome
+|move|pXa: A|Reflect|pXa: A|[from]Mirror Move
+|move|pXa: A|Rest|pXa: A
+|move|pXa: A|Rest|pXa: A|[from]Metronome
+|move|pXa: A|Rest|pXa: A|[from]Mirror Move
+|move|pXa: A|Rest|pXa: A|[from]Sleep Talk
+|move|pXa: A|Return|pXa: A
+|move|pXa: A|Return|pXa: A|[from]Metronome
+|move|pXa: A|Return|pXa: A|[from]Metronome|[miss]
+|move|pXa: A|Return|pXa: A|[from]Mirror Move
+|move|pXa: A|Return|pXa: A|[from]Sleep Talk
+|move|pXa: A|Return|pXa: A|[miss]
+|move|pXa: A|Reversal|pXa: A
+|move|pXa: A|Reversal|pXa: A|[from]Metronome
+|move|pXa: A|Reversal|pXa: A|[from]Mirror Move
+|move|pXa: A|Reversal|pXa: A|[from]Mirror Move|[miss]
+|move|pXa: A|Reversal|pXa: A|[miss]
+|move|pXa: A|Roar|pXa: A
+|move|pXa: A|Roar|pXa: A|[from]Metronome
+|move|pXa: A|Roar|pXa: A|[from]Metronome|[miss]
+|move|pXa: A|Roar|pXa: A|[from]Mirror Move
+|move|pXa: A|Roar|pXa: A|[miss]
+|move|pXa: A|Roar|pXa: A|[miss]|[miss]
+|move|pXa: A|Rock Slide|pXa: A
+|move|pXa: A|Rock Slide|pXa: A|[from]Metronome
+|move|pXa: A|Rock Slide|pXa: A|[from]Mirror Move
+|move|pXa: A|Rock Slide|pXa: A|[from]Mirror Move|[miss]
+|move|pXa: A|Rock Slide|pXa: A|[miss]
+|move|pXa: A|Rock Smash|pXa: A
+|move|pXa: A|Rock Smash|pXa: A|[from]Metronome
+|move|pXa: A|Rock Smash|pXa: A|[from]Mirror Move
+|move|pXa: A|Rock Smash|pXa: A|[from]Sleep Talk
+|move|pXa: A|Rock Smash|pXa: A|[miss]
+|move|pXa: A|Rock Throw|pXa: A
+|move|pXa: A|Rock Throw|pXa: A|[from]Metronome
+|move|pXa: A|Rock Throw|pXa: A|[from]Metronome|[miss]
+|move|pXa: A|Rock Throw|pXa: A|[from]Mirror Move
+|move|pXa: A|Rock Throw|pXa: A|[miss]
+|move|pXa: A|Rolling Kick|pXa: A
+|move|pXa: A|Rolling Kick|pXa: A|[from]Metronome
+|move|pXa: A|Rolling Kick|pXa: A|[from]Metronome|[miss]
+|move|pXa: A|Rolling Kick|pXa: A|[from]Mirror Move
+|move|pXa: A|Rolling Kick|pXa: A|[from]Sleep Talk
+|move|pXa: A|Rolling Kick|pXa: A|[miss]
+|move|pXa: A|Rollout|pXa: A
+|move|pXa: A|Rollout|pXa: A|[from]Metronome
+|move|pXa: A|Rollout|pXa: A|[from]Mirror Move
+|move|pXa: A|Rollout|pXa: A|[miss]
+|move|pXa: A|Sacred Fire|pXa: A
+|move|pXa: A|Sacred Fire|pXa: A|[from]Metronome
+|move|pXa: A|Sacred Fire|pXa: A|[from]Metronome|[miss]
+|move|pXa: A|Sacred Fire|pXa: A|[from]Mirror Move
+|move|pXa: A|Sacred Fire|pXa: A|[from]Mirror Move|[miss]
+|move|pXa: A|Sacred Fire|pXa: A|[from]Sleep Talk
+|move|pXa: A|Sacred Fire|pXa: A|[miss]
+|move|pXa: A|Safeguard|pXa: A
+|move|pXa: A|Safeguard|pXa: A|[from]Metronome
+|move|pXa: A|Safeguard|pXa: A|[from]Mirror Move
+|move|pXa: A|Safeguard|pXa: A|[miss]
+|move|pXa: A|Sand Attack|pXa: A
+|move|pXa: A|Sand Attack|pXa: A|[from]Metronome
+|move|pXa: A|Sand Attack|pXa: A|[from]Metronome|[miss]
+|move|pXa: A|Sand Attack|pXa: A|[from]Mirror Move
+|move|pXa: A|Sand Attack|pXa: A|[from]Mirror Move|[miss]
+|move|pXa: A|Sand Attack|pXa: A|[miss]
+|move|pXa: A|Sandstorm|pXa: A
+|move|pXa: A|Sandstorm|pXa: A|[from]Metronome
+|move|pXa: A|Sandstorm|pXa: A|[from]Mirror Move
+|move|pXa: A|Scary Face|pXa: A
+|move|pXa: A|Scary Face|pXa: A|[from]Metronome
+|move|pXa: A|Scary Face|pXa: A|[from]Mirror Move
+|move|pXa: A|Scary Face|pXa: A|[from]Mirror Move|[miss]
+|move|pXa: A|Scary Face|pXa: A|[from]Sleep Talk
+|move|pXa: A|Scary Face|pXa: A|[miss]
+|move|pXa: A|Scratch|pXa: A
+|move|pXa: A|Scratch|pXa: A|[from]Metronome
+|move|pXa: A|Scratch|pXa: A|[from]Mirror Move
+|move|pXa: A|Scratch|pXa: A|[miss]
+|move|pXa: A|Scratch|pXa: A|[miss]|[miss]
+|move|pXa: A|Screech|pXa: A
+|move|pXa: A|Screech|pXa: A|[from]Metronome
+|move|pXa: A|Screech|pXa: A|[miss]
+|move|pXa: A|Seismic Toss|pXa: A
+|move|pXa: A|Seismic Toss|pXa: A|[from]Metronome
+|move|pXa: A|Seismic Toss|pXa: A|[from]Mirror Move
+|move|pXa: A|Seismic Toss|pXa: A|[miss]
+|move|pXa: A|Self-Destruct|pXa: A
+|move|pXa: A|Self-Destruct|pXa: A|[from]Metronome
+|move|pXa: A|Self-Destruct|pXa: A|[miss]
+|move|pXa: A|Shadow Ball|pXa: A
+|move|pXa: A|Shadow Ball|pXa: A|[from]Metronome
+|move|pXa: A|Shadow Ball|pXa: A|[from]Metronome|[miss]
+|move|pXa: A|Shadow Ball|pXa: A|[from]Mirror Move
+|move|pXa: A|Shadow Ball|pXa: A|[miss]
+|move|pXa: A|Sharpen|pXa: A
+|move|pXa: A|Sharpen|pXa: A|[from]Metronome
+|move|pXa: A|Sharpen|pXa: A|[from]Mirror Move
+|move|pXa: A|Sing|pXa: A
+|move|pXa: A|Sing|pXa: A|[from]Metronome
+|move|pXa: A|Sing|pXa: A|[from]Metronome|[miss]
+|move|pXa: A|Sing|pXa: A|[from]Mirror Move
+|move|pXa: A|Sing|pXa: A|[from]Mirror Move|[miss]
+|move|pXa: A|Sing|pXa: A|[from]Sleep Talk
+|move|pXa: A|Sing|pXa: A|[miss]
+|move|pXa: A|Sing||[from]Metronome|[still]
+|move|pXa: A|Sing||[still]
+|move|pXa: A|Sketch|pXa: A
+|move|pXa: A|Sketch|pXa: A|[from]Sleep Talk
+|move|pXa: A|Sketch|pXa: A|[miss]
+|move|pXa: A|Skull Bash|pXa: A
+|move|pXa: A|Skull Bash|pXa: A|[miss]
+|move|pXa: A|Skull Bash||[from]Metronome|[still]
+|move|pXa: A|Skull Bash||[from]Mirror Move|[still]
+|move|pXa: A|Skull Bash||[still]
+|move|pXa: A|Skull Bash||[still]|[miss]
+|move|pXa: A|Sky Attack|pXa: A
+|move|pXa: A|Sky Attack|pXa: A|[miss]
+|move|pXa: A|Sky Attack||[from]Metronome|[still]
+|move|pXa: A|Sky Attack||[from]Mirror Move|[still]
+|move|pXa: A|Sky Attack||[still]
+|move|pXa: A|Slam|pXa: A
+|move|pXa: A|Slam|pXa: A|[from]Metronome
+|move|pXa: A|Slam|pXa: A|[from]Mirror Move
+|move|pXa: A|Slam|pXa: A|[from]Mirror Move|[miss]
+|move|pXa: A|Slam|pXa: A|[miss]
+|move|pXa: A|Slash|pXa: A
+|move|pXa: A|Slash|pXa: A|[from]Metronome
+|move|pXa: A|Slash|pXa: A|[from]Mirror Move
+|move|pXa: A|Slash|pXa: A|[miss]
+|move|pXa: A|Sleep Powder|pXa: A
+|move|pXa: A|Sleep Powder|pXa: A|[from]Metronome
+|move|pXa: A|Sleep Powder|pXa: A|[from]Mirror Move
+|move|pXa: A|Sleep Powder|pXa: A|[from]Mirror Move|[miss]
+|move|pXa: A|Sleep Powder|pXa: A|[miss]
+|move|pXa: A|Sleep Powder||[from]Metronome|[still]
+|move|pXa: A|Sleep Powder||[still]
+|move|pXa: A|Sleep Talk|pXa: A
+|move|pXa: A|Sludge Bomb|pXa: A
+|move|pXa: A|Sludge Bomb|pXa: A|[from]Metronome
+|move|pXa: A|Sludge Bomb|pXa: A|[from]Mirror Move
+|move|pXa: A|Sludge Bomb|pXa: A|[miss]
+|move|pXa: A|Sludge|pXa: A
+|move|pXa: A|Sludge|pXa: A|[from]Metronome
+|move|pXa: A|Sludge|pXa: A|[from]Mirror Move
+|move|pXa: A|Sludge|pXa: A|[miss]
+|move|pXa: A|Smog|pXa: A
+|move|pXa: A|Smog|pXa: A|[from]Mirror Move
+|move|pXa: A|Smog|pXa: A|[miss]
+|move|pXa: A|Smokescreen|pXa: A
+|move|pXa: A|Smokescreen|pXa: A|[from]Metronome
+|move|pXa: A|Smokescreen|pXa: A|[from]Mirror Move
+|move|pXa: A|Smokescreen|pXa: A|[from]Mirror Move|[miss]
+|move|pXa: A|Smokescreen|pXa: A|[miss]
+|move|pXa: A|Snore|pXa: A
+|move|pXa: A|Snore|pXa: A|[from]Metronome
+|move|pXa: A|Snore|pXa: A|[from]Mirror Move
+|move|pXa: A|Snore|pXa: A|[miss]
+|move|pXa: A|Soft-Boiled|pXa: A
+|move|pXa: A|Soft-Boiled|pXa: A|[from]Metronome
+|move|pXa: A|Soft-Boiled|pXa: A|[from]Mirror Move
+|move|pXa: A|Solar Beam|pXa: A
+|move|pXa: A|Solar Beam|pXa: A|[miss]
+|move|pXa: A|Solar Beam||[from]Metronome|[still]
+|move|pXa: A|Solar Beam||[from]Mirror Move|[still]
+|move|pXa: A|Solar Beam||[still]
+|move|pXa: A|Sonic Boom|pXa: A
+|move|pXa: A|Sonic Boom|pXa: A|[from]Metronome
+|move|pXa: A|Sonic Boom|pXa: A|[from]Mirror Move
+|move|pXa: A|Sonic Boom|pXa: A|[from]Mirror Move|[miss]
+|move|pXa: A|Sonic Boom|pXa: A|[miss]
+|move|pXa: A|Spark|pXa: A
+|move|pXa: A|Spark|pXa: A|[from]Metronome
+|move|pXa: A|Spark|pXa: A|[from]Mirror Move
+|move|pXa: A|Spark|pXa: A|[from]Mirror Move|[miss]
+|move|pXa: A|Spark|pXa: A|[miss]
+|move|pXa: A|Spider Web|pXa: A
+|move|pXa: A|Spider Web|pXa: A|[from]Metronome
+|move|pXa: A|Spider Web|pXa: A|[from]Mirror Move
+|move|pXa: A|Spider Web|pXa: A|[miss]
+|move|pXa: A|Spike Cannon|pXa: A
+|move|pXa: A|Spike Cannon|pXa: A|[from]Metronome
+|move|pXa: A|Spike Cannon|pXa: A|[from]Mirror Move
+|move|pXa: A|Spike Cannon|pXa: A|[miss]
+|move|pXa: A|Spikes|pXa: A
+|move|pXa: A|Spikes|pXa: A|[from]Metronome
+|move|pXa: A|Spikes|pXa: A|[from]Mirror Move
+|move|pXa: A|Spikes|pXa: A|[miss]
+|move|pXa: A|Spite|pXa: A
+|move|pXa: A|Spite|pXa: A|[from]Metronome
+|move|pXa: A|Spite|pXa: A|[from]Metronome|[miss]
+|move|pXa: A|Spite|pXa: A|[from]Mirror Move
+|move|pXa: A|Spite|pXa: A|[from]Mirror Move|[miss]
+|move|pXa: A|Spite|pXa: A|[miss]
+|move|pXa: A|Splash|pXa: A
+|move|pXa: A|Splash|pXa: A|[from]Metronome
+|move|pXa: A|Splash|pXa: A|[from]Mirror Move
+|move|pXa: A|Spore|pXa: A
+|move|pXa: A|Spore|pXa: A|[from]Metronome
+|move|pXa: A|Spore|pXa: A|[from]Mirror Move
+|move|pXa: A|Spore|pXa: A|[miss]
+|move|pXa: A|Spore||[from]Mirror Move|[still]
+|move|pXa: A|Spore||[still]
+|move|pXa: A|Steel Wing|pXa: A
+|move|pXa: A|Steel Wing|pXa: A|[from]Metronome
+|move|pXa: A|Steel Wing|pXa: A|[from]Metronome|[miss]
+|move|pXa: A|Steel Wing|pXa: A|[from]Mirror Move
+|move|pXa: A|Steel Wing|pXa: A|[from]Sleep Talk
+|move|pXa: A|Steel Wing|pXa: A|[miss]
+|move|pXa: A|Stomp|pXa: A
+|move|pXa: A|Stomp|pXa: A|[from]Metronome
+|move|pXa: A|Stomp|pXa: A|[from]Mirror Move
+|move|pXa: A|Stomp|pXa: A|[miss]
+|move|pXa: A|Strength|pXa: A
+|move|pXa: A|Strength|pXa: A|[from]Metronome
+|move|pXa: A|Strength|pXa: A|[miss]
+|move|pXa: A|String Shot|pXa: A
+|move|pXa: A|String Shot|pXa: A|[from]Metronome
+|move|pXa: A|String Shot|pXa: A|[from]Metronome|[miss]
+|move|pXa: A|String Shot|pXa: A|[from]Mirror Move
+|move|pXa: A|String Shot|pXa: A|[miss]
+|move|pXa: A|Struggle|pXa: A
+|move|pXa: A|Struggle|pXa: A|[from]Mirror Move
+|move|pXa: A|Struggle|pXa: A|[from]Mirror Move|[miss]
+|move|pXa: A|Struggle|pXa: A|[miss]
+|move|pXa: A|Stun Spore|pXa: A
+|move|pXa: A|Stun Spore|pXa: A|[from]Metronome
+|move|pXa: A|Stun Spore|pXa: A|[miss]
+|move|pXa: A|Stun Spore||[still]
+|move|pXa: A|Submission|pXa: A
+|move|pXa: A|Submission|pXa: A|[from]Metronome
+|move|pXa: A|Submission|pXa: A|[from]Metronome|[miss]
+|move|pXa: A|Submission|pXa: A|[from]Mirror Move
+|move|pXa: A|Submission|pXa: A|[miss]
+|move|pXa: A|Substitute|pXa: A
+|move|pXa: A|Substitute|pXa: A|[from]Metronome
+|move|pXa: A|Substitute|pXa: A|[from]Mirror Move
+|move|pXa: A|Substitute|pXa: A|[miss]
+|move|pXa: A|Sunny Day|pXa: A
+|move|pXa: A|Sunny Day|pXa: A|[from]Metronome
+|move|pXa: A|Sunny Day|pXa: A|[from]Mirror Move
+|move|pXa: A|Sunny Day|pXa: A|[from]Sleep Talk
+|move|pXa: A|Super Fang|pXa: A
+|move|pXa: A|Super Fang|pXa: A|[from]Metronome
+|move|pXa: A|Super Fang|pXa: A|[from]Metronome|[miss]
+|move|pXa: A|Super Fang|pXa: A|[from]Mirror Move
+|move|pXa: A|Super Fang|pXa: A|[from]Mirror Move|[miss]
+|move|pXa: A|Super Fang|pXa: A|[from]Sleep Talk
+|move|pXa: A|Super Fang|pXa: A|[miss]
+|move|pXa: A|Super Fang|pXa: A|[miss]|[miss]
+|move|pXa: A|Supersonic|pXa: A
+|move|pXa: A|Supersonic|pXa: A|[from]Metronome
+|move|pXa: A|Supersonic|pXa: A|[from]Mirror Move
+|move|pXa: A|Supersonic|pXa: A|[from]Mirror Move|[miss]
+|move|pXa: A|Supersonic|pXa: A|[miss]
+|move|pXa: A|Surf|pXa: A
+|move|pXa: A|Surf|pXa: A|[from]Metronome
+|move|pXa: A|Surf|pXa: A|[from]Mirror Move
+|move|pXa: A|Surf|pXa: A|[miss]
+|move|pXa: A|Swagger|pXa: A
+|move|pXa: A|Swagger|pXa: A|[from]Metronome
+|move|pXa: A|Swagger|pXa: A|[from]Metronome|[miss]
+|move|pXa: A|Swagger|pXa: A|[from]Mirror Move
+|move|pXa: A|Swagger|pXa: A|[from]Mirror Move|[miss]
+|move|pXa: A|Swagger|pXa: A|[miss]
+|move|pXa: A|Sweet Kiss|pXa: A
+|move|pXa: A|Sweet Kiss|pXa: A|[from]Metronome
+|move|pXa: A|Sweet Kiss|pXa: A|[from]Metronome|[miss]
+|move|pXa: A|Sweet Kiss|pXa: A|[from]Mirror Move|[miss]
+|move|pXa: A|Sweet Kiss|pXa: A|[miss]
+|move|pXa: A|Sweet Scent|pXa: A
+|move|pXa: A|Sweet Scent|pXa: A|[from]Metronome
+|move|pXa: A|Sweet Scent|pXa: A|[from]Metronome|[miss]
+|move|pXa: A|Sweet Scent|pXa: A|[from]Mirror Move
+|move|pXa: A|Sweet Scent|pXa: A|[from]Sleep Talk
+|move|pXa: A|Sweet Scent|pXa: A|[miss]
+|move|pXa: A|Swift|pXa: A
+|move|pXa: A|Swift|pXa: A|[from]Metronome
+|move|pXa: A|Swift|pXa: A|[from]Mirror Move
+|move|pXa: A|Swift|pXa: A|[from]Sleep Talk
+|move|pXa: A|Swift|pXa: A|[miss]
+|move|pXa: A|Swords Dance|pXa: A
+|move|pXa: A|Swords Dance|pXa: A|[from]Metronome
+|move|pXa: A|Swords Dance|pXa: A|[from]Mirror Move
+|move|pXa: A|Swords Dance|pXa: A|[miss]
+|move|pXa: A|Synthesis|pXa: A
+|move|pXa: A|Synthesis|pXa: A|[from]Metronome
+|move|pXa: A|Synthesis|pXa: A|[from]Mirror Move
+|move|pXa: A|Synthesis|pXa: A|[from]Sleep Talk
+|move|pXa: A|Tackle|pXa: A
+|move|pXa: A|Tackle|pXa: A|[from]Metronome
+|move|pXa: A|Tackle|pXa: A|[from]Metronome|[miss]
+|move|pXa: A|Tackle|pXa: A|[from]Mirror Move
+|move|pXa: A|Tackle|pXa: A|[from]Mirror Move|[miss]
+|move|pXa: A|Tackle|pXa: A|[miss]
+|move|pXa: A|Tail Whip|pXa: A
+|move|pXa: A|Tail Whip|pXa: A|[from]Metronome
+|move|pXa: A|Tail Whip|pXa: A|[from]Mirror Move
+|move|pXa: A|Tail Whip|pXa: A|[miss]
+|move|pXa: A|Take Down|pXa: A
+|move|pXa: A|Take Down|pXa: A|[from]Metronome
+|move|pXa: A|Take Down|pXa: A|[from]Metronome|[miss]
+|move|pXa: A|Take Down|pXa: A|[from]Mirror Move
+|move|pXa: A|Take Down|pXa: A|[miss]
+|move|pXa: A|Teleport|pXa: A
+|move|pXa: A|Teleport|pXa: A|[from]Metronome
+|move|pXa: A|Teleport|pXa: A|[from]Mirror Move
+|move|pXa: A|Teleport|pXa: A|[miss]
+|move|pXa: A|Thief|pXa: A
+|move|pXa: A|Thief|pXa: A|[from]Mirror Move
+|move|pXa: A|Thief|pXa: A|[miss]
+|move|pXa: A|Thrash|pXa: A
+|move|pXa: A|Thrash|pXa: A|[from]Metronome
+|move|pXa: A|Thrash|pXa: A|[from]Mirror Move
+|move|pXa: A|Thrash|pXa: A|[miss]
+|move|pXa: A|Thunder Punch|pXa: A
+|move|pXa: A|Thunder Punch|pXa: A|[from]Metronome
+|move|pXa: A|Thunder Punch|pXa: A|[from]Mirror Move
+|move|pXa: A|Thunder Punch|pXa: A|[miss]
+|move|pXa: A|Thunder Shock|pXa: A
+|move|pXa: A|Thunder Shock|pXa: A|[from]Metronome
+|move|pXa: A|Thunder Shock|pXa: A|[from]Mirror Move
+|move|pXa: A|Thunder Shock|pXa: A|[miss]
+|move|pXa: A|Thunder Wave|pXa: A
+|move|pXa: A|Thunder Wave|pXa: A|[from]Metronome
+|move|pXa: A|Thunder Wave|pXa: A|[from]Metronome|[miss]
+|move|pXa: A|Thunder Wave|pXa: A|[from]Mirror Move
+|move|pXa: A|Thunder Wave|pXa: A|[miss]
+|move|pXa: A|Thunder Wave||[still]
+|move|pXa: A|Thunderbolt|pXa: A
+|move|pXa: A|Thunderbolt|pXa: A|[from]Metronome
+|move|pXa: A|Thunderbolt|pXa: A|[from]Mirror Move
+|move|pXa: A|Thunderbolt|pXa: A|[from]Sleep Talk
+|move|pXa: A|Thunderbolt|pXa: A|[miss]
+|move|pXa: A|Thunder|pXa: A
+|move|pXa: A|Thunder|pXa: A|[from]Metronome
+|move|pXa: A|Thunder|pXa: A|[from]Metronome|[miss]
+|move|pXa: A|Thunder|pXa: A|[from]Mirror Move|[miss]
+|move|pXa: A|Thunder|pXa: A|[from]Sleep Talk|[miss]
+|move|pXa: A|Thunder|pXa: A|[miss]
+|move|pXa: A|Toxic|pXa: A
+|move|pXa: A|Toxic|pXa: A|[from]Metronome
+|move|pXa: A|Toxic|pXa: A|[from]Metronome|[miss]
+|move|pXa: A|Toxic|pXa: A|[from]Mirror Move
+|move|pXa: A|Toxic|pXa: A|[from]Mirror Move|[miss]
+|move|pXa: A|Toxic|pXa: A|[miss]
+|move|pXa: A|Toxic||[from]Metronome|[still]
+|move|pXa: A|Toxic||[from]Mirror Move|[still]
+|move|pXa: A|Toxic||[still]
+|move|pXa: A|Transform|pXa: A
+|move|pXa: A|Transform|pXa: A|[from]Metronome
+|move|pXa: A|Transform|pXa: A|[miss]
+|move|pXa: A|Tri Attack|pXa: A
+|move|pXa: A|Tri Attack|pXa: A|[from]Metronome
+|move|pXa: A|Tri Attack|pXa: A|[miss]
+|move|pXa: A|Triple Kick|pXa: A
+|move|pXa: A|Triple Kick|pXa: A|[from]Metronome
+|move|pXa: A|Triple Kick|pXa: A|[from]Mirror Move
+|move|pXa: A|Triple Kick|pXa: A|[miss]
+|move|pXa: A|Twineedle|pXa: A
+|move|pXa: A|Twineedle|pXa: A|[from]Metronome
+|move|pXa: A|Twineedle|pXa: A|[from]Metronome|[miss]
+|move|pXa: A|Twineedle|pXa: A|[from]Mirror Move
+|move|pXa: A|Twineedle|pXa: A|[miss]
+|move|pXa: A|Twister|pXa: A
+|move|pXa: A|Twister|pXa: A|[from]Metronome
+|move|pXa: A|Twister|pXa: A|[from]Metronome|[miss]
+|move|pXa: A|Twister|pXa: A|[from]Mirror Move
+|move|pXa: A|Twister|pXa: A|[miss]
+|move|pXa: A|Vine Whip|pXa: A
+|move|pXa: A|Vine Whip|pXa: A|[from]Metronome
+|move|pXa: A|Vine Whip|pXa: A|[from]Mirror Move
+|move|pXa: A|Vine Whip|pXa: A|[miss]
+|move|pXa: A|Vise Grip|pXa: A
+|move|pXa: A|Vise Grip|pXa: A|[from]Metronome
+|move|pXa: A|Vise Grip|pXa: A|[miss]
+|move|pXa: A|Vital Throw|pXa: A
+|move|pXa: A|Vital Throw|pXa: A|[from]Metronome
+|move|pXa: A|Vital Throw|pXa: A|[from]Metronome|[miss]
+|move|pXa: A|Vital Throw|pXa: A|[from]Mirror Move
+|move|pXa: A|Vital Throw|pXa: A|[from]Sleep Talk
+|move|pXa: A|Vital Throw|pXa: A|[miss]
+|move|pXa: A|Water Gun|pXa: A
+|move|pXa: A|Water Gun|pXa: A|[from]Metronome
+|move|pXa: A|Water Gun|pXa: A|[from]Mirror Move
+|move|pXa: A|Water Gun|pXa: A|[from]Sleep Talk
+|move|pXa: A|Water Gun|pXa: A|[miss]
+|move|pXa: A|Waterfall|pXa: A
+|move|pXa: A|Waterfall|pXa: A|[from]Metronome
+|move|pXa: A|Waterfall|pXa: A|[from]Mirror Move
+|move|pXa: A|Waterfall|pXa: A|[miss]
+|move|pXa: A|Whirlpool|pXa: A
+|move|pXa: A|Whirlpool|pXa: A|[from]Metronome
+|move|pXa: A|Whirlpool|pXa: A|[from]Mirror Move|[miss]
+|move|pXa: A|Whirlpool|pXa: A|[miss]
+|move|pXa: A|Whirlpool|pXa: A|[miss]|[miss]
+|move|pXa: A|Whirlwind|pXa: A
+|move|pXa: A|Whirlwind|pXa: A|[from]Metronome
+|move|pXa: A|Whirlwind|pXa: A|[miss]
+|move|pXa: A|Wing Attack|pXa: A
+|move|pXa: A|Wing Attack|pXa: A|[from]Metronome
+|move|pXa: A|Wing Attack|pXa: A|[from]Mirror Move
+|move|pXa: A|Wing Attack|pXa: A|[miss]
+|move|pXa: A|Withdraw|pXa: A
+|move|pXa: A|Withdraw|pXa: A|[from]Metronome
+|move|pXa: A|Withdraw|pXa: A|[from]Mirror Move
+|move|pXa: A|Wrap|pXa: A
+|move|pXa: A|Wrap|pXa: A|[from]Metronome
+|move|pXa: A|Wrap|pXa: A|[from]Metronome|[miss]
+|move|pXa: A|Wrap|pXa: A|[from]Mirror Move
+|move|pXa: A|Wrap|pXa: A|[from]Mirror Move|[miss]
+|move|pXa: A|Wrap|pXa: A|[miss]
+|move|pXa: A|Zap Cannon|pXa: A
+|move|pXa: A|Zap Cannon|pXa: A|[from]Metronome
+|move|pXa: A|Zap Cannon|pXa: A|[from]Mirror Move
+|move|pXa: A|Zap Cannon|pXa: A|[from]Mirror Move|[miss]
+|move|pXa: A|Zap Cannon|pXa: A|[miss]
+|switch|pXa: A|Abra, LX, F|X/X
+|switch|pXa: A|Abra, LX, M|X/X
+|switch|pXa: A|Abra, LX, M|X/X|[from] Baton Pass
+|switch|pXa: A|Aerodactyl, LX, F|X/X
+|switch|pXa: A|Aerodactyl, LX, M|X/X
+|switch|pXa: A|Aerodactyl, LX, M|X/X|[from] Baton Pass
+|switch|pXa: A|Aipom, LX, F|X/X
+|switch|pXa: A|Aipom, LX, F|X/X|[from] Baton Pass
+|switch|pXa: A|Aipom, LX, M|X/X
+|switch|pXa: A|Aipom, LX, M|X/X|[from] Baton Pass
+|switch|pXa: A|Alakazam, LX, F|X/X
+|switch|pXa: A|Alakazam, LX, F|X/X|[from] Baton Pass
+|switch|pXa: A|Alakazam, LX, M|X/X
+|switch|pXa: A|Alakazam, LX, M|X/X par
+|switch|pXa: A|Alakazam, LX, M|X/X|[from] Baton Pass
+|switch|pXa: A|Ampharos, LX, F|X/X
+|switch|pXa: A|Ampharos, LX, M|X/X
+|switch|pXa: A|Arbok, LX, F|X/X
+|switch|pXa: A|Arbok, LX, F|X/X|[from] Baton Pass
+|switch|pXa: A|Arbok, LX, M|X/X
+|switch|pXa: A|Arbok, LX, M|X/X|[from] Baton Pass
+|switch|pXa: A|Arcanine, LX, F|X/X
+|switch|pXa: A|Arcanine, LX, F|X/X|[from] Baton Pass
+|switch|pXa: A|Arcanine, LX, M|X/X
+|switch|pXa: A|Arcanine, LX, M|X/X slp
+|switch|pXa: A|Ariados, LX, F|X/X
+|switch|pXa: A|Ariados, LX, F|X/X slp
+|switch|pXa: A|Ariados, LX, F|X/X|[from] Baton Pass
+|switch|pXa: A|Ariados, LX, M|X/X
+|switch|pXa: A|Articuno, LX|X/X
+|switch|pXa: A|Azumarill, LX, F|X/X
+|switch|pXa: A|Azumarill, LX, F|X/X|[from] Baton Pass
+|switch|pXa: A|Azumarill, LX, M|X/X
+|switch|pXa: A|Azumarill, LX, M|X/X|[from] Baton Pass
+|switch|pXa: A|Bayleef, LX, F|X/X
+|switch|pXa: A|Bayleef, LX, M|X/X
+|switch|pXa: A|Bayleef, LX, M|X/X|[from] Baton Pass
+|switch|pXa: A|Beedrill, LX, F|X/X
+|switch|pXa: A|Beedrill, LX, F|X/X|[from] Baton Pass
+|switch|pXa: A|Beedrill, LX, M|X/X
+|switch|pXa: A|Bellossom, LX, F|X/X
+|switch|pXa: A|Bellossom, LX, F|X/X|[from] Baton Pass
+|switch|pXa: A|Bellossom, LX, M|X/X
+|switch|pXa: A|Bellossom, LX, M|X/X|[from] Baton Pass
+|switch|pXa: A|Bellsprout, LX, F|X/X
+|switch|pXa: A|Bellsprout, LX, F|X/X|[from] Baton Pass
+|switch|pXa: A|Bellsprout, LX, M|X/X
+|switch|pXa: A|Bellsprout, LX, M|X/X|[from] Baton Pass
+|switch|pXa: A|Blastoise, LX, F|X/X
+|switch|pXa: A|Blastoise, LX, F|X/X|[from] Baton Pass
+|switch|pXa: A|Blastoise, LX, M|X/X
+|switch|pXa: A|Blissey, LX, F|X/X
+|switch|pXa: A|Blissey, LX, F|X/X|[from] Baton Pass
+|switch|pXa: A|Bulbasaur, LX, F|X/X
+|switch|pXa: A|Bulbasaur, LX, M|X/X
+|switch|pXa: A|Bulbasaur, LX, M|X/X|[from] Baton Pass
+|switch|pXa: A|Butterfree, LX, F|X/X
+|switch|pXa: A|Butterfree, LX, M|X/X
+|switch|pXa: A|Butterfree, LX, M|X/X slp
+|switch|pXa: A|Caterpie, LX, F|X/X
+|switch|pXa: A|Caterpie, LX, F|X/X|[from] Baton Pass
+|switch|pXa: A|Caterpie, LX, M|X/X
+|switch|pXa: A|Celebi, LX|X/X
+|switch|pXa: A|Celebi, LX|X/X|[from] Baton Pass
+|switch|pXa: A|Chansey, LX, F|X/X
+|switch|pXa: A|Chansey, LX, F|X/X slp
+|switch|pXa: A|Charizard, LX, F|X/X
+|switch|pXa: A|Charizard, LX, M|X/X
+|switch|pXa: A|Charizard, LX, M|X/X|[from] Baton Pass
+|switch|pXa: A|Charmander, LX, F|X/X
+|switch|pXa: A|Charmander, LX, M|X/X
+|switch|pXa: A|Charmeleon, LX, F|X/X
+|switch|pXa: A|Charmeleon, LX, F|X/X slp
+|switch|pXa: A|Charmeleon, LX, F|X/X|[from] Baton Pass
+|switch|pXa: A|Charmeleon, LX, M|X/X
+|switch|pXa: A|Charmeleon, LX, M|X/X|[from] Baton Pass
+|switch|pXa: A|Chikorita, LX, F|X/X
+|switch|pXa: A|Chikorita, LX, F|X/X|[from] Baton Pass
+|switch|pXa: A|Chikorita, LX, M|X/X
+|switch|pXa: A|Chinchou, LX, F|X/X
+|switch|pXa: A|Chinchou, LX, M|X/X
+|switch|pXa: A|Chinchou, LX, M|X/X|[from] Baton Pass
+|switch|pXa: A|Clefable, LX, F|X/X
+|switch|pXa: A|Clefable, LX, F|X/X psn
+|switch|pXa: A|Clefable, LX, F|X/X|[from] Baton Pass
+|switch|pXa: A|Clefable, LX, M|X/X
+|switch|pXa: A|Clefairy, LX, F|X/X
+|switch|pXa: A|Clefairy, LX, M|X/X
+|switch|pXa: A|Clefairy, LX, M|X/X slp
+|switch|pXa: A|Clefairy, LX, M|X/X|[from] Baton Pass
+|switch|pXa: A|Cleffa, LX, F|X/X
+|switch|pXa: A|Cleffa, LX, M|X/X
+|switch|pXa: A|Cleffa, LX, M|X/X par
+|switch|pXa: A|Cleffa, LX, M|X/X|[from] Baton Pass
+|switch|pXa: A|Cloyster, LX, F|X/X
+|switch|pXa: A|Cloyster, LX, F|X/X|[from] Baton Pass
+|switch|pXa: A|Cloyster, LX, M|X/X
+|switch|pXa: A|Corsola, LX, F|X/X
+|switch|pXa: A|Corsola, LX, M|X/X
+|switch|pXa: A|Corsola, LX, M|X/X|[from] Baton Pass
+|switch|pXa: A|Crobat, LX, F|X/X
+|switch|pXa: A|Crobat, LX, F|X/X|[from] Baton Pass
+|switch|pXa: A|Crobat, LX, M|X/X
+|switch|pXa: A|Crobat, LX, M|X/X|[from] Baton Pass
+|switch|pXa: A|Croconaw, LX, F|X/X
+|switch|pXa: A|Croconaw, LX, F|X/X|[from] Baton Pass
+|switch|pXa: A|Croconaw, LX, M|X/X
+|switch|pXa: A|Cubone, LX, F|X/X
+|switch|pXa: A|Cubone, LX, F|X/X|[from] Baton Pass
+|switch|pXa: A|Cubone, LX, M|X/X
+|switch|pXa: A|Cubone, LX, M|X/X|[from] Baton Pass
+|switch|pXa: A|Cyndaquil, LX, F|X/X
+|switch|pXa: A|Cyndaquil, LX, M|X/X
+|switch|pXa: A|Cyndaquil, LX, M|X/X|[from] Baton Pass
+|switch|pXa: A|Delibird, LX, F|X/X
+|switch|pXa: A|Delibird, LX, F|X/X|[from] Baton Pass
+|switch|pXa: A|Delibird, LX, M|X/X
+|switch|pXa: A|Delibird, LX, M|X/X par
+|switch|pXa: A|Dewgong, LX, F|X/X
+|switch|pXa: A|Dewgong, LX, F|X/X|[from] Baton Pass
+|switch|pXa: A|Dewgong, LX, M|X/X
+|switch|pXa: A|Dewgong, LX, M|X/X|[from] Baton Pass
+|switch|pXa: A|Diglett, LX, F|X/X
+|switch|pXa: A|Diglett, LX, M|X/X
+|switch|pXa: A|Diglett, LX, M|X/X|[from] Baton Pass
+|switch|pXa: A|Ditto, LX|X/X
+|switch|pXa: A|Ditto, LX|X/X par
+|switch|pXa: A|Dodrio, LX, F|X/X
+|switch|pXa: A|Dodrio, LX, F|X/X|[from] Baton Pass
+|switch|pXa: A|Dodrio, LX, M|X/X
+|switch|pXa: A|Dodrio, LX, M|X/X|[from] Baton Pass
+|switch|pXa: A|Doduo, LX, F|X/X
+|switch|pXa: A|Doduo, LX, M|X/X
+|switch|pXa: A|Doduo, LX, M|X/X|[from] Baton Pass
+|switch|pXa: A|Donphan, LX, F|X/X
+|switch|pXa: A|Donphan, LX, M|X/X
+|switch|pXa: A|Donphan, LX, M|X/X par
+|switch|pXa: A|Dragonair, LX, F|X/X
+|switch|pXa: A|Dragonair, LX, M|X/X
+|switch|pXa: A|Dragonair, LX, M|X/X par
+|switch|pXa: A|Dragonair, LX, M|X/X|[from] Baton Pass
+|switch|pXa: A|Dragonite, LX, F|X/X
+|switch|pXa: A|Dragonite, LX, F|X/X psn
+|switch|pXa: A|Dragonite, LX, F|X/X|[from] Baton Pass
+|switch|pXa: A|Dragonite, LX, M|X/X
+|switch|pXa: A|Dragonite, LX, M|X/X slp
+|switch|pXa: A|Dratini, LX, F|X/X
+|switch|pXa: A|Dratini, LX, M|X/X
+|switch|pXa: A|Drowzee, LX, F|X/X
+|switch|pXa: A|Drowzee, LX, M|X/X
+|switch|pXa: A|Drowzee, LX, M|X/X|[from] Baton Pass
+|switch|pXa: A|Dugtrio, LX, F|X/X
+|switch|pXa: A|Dugtrio, LX, F|X/X|[from] Baton Pass
+|switch|pXa: A|Dugtrio, LX, M|X/X
+|switch|pXa: A|Dunsparce, LX, F|X/X
+|switch|pXa: A|Dunsparce, LX, F|X/X|[from] Baton Pass
+|switch|pXa: A|Dunsparce, LX, M|X/X
+|switch|pXa: A|Eevee, LX, F|X/X
+|switch|pXa: A|Eevee, LX, F|X/X|[from] Baton Pass
+|switch|pXa: A|Eevee, LX, M|X/X
+|switch|pXa: A|Eevee, LX, M|X/X|[from] Baton Pass
+|switch|pXa: A|Ekans, LX, F|X/X
+|switch|pXa: A|Ekans, LX, F|X/X|[from] Baton Pass
+|switch|pXa: A|Ekans, LX, M|X/X
+|switch|pXa: A|Ekans, LX, M|X/X|[from] Baton Pass
+|switch|pXa: A|Electabuzz, LX, F|X/X
+|switch|pXa: A|Electabuzz, LX, F|X/X tox|[from] Baton Pass
+|switch|pXa: A|Electabuzz, LX, F|X/X|[from] Baton Pass
+|switch|pXa: A|Electabuzz, LX, M|X/X
+|switch|pXa: A|Electabuzz, LX, M|X/X frz
+|switch|pXa: A|Electabuzz, LX, M|X/X|[from] Baton Pass
+|switch|pXa: A|Electrode, LX|X/X
+|switch|pXa: A|Elekid, LX, F|X/X
+|switch|pXa: A|Elekid, LX, M|X/X
+|switch|pXa: A|Elekid, LX, M|X/X|[from] Baton Pass
+|switch|pXa: A|Entei, LX|X/X
+|switch|pXa: A|Entei, LX|X/X|[from] Baton Pass
+|switch|pXa: A|Espeon, LX, F|X/X
+|switch|pXa: A|Espeon, LX, M|X/X
+|switch|pXa: A|Espeon, LX, M|X/X|[from] Baton Pass
+|switch|pXa: A|Exeggcute, LX, F|X/X
+|switch|pXa: A|Exeggcute, LX, F|X/X|[from] Baton Pass
+|switch|pXa: A|Exeggcute, LX, M|X/X
+|switch|pXa: A|Exeggcute, LX, M|X/X|[from] Baton Pass
+|switch|pXa: A|Exeggutor, LX, F|X/X
+|switch|pXa: A|Exeggutor, LX, F|X/X|[from] Baton Pass
+|switch|pXa: A|Exeggutor, LX, M|X/X
+|switch|pXa: A|Exeggutor, LX, M|X/X|[from] Baton Pass
+|switch|pXa: A|Farfetch’d, LX, F|X/X
+|switch|pXa: A|Farfetch’d, LX, M|X/X
+|switch|pXa: A|Farfetch’d, LX, M|X/X|[from] Baton Pass
+|switch|pXa: A|Fearow, LX, F|X/X
+|switch|pXa: A|Fearow, LX, F|X/X tox
+|switch|pXa: A|Fearow, LX, M|X/X
+|switch|pXa: A|Fearow, LX, M|X/X par
+|switch|pXa: A|Fearow, LX, M|X/X|[from] Baton Pass
+|switch|pXa: A|Feraligatr, LX, F|X/X
+|switch|pXa: A|Feraligatr, LX, F|X/X psn
+|switch|pXa: A|Feraligatr, LX, F|X/X|[from] Baton Pass
+|switch|pXa: A|Feraligatr, LX, M|X/X
+|switch|pXa: A|Feraligatr, LX, M|X/X brn
+|switch|pXa: A|Feraligatr, LX, M|X/X|[from] Baton Pass
+|switch|pXa: A|Flaaffy, LX, F|X/X
+|switch|pXa: A|Flaaffy, LX, F|X/X|[from] Baton Pass
+|switch|pXa: A|Flaaffy, LX, M|X/X
+|switch|pXa: A|Flaaffy, LX, M|X/X|[from] Baton Pass
+|switch|pXa: A|Flareon, LX, F|X/X
+|switch|pXa: A|Flareon, LX, F|X/X|[from] Baton Pass
+|switch|pXa: A|Flareon, LX, M|X/X
+|switch|pXa: A|Forretress, LX, F|X/X
+|switch|pXa: A|Forretress, LX, M|X/X
+|switch|pXa: A|Forretress, LX, M|X/X par
+|switch|pXa: A|Forretress, LX, M|X/X|[from] Baton Pass
+|switch|pXa: A|Furret, LX, F|X/X
+|switch|pXa: A|Furret, LX, F|X/X|[from] Baton Pass
+|switch|pXa: A|Furret, LX, M|X/X
+|switch|pXa: A|Furret, LX, M|X/X slp
+|switch|pXa: A|Gastly, LX, F|X/X
+|switch|pXa: A|Gastly, LX, F|X/X|[from] Baton Pass
+|switch|pXa: A|Gastly, LX, M|X/X
+|switch|pXa: A|Gastly, LX, M|X/X|[from] Baton Pass
+|switch|pXa: A|Gengar, LX, F|X/X
+|switch|pXa: A|Gengar, LX, F|X/X|[from] Baton Pass
+|switch|pXa: A|Gengar, LX, M|X/X
+|switch|pXa: A|Gengar, LX, M|X/X slp
+|switch|pXa: A|Geodude, LX, F|X/X
+|switch|pXa: A|Geodude, LX, M|X/X
+|switch|pXa: A|Geodude, LX, M|X/X|[from] Baton Pass
+|switch|pXa: A|Girafarig, LX, F|X/X
+|switch|pXa: A|Girafarig, LX, M|X/X
+|switch|pXa: A|Gligar, LX, F|X/X
+|switch|pXa: A|Gligar, LX, F|X/X|[from] Baton Pass
+|switch|pXa: A|Gligar, LX, M|X/X
+|switch|pXa: A|Gligar, LX, M|X/X|[from] Baton Pass
+|switch|pXa: A|Gloom, LX, F|X/X
+|switch|pXa: A|Gloom, LX, F|X/X|[from] Baton Pass
+|switch|pXa: A|Gloom, LX, M|X/X
+|switch|pXa: A|Gloom, LX, M|X/X|[from] Baton Pass
+|switch|pXa: A|Golbat, LX, F|X/X
+|switch|pXa: A|Golbat, LX, F|X/X|[from] Baton Pass
+|switch|pXa: A|Golbat, LX, M|X/X
+|switch|pXa: A|Golbat, LX, M|X/X par
+|switch|pXa: A|Golbat, LX, M|X/X|[from] Baton Pass
+|switch|pXa: A|Goldeen, LX, F|X/X
+|switch|pXa: A|Goldeen, LX, F|X/X|[from] Baton Pass
+|switch|pXa: A|Goldeen, LX, M|X/X
+|switch|pXa: A|Golduck, LX, F|X/X
+|switch|pXa: A|Golduck, LX, M|X/X
+|switch|pXa: A|Golduck, LX, M|X/X|[from] Baton Pass
+|switch|pXa: A|Golem, LX, F|X/X
+|switch|pXa: A|Golem, LX, F|X/X|[from] Baton Pass
+|switch|pXa: A|Golem, LX, M|X/X
+|switch|pXa: A|Granbull, LX, F|X/X
+|switch|pXa: A|Granbull, LX, F|X/X|[from] Baton Pass
+|switch|pXa: A|Granbull, LX, M|X/X
+|switch|pXa: A|Granbull, LX, M|X/X|[from] Baton Pass
+|switch|pXa: A|Graveler, LX, F|X/X
+|switch|pXa: A|Graveler, LX, M|X/X
+|switch|pXa: A|Grimer, LX, F|X/X
+|switch|pXa: A|Grimer, LX, F|X/X|[from] Baton Pass
+|switch|pXa: A|Grimer, LX, M|X/X
+|switch|pXa: A|Grimer, LX, M|X/X par
+|switch|pXa: A|Grimer, LX, M|X/X|[from] Baton Pass
+|switch|pXa: A|Growlithe, LX, F|X/X
+|switch|pXa: A|Growlithe, LX, M|X/X
+|switch|pXa: A|Growlithe, LX, M|X/X|[from] Baton Pass
+|switch|pXa: A|Gyarados, LX, F|X/X
+|switch|pXa: A|Gyarados, LX, M|X/X
+|switch|pXa: A|Haunter, LX, F|X/X
+|switch|pXa: A|Haunter, LX, M|X/X
+|switch|pXa: A|Haunter, LX, M|X/X par
+|switch|pXa: A|Haunter, LX, M|X/X|[from] Baton Pass
+|switch|pXa: A|Heracross, LX, F|X/X
+|switch|pXa: A|Heracross, LX, M|X/X
+|switch|pXa: A|Hitmonchan, LX, M|X/X
+|switch|pXa: A|Hitmonchan, LX, M|X/X|[from] Baton Pass
+|switch|pXa: A|Hitmonlee, LX, M|X/X
+|switch|pXa: A|Hitmonlee, LX, M|X/X|[from] Baton Pass
+|switch|pXa: A|Hitmontop, LX, M|X/X
+|switch|pXa: A|Hitmontop, LX, M|X/X|[from] Baton Pass
+|switch|pXa: A|Ho-Oh, LX|X/X
+|switch|pXa: A|Ho-Oh, LX|X/X slp|[from] Baton Pass
+|switch|pXa: A|Ho-Oh, LX|X/X|[from] Baton Pass
+|switch|pXa: A|Hoothoot, LX, F|X/X
+|switch|pXa: A|Hoothoot, LX, M|X/X
+|switch|pXa: A|Hoppip, LX, F|X/X
+|switch|pXa: A|Hoppip, LX, F|X/X|[from] Baton Pass
+|switch|pXa: A|Hoppip, LX, M|X/X
+|switch|pXa: A|Hoppip, LX, M|X/X|[from] Baton Pass
+|switch|pXa: A|Horsea, LX, F|X/X
+|switch|pXa: A|Horsea, LX, F|X/X|[from] Baton Pass
+|switch|pXa: A|Horsea, LX, M|X/X
+|switch|pXa: A|Houndoom, LX, F|X/X
+|switch|pXa: A|Houndoom, LX, F|X/X|[from] Baton Pass
+|switch|pXa: A|Houndoom, LX, M|X/X
+|switch|pXa: A|Houndour, LX, F|X/X
+|switch|pXa: A|Houndour, LX, M|X/X
+|switch|pXa: A|Houndour, LX, M|X/X slp
+|switch|pXa: A|Hypno, LX, F|X/X
+|switch|pXa: A|Hypno, LX, M|X/X
+|switch|pXa: A|Igglybuff, LX, F|X/X
+|switch|pXa: A|Igglybuff, LX, M|X/X
+|switch|pXa: A|Ivysaur, LX, F|X/X
+|switch|pXa: A|Ivysaur, LX, F|X/X par
+|switch|pXa: A|Ivysaur, LX, F|X/X|[from] Baton Pass
+|switch|pXa: A|Ivysaur, LX, M|X/X
+|switch|pXa: A|Ivysaur, LX, M|X/X|[from] Baton Pass
+|switch|pXa: A|Jigglypuff, LX, F|X/X
+|switch|pXa: A|Jigglypuff, LX, M|X/X
+|switch|pXa: A|Jigglypuff, LX, M|X/X slp
+|switch|pXa: A|Jolteon, LX, F|X/X
+|switch|pXa: A|Jolteon, LX, M|X/X
+|switch|pXa: A|Jolteon, LX, M|X/X|[from] Baton Pass
+|switch|pXa: A|Jumpluff, LX, F|X/X
+|switch|pXa: A|Jumpluff, LX, F|X/X|[from] Baton Pass
+|switch|pXa: A|Jumpluff, LX, M|X/X
+|switch|pXa: A|Jumpluff, LX, M|X/X|[from] Baton Pass
+|switch|pXa: A|Jynx, LX, F|X/X
+|switch|pXa: A|Jynx, LX, F|X/X|[from] Baton Pass
+|switch|pXa: A|Kabuto, LX, F|X/X
+|switch|pXa: A|Kabuto, LX, M|X/X
+|switch|pXa: A|Kabuto, LX, M|X/X|[from] Baton Pass
+|switch|pXa: A|Kabutops, LX, F|X/X
+|switch|pXa: A|Kabutops, LX, F|X/X|[from] Baton Pass
+|switch|pXa: A|Kabutops, LX, M|X/X
+|switch|pXa: A|Kabutops, LX, M|X/X|[from] Baton Pass
+|switch|pXa: A|Kadabra, LX, F|X/X
+|switch|pXa: A|Kadabra, LX, M|X/X
+|switch|pXa: A|Kadabra, LX, M|X/X par
+|switch|pXa: A|Kadabra, LX, M|X/X slp|[from] Baton Pass
+|switch|pXa: A|Kadabra, LX, M|X/X|[from] Baton Pass
+|switch|pXa: A|Kakuna, LX, F|X/X
+|switch|pXa: A|Kakuna, LX, M|X/X
+|switch|pXa: A|Kangaskhan, LX, F|X/X
+|switch|pXa: A|Kangaskhan, LX, F|X/X|[from] Baton Pass
+|switch|pXa: A|Kingdra, LX, F|X/X
+|switch|pXa: A|Kingdra, LX, F|X/X psn
+|switch|pXa: A|Kingdra, LX, M|X/X
+|switch|pXa: A|Kingdra, LX, M|X/X par
+|switch|pXa: A|Kingdra, LX, M|X/X|[from] Baton Pass
+|switch|pXa: A|Kingler, LX, F|X/X
+|switch|pXa: A|Kingler, LX, F|X/X|[from] Baton Pass
+|switch|pXa: A|Kingler, LX, M|X/X
+|switch|pXa: A|Koffing, LX, F|X/X
+|switch|pXa: A|Koffing, LX, F|X/X|[from] Baton Pass
+|switch|pXa: A|Koffing, LX, M|X/X
+|switch|pXa: A|Krabby, LX, F|X/X
+|switch|pXa: A|Krabby, LX, F|X/X|[from] Baton Pass
+|switch|pXa: A|Krabby, LX, M|X/X
+|switch|pXa: A|Krabby, LX, M|X/X|[from] Baton Pass
+|switch|pXa: A|Lanturn, LX, F|X/X
+|switch|pXa: A|Lanturn, LX, F|X/X|[from] Baton Pass
+|switch|pXa: A|Lanturn, LX, M|X/X
+|switch|pXa: A|Lanturn, LX, M|X/X|[from] Baton Pass
+|switch|pXa: A|Lapras, LX, F|X/X
+|switch|pXa: A|Lapras, LX, M|X/X
+|switch|pXa: A|Lapras, LX, M|X/X|[from] Baton Pass
+|switch|pXa: A|Larvitar, LX, F|X/X
+|switch|pXa: A|Larvitar, LX, F|X/X|[from] Baton Pass
+|switch|pXa: A|Larvitar, LX, M|X/X
+|switch|pXa: A|Ledian, LX, F|X/X
+|switch|pXa: A|Ledian, LX, F|X/X|[from] Baton Pass
+|switch|pXa: A|Ledian, LX, M|X/X
+|switch|pXa: A|Ledian, LX, M|X/X|[from] Baton Pass
+|switch|pXa: A|Ledyba, LX, F|X/X
+|switch|pXa: A|Ledyba, LX, F|X/X par
+|switch|pXa: A|Ledyba, LX, F|X/X|[from] Baton Pass
+|switch|pXa: A|Ledyba, LX, M|X/X
+|switch|pXa: A|Ledyba, LX, M|X/X|[from] Baton Pass
+|switch|pXa: A|Lickitung, LX, F|X/X
+|switch|pXa: A|Lickitung, LX, M|X/X
+|switch|pXa: A|Lickitung, LX, M|X/X|[from] Baton Pass
+|switch|pXa: A|Lugia, LX|X/X
+|switch|pXa: A|Lugia, LX|X/X|[from] Baton Pass
+|switch|pXa: A|Machamp, LX, F|X/X
+|switch|pXa: A|Machamp, LX, F|X/X|[from] Baton Pass
+|switch|pXa: A|Machamp, LX, M|X/X
+|switch|pXa: A|Machoke, LX, F|X/X
+|switch|pXa: A|Machoke, LX, F|X/X|[from] Baton Pass
+|switch|pXa: A|Machoke, LX, M|X/X
+|switch|pXa: A|Machoke, LX, M|X/X|[from] Baton Pass
+|switch|pXa: A|Machop, LX, F|X/X
+|switch|pXa: A|Machop, LX, F|X/X|[from] Baton Pass
+|switch|pXa: A|Machop, LX, M|X/X
+|switch|pXa: A|Machop, LX, M|X/X|[from] Baton Pass
+|switch|pXa: A|Magby, LX, F|X/X
+|switch|pXa: A|Magby, LX, M|X/X
+|switch|pXa: A|Magby, LX, M|X/X slp
+|switch|pXa: A|Magby, LX, M|X/X|[from] Baton Pass
+|switch|pXa: A|Magcargo, LX, F|X/X
+|switch|pXa: A|Magcargo, LX, F|X/X|[from] Baton Pass
+|switch|pXa: A|Magcargo, LX, M|X/X
+|switch|pXa: A|Magcargo, LX, M|X/X|[from] Baton Pass
+|switch|pXa: A|Magikarp, LX, F|X/X
+|switch|pXa: A|Magikarp, LX, F|X/X|[from] Baton Pass
+|switch|pXa: A|Magikarp, LX, M|X/X
+|switch|pXa: A|Magmar, LX, F|X/X
+|switch|pXa: A|Magmar, LX, F|X/X|[from] Baton Pass
+|switch|pXa: A|Magmar, LX, M|X/X
+|switch|pXa: A|Magnemite, LX|X/X
+|switch|pXa: A|Magnemite, LX|X/X|[from] Baton Pass
+|switch|pXa: A|Magneton, LX|X/X
+|switch|pXa: A|Mankey, LX, F|X/X
+|switch|pXa: A|Mankey, LX, F|X/X|[from] Baton Pass
+|switch|pXa: A|Mankey, LX, M|X/X
+|switch|pXa: A|Mankey, LX, M|X/X par
+|switch|pXa: A|Mantine, LX, F|X/X
+|switch|pXa: A|Mantine, LX, M|X/X
+|switch|pXa: A|Mareep, LX, F|X/X
+|switch|pXa: A|Mareep, LX, F|X/X|[from] Baton Pass
+|switch|pXa: A|Mareep, LX, M|X/X
+|switch|pXa: A|Mareep, LX, M|X/X|[from] Baton Pass
+|switch|pXa: A|Marill, LX, F|X/X
+|switch|pXa: A|Marill, LX, M|X/X
+|switch|pXa: A|Marowak, LX, F|X/X
+|switch|pXa: A|Marowak, LX, F|X/X|[from] Baton Pass
+|switch|pXa: A|Marowak, LX, M|X/X
+|switch|pXa: A|Marowak, LX, M|X/X|[from] Baton Pass
+|switch|pXa: A|Meganium, LX, F|X/X
+|switch|pXa: A|Meganium, LX, F|X/X|[from] Baton Pass
+|switch|pXa: A|Meganium, LX, M|X/X
+|switch|pXa: A|Meowth, LX, F|X/X
+|switch|pXa: A|Meowth, LX, F|X/X|[from] Baton Pass
+|switch|pXa: A|Meowth, LX, M|X/X
+|switch|pXa: A|Meowth, LX, M|X/X|[from] Baton Pass
+|switch|pXa: A|Metapod, LX, F|X/X
+|switch|pXa: A|Metapod, LX, F|X/X|[from] Baton Pass
+|switch|pXa: A|Metapod, LX, M|X/X
+|switch|pXa: A|Mew, LX|X/X
+|switch|pXa: A|Mew, LX|X/X|[from] Baton Pass
+|switch|pXa: A|Mewtwo, LX|X/X
+|switch|pXa: A|Mewtwo, LX|X/X|[from] Baton Pass
+|switch|pXa: A|Miltank, LX, F|X/X
+|switch|pXa: A|Miltank, LX, F|X/X psn
+|switch|pXa: A|Miltank, LX, F|X/X|[from] Baton Pass
+|switch|pXa: A|Misdreavus, LX, F|X/X
+|switch|pXa: A|Misdreavus, LX, F|X/X psn
+|switch|pXa: A|Misdreavus, LX, F|X/X|[from] Baton Pass
+|switch|pXa: A|Misdreavus, LX, M|X/X
+|switch|pXa: A|Moltres, LX|X/X
+|switch|pXa: A|Moltres, LX|X/X par
+|switch|pXa: A|Moltres, LX|X/X|[from] Baton Pass
+|switch|pXa: A|Mr. Mime, LX, F|X/X
+|switch|pXa: A|Mr. Mime, LX, F|X/X|[from] Baton Pass
+|switch|pXa: A|Mr. Mime, LX, M|X/X
+|switch|pXa: A|Muk, LX, F|X/X
+|switch|pXa: A|Muk, LX, F|X/X|[from] Baton Pass
+|switch|pXa: A|Muk, LX, M|X/X
+|switch|pXa: A|Muk, LX, M|X/X|[from] Baton Pass
+|switch|pXa: A|Murkrow, LX, F|X/X
+|switch|pXa: A|Murkrow, LX, F|X/X|[from] Baton Pass
+|switch|pXa: A|Murkrow, LX, M|X/X
+|switch|pXa: A|Natu, LX, F|X/X
+|switch|pXa: A|Natu, LX, M|X/X
+|switch|pXa: A|Natu, LX, M|X/X|[from] Baton Pass
+|switch|pXa: A|Nidoking, LX, M|X/X
+|switch|pXa: A|Nidoking, LX, M|X/X|[from] Baton Pass
+|switch|pXa: A|Nidoqueen, LX, F|X/X
+|switch|pXa: A|Nidoqueen, LX, F|X/X|[from] Baton Pass
+|switch|pXa: A|Nidoran-F, LX, F|X/X
+|switch|pXa: A|Nidoran-F, LX, F|X/X|[from] Baton Pass
+|switch|pXa: A|Nidoran-M, LX, M|X/X
+|switch|pXa: A|Nidoran-M, LX, M|X/X|[from] Baton Pass
+|switch|pXa: A|Nidorina, LX, F|X/X
+|switch|pXa: A|Nidorina, LX, F|X/X|[from] Baton Pass
+|switch|pXa: A|Nidorino, LX, M|X/X
+|switch|pXa: A|Nidorino, LX, M|X/X|[from] Baton Pass
+|switch|pXa: A|Ninetales, LX, F|X/X
+|switch|pXa: A|Ninetales, LX, F|X/X|[from] Baton Pass
+|switch|pXa: A|Ninetales, LX, M|X/X
+|switch|pXa: A|Ninetales, LX, M|X/X|[from] Baton Pass
+|switch|pXa: A|Noctowl, LX, F|X/X
+|switch|pXa: A|Noctowl, LX, M|X/X
+|switch|pXa: A|Noctowl, LX, M|X/X slp
+|switch|pXa: A|Octillery, LX, F|X/X
+|switch|pXa: A|Octillery, LX, F|X/X par
+|switch|pXa: A|Octillery, LX, F|X/X|[from] Baton Pass
+|switch|pXa: A|Octillery, LX, M|X/X
+|switch|pXa: A|Octillery, LX, M|X/X|[from] Baton Pass
+|switch|pXa: A|Oddish, LX, F|X/X
+|switch|pXa: A|Oddish, LX, M|X/X
+|switch|pXa: A|Oddish, LX, M|X/X par
+|switch|pXa: A|Oddish, LX, M|X/X|[from] Baton Pass
+|switch|pXa: A|Omanyte, LX, F|X/X
+|switch|pXa: A|Omanyte, LX, F|X/X|[from] Baton Pass
+|switch|pXa: A|Omanyte, LX, M|X/X
+|switch|pXa: A|Omanyte, LX, M|X/X|[from] Baton Pass
+|switch|pXa: A|Omastar, LX, F|X/X
+|switch|pXa: A|Omastar, LX, F|X/X|[from] Baton Pass
+|switch|pXa: A|Omastar, LX, M|X/X
+|switch|pXa: A|Onix, LX, F|X/X
+|switch|pXa: A|Onix, LX, F|X/X|[from] Baton Pass
+|switch|pXa: A|Onix, LX, M|X/X
+|switch|pXa: A|Onix, LX, M|X/X|[from] Baton Pass
+|switch|pXa: A|Paras, LX, F|X/X
+|switch|pXa: A|Paras, LX, F|X/X|[from] Baton Pass
+|switch|pXa: A|Paras, LX, M|X/X
+|switch|pXa: A|Paras, LX, M|X/X|[from] Baton Pass
+|switch|pXa: A|Parasect, LX, F|X/X
+|switch|pXa: A|Parasect, LX, M|X/X
+|switch|pXa: A|Parasect, LX, M|X/X frz
+|switch|pXa: A|Persian, LX, F|X/X
+|switch|pXa: A|Persian, LX, F|X/X|[from] Baton Pass
+|switch|pXa: A|Persian, LX, M|X/X
+|switch|pXa: A|Persian, LX, M|X/X|[from] Baton Pass
+|switch|pXa: A|Phanpy, LX, F|X/X
+|switch|pXa: A|Phanpy, LX, F|X/X|[from] Baton Pass
+|switch|pXa: A|Phanpy, LX, M|X/X
+|switch|pXa: A|Pichu, LX, F|X/X
+|switch|pXa: A|Pichu, LX, F|X/X slp
+|switch|pXa: A|Pichu, LX, F|X/X|[from] Baton Pass
+|switch|pXa: A|Pichu, LX, M|X/X
+|switch|pXa: A|Pichu, LX, M|X/X|[from] Baton Pass
+|switch|pXa: A|Pidgeot, LX, F|X/X
+|switch|pXa: A|Pidgeot, LX, F|X/X|[from] Baton Pass
+|switch|pXa: A|Pidgeot, LX, M|X/X
+|switch|pXa: A|Pidgeotto, LX, F|X/X
+|switch|pXa: A|Pidgeotto, LX, F|X/X|[from] Baton Pass
+|switch|pXa: A|Pidgeotto, LX, M|X/X
+|switch|pXa: A|Pidgey, LX, F|X/X
+|switch|pXa: A|Pidgey, LX, F|X/X|[from] Baton Pass
+|switch|pXa: A|Pidgey, LX, M|X/X
+|switch|pXa: A|Pikachu, LX, F|X/X
+|switch|pXa: A|Pikachu, LX, F|X/X|[from] Baton Pass
+|switch|pXa: A|Pikachu, LX, M|X/X
+|switch|pXa: A|Piloswine, LX, F|X/X
+|switch|pXa: A|Piloswine, LX, M|X/X
+|switch|pXa: A|Piloswine, LX, M|X/X|[from] Baton Pass
+|switch|pXa: A|Pineco, LX, F|X/X
+|switch|pXa: A|Pineco, LX, F|X/X|[from] Baton Pass
+|switch|pXa: A|Pineco, LX, M|X/X
+|switch|pXa: A|Pinsir, LX, F|X/X
+|switch|pXa: A|Pinsir, LX, F|X/X|[from] Baton Pass
+|switch|pXa: A|Pinsir, LX, M|X/X
+|switch|pXa: A|Pinsir, LX, M|X/X par
+|switch|pXa: A|Pinsir, LX, M|X/X|[from] Baton Pass
+|switch|pXa: A|Politoed, LX, F|X/X
+|switch|pXa: A|Politoed, LX, F|X/X|[from] Baton Pass
+|switch|pXa: A|Politoed, LX, M|X/X
+|switch|pXa: A|Politoed, LX, M|X/X|[from] Baton Pass
+|switch|pXa: A|Poliwag, LX, F|X/X
+|switch|pXa: A|Poliwag, LX, F|X/X|[from] Baton Pass
+|switch|pXa: A|Poliwag, LX, M|X/X
+|switch|pXa: A|Poliwag, LX, M|X/X brn
+|switch|pXa: A|Poliwhirl, LX, F|X/X
+|switch|pXa: A|Poliwhirl, LX, M|X/X
+|switch|pXa: A|Poliwhirl, LX, M|X/X|[from] Baton Pass
+|switch|pXa: A|Poliwrath, LX, F|X/X
+|switch|pXa: A|Poliwrath, LX, F|X/X|[from] Baton Pass
+|switch|pXa: A|Poliwrath, LX, M|X/X
+|switch|pXa: A|Poliwrath, LX, M|X/X psn
+|switch|pXa: A|Ponyta, LX, F|X/X
+|switch|pXa: A|Ponyta, LX, F|X/X|[from] Baton Pass
+|switch|pXa: A|Ponyta, LX, M|X/X
+|switch|pXa: A|Porygon, LX|X/X
+|switch|pXa: A|Porygon, LX|X/X|[from] Baton Pass
+|switch|pXa: A|PorygonX, LX|X/X
+|switch|pXa: A|PorygonX, LX|X/X|[from] Baton Pass
+|switch|pXa: A|Primeape, LX, F|X/X
+|switch|pXa: A|Primeape, LX, F|X/X|[from] Baton Pass
+|switch|pXa: A|Primeape, LX, M|X/X
+|switch|pXa: A|Primeape, LX, M|X/X par
+|switch|pXa: A|Primeape, LX, M|X/X|[from] Baton Pass
+|switch|pXa: A|Psyduck, LX, F|X/X
+|switch|pXa: A|Psyduck, LX, M|X/X
+|switch|pXa: A|Psyduck, LX, M|X/X|[from] Baton Pass
+|switch|pXa: A|Pupitar, LX, F|X/X
+|switch|pXa: A|Pupitar, LX, M|X/X
+|switch|pXa: A|Pupitar, LX, M|X/X|[from] Baton Pass
+|switch|pXa: A|Quagsire, LX, F|X/X
+|switch|pXa: A|Quagsire, LX, F|X/X|[from] Baton Pass
+|switch|pXa: A|Quagsire, LX, M|X/X
+|switch|pXa: A|Quagsire, LX, M|X/X par
+|switch|pXa: A|Quagsire, LX, M|X/X|[from] Baton Pass
+|switch|pXa: A|Quilava, LX, F|X/X
+|switch|pXa: A|Quilava, LX, M|X/X
+|switch|pXa: A|Qwilfish, LX, F|X/X
+|switch|pXa: A|Qwilfish, LX, F|X/X par
+|switch|pXa: A|Qwilfish, LX, F|X/X|[from] Baton Pass
+|switch|pXa: A|Qwilfish, LX, M|X/X
+|switch|pXa: A|Raichu, LX, F|X/X
+|switch|pXa: A|Raichu, LX, F|X/X brn
+|switch|pXa: A|Raichu, LX, M|X/X
+|switch|pXa: A|Raichu, LX, M|X/X|[from] Baton Pass
+|switch|pXa: A|Raikou, LX|X/X
+|switch|pXa: A|Raikou, LX|X/X|[from] Baton Pass
+|switch|pXa: A|Rapidash, LX, F|X/X
+|switch|pXa: A|Rapidash, LX, M|X/X
+|switch|pXa: A|Rapidash, LX, M|X/X psn
+|switch|pXa: A|Raticate, LX, F|X/X
+|switch|pXa: A|Raticate, LX, F|X/X|[from] Baton Pass
+|switch|pXa: A|Raticate, LX, M|X/X
+|switch|pXa: A|Raticate, LX, M|X/X|[from] Baton Pass
+|switch|pXa: A|Rattata, LX, F|X/X
+|switch|pXa: A|Rattata, LX, M|X/X
+|switch|pXa: A|Remoraid, LX, F|X/X
+|switch|pXa: A|Remoraid, LX, F|X/X|[from] Baton Pass
+|switch|pXa: A|Remoraid, LX, M|X/X
+|switch|pXa: A|Rhydon, LX, F|X/X
+|switch|pXa: A|Rhydon, LX, M|X/X
+|switch|pXa: A|Rhyhorn, LX, F|X/X
+|switch|pXa: A|Rhyhorn, LX, F|X/X par
+|switch|pXa: A|Rhyhorn, LX, M|X/X
+|switch|pXa: A|Rhyhorn, LX, M|X/X par
+|switch|pXa: A|Sandshrew, LX, F|X/X
+|switch|pXa: A|Sandshrew, LX, F|X/X brn
+|switch|pXa: A|Sandshrew, LX, F|X/X|[from] Baton Pass
+|switch|pXa: A|Sandshrew, LX, M|X/X
+|switch|pXa: A|Sandshrew, LX, M|X/X|[from] Baton Pass
+|switch|pXa: A|Sandslash, LX, F|X/X
+|switch|pXa: A|Sandslash, LX, F|X/X|[from] Baton Pass
+|switch|pXa: A|Sandslash, LX, M|X/X
+|switch|pXa: A|Sandslash, LX, M|X/X|[from] Baton Pass
+|switch|pXa: A|Scizor, LX, F|X/X
+|switch|pXa: A|Scizor, LX, M|X/X
+|switch|pXa: A|Scizor, LX, M|X/X|[from] Baton Pass
+|switch|pXa: A|Scyther, LX, F|X/X
+|switch|pXa: A|Scyther, LX, M|X/X
+|switch|pXa: A|Scyther, LX, M|X/X tox
+|switch|pXa: A|Scyther, LX, M|X/X|[from] Baton Pass
+|switch|pXa: A|Seadra, LX, F|X/X
+|switch|pXa: A|Seadra, LX, F|X/X|[from] Baton Pass
+|switch|pXa: A|Seadra, LX, M|X/X
+|switch|pXa: A|Seadra, LX, M|X/X|[from] Baton Pass
+|switch|pXa: A|Seaking, LX, F|X/X
+|switch|pXa: A|Seaking, LX, F|X/X par
+|switch|pXa: A|Seaking, LX, F|X/X|[from] Baton Pass
+|switch|pXa: A|Seaking, LX, M|X/X
+|switch|pXa: A|Seaking, LX, M|X/X|[from] Baton Pass
+|switch|pXa: A|Seel, LX, F|X/X
+|switch|pXa: A|Seel, LX, M|X/X
+|switch|pXa: A|Seel, LX, M|X/X|[from] Baton Pass
+|switch|pXa: A|Sentret, LX, F|X/X
+|switch|pXa: A|Sentret, LX, F|X/X|[from] Baton Pass
+|switch|pXa: A|Sentret, LX, M|X/X
+|switch|pXa: A|Shellder, LX, F|X/X
+|switch|pXa: A|Shellder, LX, F|X/X|[from] Baton Pass
+|switch|pXa: A|Shellder, LX, M|X/X
+|switch|pXa: A|Shuckle, LX, F|X/X
+|switch|pXa: A|Shuckle, LX, M|X/X
+|switch|pXa: A|Shuckle, LX, M|X/X|[from] Baton Pass
+|switch|pXa: A|Skarmory, LX, F|X/X
+|switch|pXa: A|Skarmory, LX, F|X/X frz
+|switch|pXa: A|Skarmory, LX, F|X/X|[from] Baton Pass
+|switch|pXa: A|Skarmory, LX, M|X/X
+|switch|pXa: A|Skarmory, LX, M|X/X|[from] Baton Pass
+|switch|pXa: A|Skiploom, LX, F|X/X
+|switch|pXa: A|Skiploom, LX, F|X/X|[from] Baton Pass
+|switch|pXa: A|Skiploom, LX, M|X/X
+|switch|pXa: A|Skiploom, LX, M|X/X|[from] Baton Pass
+|switch|pXa: A|Slowbro, LX, F|X/X
+|switch|pXa: A|Slowbro, LX, F|X/X|[from] Baton Pass
+|switch|pXa: A|Slowbro, LX, M|X/X
+|switch|pXa: A|Slowking, LX, F|X/X
+|switch|pXa: A|Slowking, LX, F|X/X|[from] Baton Pass
+|switch|pXa: A|Slowking, LX, M|X/X
+|switch|pXa: A|Slowking, LX, M|X/X|[from] Baton Pass
+|switch|pXa: A|Slowpoke, LX, F|X/X
+|switch|pXa: A|Slowpoke, LX, F|X/X|[from] Baton Pass
+|switch|pXa: A|Slowpoke, LX, M|X/X
+|switch|pXa: A|Slugma, LX, F|X/X
+|switch|pXa: A|Slugma, LX, F|X/X|[from] Baton Pass
+|switch|pXa: A|Slugma, LX, M|X/X
+|switch|pXa: A|Slugma, LX, M|X/X par
+|switch|pXa: A|Smeargle, LX, F|X/X
+|switch|pXa: A|Smeargle, LX, M|X/X
+|switch|pXa: A|Smeargle, LX, M|X/X|[from] Baton Pass
+|switch|pXa: A|Smoochum, LX, F|X/X
+|switch|pXa: A|Smoochum, LX, F|X/X|[from] Baton Pass
+|switch|pXa: A|Sneasel, LX, F|X/X
+|switch|pXa: A|Sneasel, LX, M|X/X
+|switch|pXa: A|Sneasel, LX, M|X/X|[from] Baton Pass
+|switch|pXa: A|Snorlax, LX, F|X/X
+|switch|pXa: A|Snorlax, LX, M|X/X
+|switch|pXa: A|Snubbull, LX, F|X/X
+|switch|pXa: A|Snubbull, LX, M|X/X
+|switch|pXa: A|Spearow, LX, F|X/X
+|switch|pXa: A|Spearow, LX, F|X/X|[from] Baton Pass
+|switch|pXa: A|Spearow, LX, M|X/X
+|switch|pXa: A|Spearow, LX, M|X/X par
+|switch|pXa: A|Spinarak, LX, F|X/X
+|switch|pXa: A|Spinarak, LX, F|X/X|[from] Baton Pass
+|switch|pXa: A|Spinarak, LX, M|X/X
+|switch|pXa: A|Spinarak, LX, M|X/X|[from] Baton Pass
+|switch|pXa: A|Squirtle, LX, F|X/X
+|switch|pXa: A|Squirtle, LX, F|X/X|[from] Baton Pass
+|switch|pXa: A|Squirtle, LX, M|X/X
+|switch|pXa: A|Squirtle, LX, M|X/X|[from] Baton Pass
+|switch|pXa: A|Stantler, LX, F|X/X
+|switch|pXa: A|Stantler, LX, M|X/X
+|switch|pXa: A|Stantler, LX, M|X/X|[from] Baton Pass
+|switch|pXa: A|Starmie, LX|X/X
+|switch|pXa: A|Starmie, LX|X/X|[from] Baton Pass
+|switch|pXa: A|Staryu, LX|X/X
+|switch|pXa: A|Staryu, LX|X/X psn
+|switch|pXa: A|Staryu, LX|X/X|[from] Baton Pass
+|switch|pXa: A|Steelix, LX, F|X/X
+|switch|pXa: A|Steelix, LX, M|X/X
+|switch|pXa: A|Sudowoodo, LX, F|X/X
+|switch|pXa: A|Sudowoodo, LX, M|X/X
+|switch|pXa: A|Sudowoodo, LX, M|X/X slp
+|switch|pXa: A|Suicune, LX|X/X
+|switch|pXa: A|Suicune, LX|X/X|[from] Baton Pass
+|switch|pXa: A|Sunflora, LX, F|X/X
+|switch|pXa: A|Sunflora, LX, M|X/X
+|switch|pXa: A|Sunflora, LX, M|X/X|[from] Baton Pass
+|switch|pXa: A|Sunkern, LX, F|X/X
+|switch|pXa: A|Sunkern, LX, F|X/X|[from] Baton Pass
+|switch|pXa: A|Sunkern, LX, M|X/X
+|switch|pXa: A|Sunkern, LX, M|X/X|[from] Baton Pass
+|switch|pXa: A|Swinub, LX, F|X/X
+|switch|pXa: A|Swinub, LX, M|X/X
+|switch|pXa: A|Tangela, LX, F|X/X
+|switch|pXa: A|Tangela, LX, M|X/X
+|switch|pXa: A|Tangela, LX, M|X/X|[from] Baton Pass
+|switch|pXa: A|Tauros, LX, M|X/X
+|switch|pXa: A|Tauros, LX, M|X/X par
+|switch|pXa: A|Teddiursa, LX, F|X/X
+|switch|pXa: A|Teddiursa, LX, F|X/X|[from] Baton Pass
+|switch|pXa: A|Teddiursa, LX, M|X/X
+|switch|pXa: A|Teddiursa, LX, M|X/X|[from] Baton Pass
+|switch|pXa: A|Tentacool, LX, F|X/X
+|switch|pXa: A|Tentacool, LX, M|X/X
+|switch|pXa: A|Tentacruel, LX, F|X/X
+|switch|pXa: A|Tentacruel, LX, M|X/X
+|switch|pXa: A|Tentacruel, LX, M|X/X|[from] Baton Pass
+|switch|pXa: A|Togepi, LX, F|X/X
+|switch|pXa: A|Togepi, LX, F|X/X|[from] Baton Pass
+|switch|pXa: A|Togepi, LX, M|X/X
+|switch|pXa: A|Togetic, LX, F|X/X
+|switch|pXa: A|Togetic, LX, F|X/X par
+|switch|pXa: A|Togetic, LX, M|X/X
+|switch|pXa: A|Togetic, LX, M|X/X|[from] Baton Pass
+|switch|pXa: A|Totodile, LX, F|X/X
+|switch|pXa: A|Totodile, LX, M|X/X
+|switch|pXa: A|Totodile, LX, M|X/X|[from] Baton Pass
+|switch|pXa: A|Typhlosion, LX, F|X/X
+|switch|pXa: A|Typhlosion, LX, F|X/X|[from] Baton Pass
+|switch|pXa: A|Typhlosion, LX, M|X/X
+|switch|pXa: A|Typhlosion, LX, M|X/X slp
+|switch|pXa: A|Typhlosion, LX, M|X/X|[from] Baton Pass
+|switch|pXa: A|Tyranitar, LX, F|X/X
+|switch|pXa: A|Tyranitar, LX, F|X/X par
+|switch|pXa: A|Tyranitar, LX, F|X/X|[from] Baton Pass
+|switch|pXa: A|Tyranitar, LX, M|X/X
+|switch|pXa: A|Tyranitar, LX, M|X/X|[from] Baton Pass
+|switch|pXa: A|Tyrogue, LX, M|X/X
+|switch|pXa: A|Tyrogue, LX, M|X/X|[from] Baton Pass
+|switch|pXa: A|Umbreon, LX, F|X/X
+|switch|pXa: A|Umbreon, LX, F|X/X par
+|switch|pXa: A|Umbreon, LX, F|X/X|[from] Baton Pass
+|switch|pXa: A|Umbreon, LX, M|X/X
+|switch|pXa: A|Unown, LX|X/X
+|switch|pXa: A|Unown, LX|X/X|[from] Baton Pass
+|switch|pXa: A|Ursaring, LX, F|X/X
+|switch|pXa: A|Ursaring, LX, F|X/X|[from] Baton Pass
+|switch|pXa: A|Ursaring, LX, M|X/X
+|switch|pXa: A|Ursaring, LX, M|X/X|[from] Baton Pass
+|switch|pXa: A|Vaporeon, LX, F|X/X
+|switch|pXa: A|Vaporeon, LX, M|X/X
+|switch|pXa: A|Venomoth, LX, F|X/X
+|switch|pXa: A|Venomoth, LX, F|X/X|[from] Baton Pass
+|switch|pXa: A|Venomoth, LX, M|X/X
+|switch|pXa: A|Venomoth, LX, M|X/X|[from] Baton Pass
+|switch|pXa: A|Venonat, LX, F|X/X
+|switch|pXa: A|Venonat, LX, M|X/X
+|switch|pXa: A|Venonat, LX, M|X/X|[from] Baton Pass
+|switch|pXa: A|Venusaur, LX, F|X/X
+|switch|pXa: A|Venusaur, LX, M|X/X
+|switch|pXa: A|Venusaur, LX, M|X/X|[from] Baton Pass
+|switch|pXa: A|Victreebel, LX, F|X/X
+|switch|pXa: A|Victreebel, LX, M|X/X
+|switch|pXa: A|Vileplume, LX, F|X/X
+|switch|pXa: A|Vileplume, LX, F|X/X|[from] Baton Pass
+|switch|pXa: A|Vileplume, LX, M|X/X
+|switch|pXa: A|Voltorb, LX|X/X
+|switch|pXa: A|Voltorb, LX|X/X slp
+|switch|pXa: A|Voltorb, LX|X/X|[from] Baton Pass
+|switch|pXa: A|Vulpix, LX, F|X/X
+|switch|pXa: A|Vulpix, LX, M|X/X
+|switch|pXa: A|Vulpix, LX, M|X/X|[from] Baton Pass
+|switch|pXa: A|Wartortle, LX, F|X/X
+|switch|pXa: A|Wartortle, LX, F|X/X|[from] Baton Pass
+|switch|pXa: A|Wartortle, LX, M|X/X
+|switch|pXa: A|Weedle, LX, F|X/X
+|switch|pXa: A|Weedle, LX, M|X/X
+|switch|pXa: A|Weedle, LX, M|X/X|[from] Baton Pass
+|switch|pXa: A|Weepinbell, LX, F|X/X
+|switch|pXa: A|Weepinbell, LX, F|X/X|[from] Baton Pass
+|switch|pXa: A|Weepinbell, LX, M|X/X
+|switch|pXa: A|Weepinbell, LX, M|X/X|[from] Baton Pass
+|switch|pXa: A|Weezing, LX, F|X/X
+|switch|pXa: A|Weezing, LX, F|X/X|[from] Baton Pass
+|switch|pXa: A|Weezing, LX, M|X/X
+|switch|pXa: A|Weezing, LX, M|X/X par
+|switch|pXa: A|Weezing, LX, M|X/X|[from] Baton Pass
+|switch|pXa: A|Wigglytuff, LX, F|X/X
+|switch|pXa: A|Wigglytuff, LX, M|X/X
+|switch|pXa: A|Wigglytuff, LX, M|X/X par
+|switch|pXa: A|Wobbuffet, LX, F|X/X
+|switch|pXa: A|Wobbuffet, LX, F|X/X|[from] Baton Pass
+|switch|pXa: A|Wobbuffet, LX, M|X/X
+|switch|pXa: A|Wooper, LX, F|X/X
+|switch|pXa: A|Wooper, LX, F|X/X|[from] Baton Pass
+|switch|pXa: A|Wooper, LX, M|X/X
+|switch|pXa: A|Wooper, LX, M|X/X|[from] Baton Pass
+|switch|pXa: A|Xatu, LX, F|X/X
+|switch|pXa: A|Xatu, LX, F|X/X|[from] Baton Pass
+|switch|pXa: A|Xatu, LX, M|X/X
+|switch|pXa: A|Yanma, LX, F|X/X
+|switch|pXa: A|Yanma, LX, M|X/X
+|switch|pXa: A|Yanma, LX, M|X/X slp|[from] Baton Pass
+|switch|pXa: A|Zapdos, LX|X/X
+|switch|pXa: A|Zapdos, LX|X/X|[from] Baton Pass
+|switch|pXa: A|Zubat, LX, F|X/X
+|switch|pXa: A|Zubat, LX, F|X/X slp
+|switch|pXa: A|Zubat, LX, F|X/X|[from] Baton Pass
+|switch|pXa: A|Zubat, LX, M|X/X
+|switch|pXa: A|Zubat, LX, M|X/X|[from] Baton Pass
+|tie
+|turn|X
+|win|Bot X
