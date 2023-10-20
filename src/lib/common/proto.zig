@@ -112,6 +112,12 @@ pub const Move = enum(u8) {
     From,
 };
 
+pub const Switch = enum(u8) {
+    None,
+    BatonPass,
+    Uturn,
+};
+
 /// Null object pattern implementation of `Log` backed by a `std.io.null_writer`.
 /// Ignores anything sent to it, though protocol logging should additionally be turned off
 /// entirely with `options.log`.
@@ -153,6 +159,47 @@ pub fn Log(comptime Writer: type) type {
                 &.{@intFromEnum(Move.None)}
             else
                 &.{ @intFromEnum(Move.From), @intFromEnum(from) });
+        }
+
+        pub fn switched(self: Self, ident: ID, pokemon: anytype) Error!void {
+            return switchDrag(self, .Switch, ident, pokemon, .None);
+        }
+
+        pub fn switchedFrom(self: Self, ident: ID, pokemon: anytype, reason: Switch) Error!void {
+            assert(reason != .None);
+            return switchDrag(self, .Switch, ident, pokemon, reason);
+        }
+
+        fn switchDrag(
+            self: Self,
+            arg: ArgType,
+            ident: ID,
+            pokemon: anytype,
+            reason: Switch,
+        ) Error!void {
+            if (!enabled) return;
+
+            try self.writer.writeAll(&.{ @intFromEnum(arg), @as(u8, @bitCast(ident)) });
+            if (@hasField(@TypeOf(pokemon.*), "dvs")) {
+                try self.writer.writeAll(&.{
+                    @intFromEnum(pokemon.species),
+                    @intFromEnum(pokemon.dvs.gender),
+                    pokemon.level,
+                });
+                try self.writer.writeIntNative(u16, pokemon.hp);
+                try self.writer.writeIntNative(u16, pokemon.stats.hp);
+                try self.writer.writeByte(pokemon.status);
+                if (arg == .Switch) try self.writer.writeByte(@intFromEnum(reason));
+            } else {
+                try self.writer.writeAll(&.{ @intFromEnum(pokemon.species), pokemon.level });
+                try self.writer.writeIntNative(u16, pokemon.hp);
+                try self.writer.writeIntNative(u16, pokemon.stats.hp);
+                try self.writer.writeByte(pokemon.status);
+            }
+        }
+
+        pub fn drag(self: Self, ident: ID, pokemon: anytype) Error!void {
+            return switchDrag(self, .Drag, ident, pokemon, .None);
         }
 
         pub fn laststill(self: Self) Error!void {
@@ -231,6 +278,8 @@ pub fn format(
             .LastStill => "|[still]",
             .LastMiss => "|[miss]",
             .Move => "|move|",
+            .Switch => "|switch|",
+            .Drag => "|drag|",
             else => unreachable,
         };
         printc("{s}", .{name}, a, b, &i, 1, color);
@@ -249,6 +298,39 @@ pub fn format(
                 printc(" {s}", .{@tagName(reason)}, a, b, &i, 1, color);
                 if (reason == .From) {
                     printc(" {s}", .{formatter(gen, .Move, a[i])}, a, b, &i, 1, color);
+                }
+            },
+            .Switch, .Drag => {
+                const id = ID.from(@intCast(a[i]));
+                printc(" {s}({d})", .{ @tagName(id.player), id.id }, a, b, &i, 1, color);
+                printc(" {s}", .{formatter(gen, .Species, a[i])}, a, b, &i, 1, color);
+                if (@hasDecl(gen, "Gender")) {
+                    if (a[i] == N(gen.Gender.Unknown)) {
+                        i += 1;
+                    } else {
+                        var gender = if (a[i] == N(gen.Gender.Male)) "M" else "F";
+                        printc(", {s}", .{gender}, a, b, &i, 1, color);
+                    }
+                }
+                printc(" L{d}", .{a[i]}, a, b, &i, 1, color);
+                switch (endian) {
+                    .Big => {
+                        var hp = @as(u16, a[i]) << 8 | @as(u16, a[i + 1]);
+                        printc(" {d}", .{hp}, a, b, &i, 2, color);
+                        hp = @as(u16, a[i]) << 8 | @as(u16, a[i + 1]);
+                        printc("/{d}", .{hp}, a, b, &i, 2, color);
+                    },
+                    .Little => {
+                        var hp = @as(u16, a[i + 1]) << 8 | @as(u16, a[i]);
+                        printc(" {d}", .{hp}, a, b, &i, 2, color);
+                        hp = @as(u16, a[i + 1]) << 8 | @as(u16, a[i]);
+                        printc("/{d}", .{hp}, a, b, &i, 2, color);
+                    },
+                }
+                printc(" {s}", .{formatter(gen, .Status, a[i])}, a, b, &i, 1, color);
+                if (arg == .Switch and @hasDecl(gen, "Gender")) {
+                    const reason: Move = @enumFromInt(a[i]);
+                    printc(" {s}", .{@tagName(reason)}, a, b, &i, 1, color);
                 }
             },
             else => unreachable,
@@ -429,5 +511,82 @@ test "|move|" {
         },
         buf[0..6],
     );
+    stream.reset();
+}
+
+test "|switch|" {
+    var snorlax = gen1.helpers.Pokemon.init(.{ .species = .Snorlax, .moves = &.{.Splash} });
+    snorlax.level = 91;
+    snorlax.hp = 200;
+    snorlax.stats.hp = 400;
+    snorlax.status = gen1.Status.init(.PAR);
+    try log.switched(p2.ident(3), &snorlax);
+    const par = 0b1000000;
+    var expected: []const u8 = switch (endian) {
+        .Big => &.{ N(ArgType.Switch), 0b1011, N(S1.Snorlax), 91, 0, 200, 1, 144, par },
+        .Little => &.{ N(ArgType.Switch), 0b1011, N(S1.Snorlax), 91, 200, 0, 144, 1, par },
+    };
+    try expectLog1(expected, buf[0..9]);
+    stream.reset();
+
+    snorlax.level = 100;
+    snorlax.hp = 0;
+    snorlax.status = 0;
+    try log.switched(p2.ident(3), &snorlax);
+    expected = switch (endian) {
+        .Big => &.{ N(ArgType.Switch), 0b1011, N(S1.Snorlax), 100, 0, 0, 1, 144, 0 },
+        .Little => &.{ N(ArgType.Switch), 0b1011, N(S1.Snorlax), 100, 0, 0, 144, 1, 0 },
+    };
+    try expectLog1(expected, buf[0..9]);
+    stream.reset();
+
+    snorlax.hp = 400;
+    try log.switched(p2.ident(3), &snorlax);
+    expected = switch (endian) {
+        .Big => &.{ N(ArgType.Switch), 0b1011, N(S1.Snorlax), 100, 1, 144, 1, 144, 0 },
+        .Little => &.{ N(ArgType.Switch), 0b1011, N(S1.Snorlax), 100, 144, 1, 144, 1, 0 },
+    };
+    try expectLog1(expected, buf[0..9]);
+    stream.reset();
+
+    var blissey = gen2.helpers.Pokemon.init(.{ .species = .Blissey, .moves = &.{.Splash} });
+    blissey.level = 91;
+    blissey.hp = 200;
+    blissey.stats.hp = 400;
+    blissey.status = gen2.Status.init(.PAR);
+    try log.switchedFrom(p2.ident(3), &blissey, .BatonPass);
+    expected = &(.{
+        N(ArgType.Switch),
+        0b1011,
+        N(S2.Blissey),
+        N(gen2.Gender.Female),
+        91,
+    } ++ switch (endian) {
+        .Big => .{ 0, 200, 1, 144, par, N(Switch.BatonPass) },
+        .Little => .{ 200, 0, 144, 1, par, N(Switch.BatonPass) },
+    });
+    try expectLog2(expected, buf[0..11]);
+    stream.reset();
+}
+
+test "|drag|" {
+    var blissey = gen2.helpers.Pokemon.init(.{ .species = .Blissey, .moves = &.{.Splash} });
+    blissey.level = 91;
+    blissey.hp = 200;
+    blissey.stats.hp = 400;
+    blissey.status = gen2.Status.init(.PAR);
+    try log.drag(p2.ident(3), &blissey);
+    const par = 0b1000000;
+    const expected = &(.{
+        N(ArgType.Drag),
+        0b1011,
+        N(S2.Blissey),
+        N(gen2.Gender.Female),
+        91,
+    } ++ switch (endian) {
+        .Big => .{ 0, 200, 1, 144, par },
+        .Little => .{ 200, 0, 144, 1, par },
+    });
+    try expectLog2(expected, buf[0..10]);
     stream.reset();
 }
