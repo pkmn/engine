@@ -118,6 +118,25 @@ pub const Switch = enum(u8) {
     Uturn,
 };
 
+pub const Cant = enum(u8) {
+    Sleep,
+    Freeze,
+    Paralysis,
+    Bound,
+    Flinch,
+    Recharge,
+    Attract,
+    Truant,
+    FocusPunch,
+    Disable,
+    PP,
+    Taunt,
+    Imprison,
+    HealBlock,
+    Gravity,
+    Damp,
+};
+
 /// Null object pattern implementation of `Log` backed by a `std.io.null_writer`.
 /// Ignores anything sent to it, though protocol logging should additionally be turned off
 /// entirely with `options.log`.
@@ -196,6 +215,29 @@ pub fn Log(comptime Writer: type) type {
                 try self.writer.writeIntNative(u16, pokemon.stats.hp);
                 try self.writer.writeByte(pokemon.status);
             }
+        }
+
+        pub fn cant(self: Self, ident: ID, reason: Cant) Error!void {
+            if (!enabled) return;
+
+            assert(@intFromEnum(reason) < @intFromEnum(Cant.Disable));
+            try self.writer.writeAll(&.{
+                @intFromEnum(ArgType.Cant),
+                @as(u8, @bitCast(ident)),
+                @intFromEnum(reason),
+            });
+        }
+
+        pub fn cantMove(self: Self, ident: ID, reason: Cant, m: anytype) Error!void {
+            if (!enabled) return;
+
+            assert(@intFromEnum(reason) >= @intFromEnum(Cant.Disable) and reason != .Damp);
+            try self.writer.writeAll(&.{
+                @intFromEnum(ArgType.Cant),
+                @as(u8, @bitCast(ident)),
+                @intFromEnum(reason),
+                @intFromEnum(m),
+            });
         }
 
         pub fn drag(self: Self, ident: ID, pokemon: anytype) Error!void {
@@ -279,6 +321,7 @@ pub fn format(
             .LastMiss => "|[miss]",
             .Move => "|move|",
             .Switch => "|switch|",
+            .Cant => "|cant|",
             .Drag => "|drag|",
             else => unreachable,
         };
@@ -331,6 +374,15 @@ pub fn format(
                 if (arg == .Switch and @hasDecl(gen, "Gender")) {
                     const reason: Move = @enumFromInt(a[i]);
                     printc(" {s}", .{@tagName(reason)}, a, b, &i, 1, color);
+                }
+            },
+            .Cant => {
+                const id = ID.from(@intCast(a[i]));
+                printc(" {s}({d})", .{ @tagName(id.player), id.id }, a, b, &i, 1, color);
+                const reason: Cant = @enumFromInt(a[i]);
+                printc(" {s}", .{@tagName(reason)}, a, b, &i, 1, color);
+                if (@intFromEnum(reason) >= @intFromEnum(Cant.Disable)) {
+                    printc(" {s}", .{formatter(gen, .Move, a[i])}, a, b, &i, 1, color);
                 }
             },
             else => unreachable,
@@ -566,6 +618,16 @@ test "|switch|" {
         .Little => .{ 200, 0, 144, 1, par, N(Switch.BatonPass) },
     });
     try expectLog2(expected, buf[0..11]);
+    stream.reset();
+}
+
+test "|cant|" {
+    try log.cant(p2.ident(6), .Bound);
+    try expectLog1(&.{ N(ArgType.Cant), 0b1110, N(Cant.Bound) }, buf[0..3]);
+    stream.reset();
+
+    try log.cantMove(p1.ident(2), Cant.Disable, M1.Earthquake);
+    try expectLog1(&.{ N(ArgType.Cant), 2, N(Cant.Disable), N(M1.Earthquake) }, buf[0..4]);
     stream.reset();
 }
 

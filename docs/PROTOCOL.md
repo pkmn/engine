@@ -225,7 +225,7 @@ and if there is a previous `|move|` message in the same buffer that occurred ear
       +---------------+---------------+
 
 `Source` is the [`PokemonIdent`](#pokemonident) of the Pokémon that used the `Move` on the
-[`PokemonIdent`](#pokemonident) `Target` for `Reason`. If `Reason` is `0x02` then the next byte
+[`PokemonIdent`](#pokemonident) `Target` for `Reason`. If `Reason` is `0x01` then the next byte
 will indicate which `Move` the `|move|` is `[from]`. This message may be modified later on by a
 `LastStill` or `LastMiss` message in the same buffer (preceding).
 
@@ -239,7 +239,7 @@ will indicate which `Move` the `|move|` is `[from]`. This message may be modifie
 
 ### `|switch|` (`0x04`)
 
-### Gen I
+### Generation I
 
     Byte/     0       |       1       |       2       |       3       |
        /              |               |               |               |
@@ -255,7 +255,7 @@ will indicate which `Move` the `|move|` is `[from]`. This message may be modifie
 The Pokémon identified by [`Ident`](#pokemonident) has switched in and is a level `Level` `Species`
 with `Current HP`, `Max HP` and `Status`.
 
-#### Gen II
+#### Generation II
 
     Byte/     0       |       1       |       2       |       3       |
        /              |               |               |               |
@@ -290,8 +290,10 @@ level `Level` `Species` with `Current HP`, `Max HP` and `Status`.
       +---------------+---------------+---------------+---------------+
 
 The Pokémon identified by [`Ident`](#pokemonident) couldn't perform an action due to `Reason`. If
-the reason is `0x05` then the following byte indicates which `Move` the Pokémon was unable to
+the reason is >= `0x09` then the following byte indicates which `Move` the Pokémon was unable to
 perform.
+
+#### Generation I
 
 <details><summary>Reason</summary>
 
@@ -302,9 +304,24 @@ perform.
 | `0x02` | `par`              | No    |
 | `0x03` | `partiallytrapped` | No    |
 | `0x04` | `flinch`           | No    |
-| `0x05` | `Disable`          | Yes   |
-| `0x06` | `recharge`         | No    |
-| `0x07` | `nopp`             | No    |
+| `0x05` | `recharge`         | No    |
+| `0x09` | `Disable`          | Yes   |
+</details>
+
+#### Generation II
+
+<details><summary>Reason</summary>
+
+| Raw    | Description | Move? |
+| ------ | ----------- | ----- |
+| `0x00` | `slp`       | No    |
+| `0x01` | `frz`       | No    |
+| `0x02` | `par`       | No    |
+| `0x04` | `flinch`    | No    |
+| `0x05` | `recharge`  | No    |
+| `0x06` | `Attract`   | No    |
+| `0x09` | `Disable`   | Yes   |
+| `0x0A` | `nopp`      | Yes   |
 </details>
 
 ### `|faint|` (`0x06`)
