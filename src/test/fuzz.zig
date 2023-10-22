@@ -132,7 +132,7 @@ fn run(
                 .result = result,
                 .c1 = c1,
                 .c2 = c2,
-                .state = try allocator.dupe(u8, std.mem.toBytes(battle)[0..]),
+                .state = try allocator.dupe(u8, std.mem.toBytes(battle.*)[0..]),
                 .log = try buf.?.toOwnedSlice(),
             });
         }
