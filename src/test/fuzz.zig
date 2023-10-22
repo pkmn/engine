@@ -181,6 +181,7 @@ fn dump() !void {
 
         try w.writeByte(@intFromBool(showdown));
         try w.writeByte(gen);
+        try w.writeIntNative(u16, 0);
         try w.writeAll(initial);
 
         if (frames) |frame| {

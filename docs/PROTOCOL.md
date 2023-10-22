@@ -50,11 +50,12 @@ compatibility mode was enabled, a byte indicating the
 [generation](https://bulbapedia.bulbagarden.net/wiki/Generation), and the initial battle state:
 
 
-| Start | End | Description                                                                              |
-| ----- | --- | ---------------------------------------------------------------------------------------- |
-| 0     | 1   | Whether Pokémon Showdown compatibility is enabled                                        |
-| 1     | 2   | A number denoting the Pokémon generation                                                 |
-| 2     | B+2 | The $B$ serialized bytes of the initial battle state as defined by its respective layout |
+| Start | End | Description                                                                                                       |
+| ----- | --- | ----------------------------------------------------------------------------------------------------------------- |
+| 0     | 1   | Whether Pokémon Showdown compatibility is enabled                                                                 |
+| 1     | 2   | A number denoting the Pokémon generation                                                                          |
+| 2     | 4   | Two native-endian bytes encoding $N$, the fixed size of each log buffer, or 0 if each log buffer is variable size |
+| 4     | B+4 | The $B$ serialized bytes of the initial battle state as defined by its respective layout                          |
 
 #### Frame
 

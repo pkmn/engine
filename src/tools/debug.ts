@@ -4,7 +4,7 @@ import {Generation, Generations} from '@pkmn/data';
 
 import {Battle, Choice, Info, Log, Result, SideInfo} from '../pkg';
 import * as addon from '../pkg/addon';
-import {Data, LAYOUT, Lookup} from '../pkg/data';
+import {Data, LAYOUT, LE, Lookup} from '../pkg/data';
 import * as gen1 from '../pkg/gen1';
 import {Frame, render} from '../test/display';
 
@@ -42,6 +42,8 @@ export function display(gens: Generations, data: Buffer, error?: string, seed?: 
   let offset = 0;
   const showdown = !!view.getUint8(offset++);
   const gen = gens.get(view.getUint8(offset++));
+  const N = view.getUint16(offset, LE);
+  offset += 2;
 
   const lookup = Lookup.get(gen);
   const size = LAYOUT[gen.num - 1].sizes.Battle;
@@ -68,7 +70,7 @@ export function display(gens: Generations, data: Buffer, error?: string, seed?: 
       partial.parsed!.push(r.value);
       r = it.next();
     }
-    offset += r.value;
+    offset += N || r.value;
     if (offset >= view.byteLength) break;
 
     partial.battle = deserialize(data.subarray(offset, offset += size));
