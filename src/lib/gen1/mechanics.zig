@@ -1012,7 +1012,7 @@ fn doMove(
                 if (sub) {
                     try log.activate(battle.active(player.foe()), .Substitute);
                 } else {
-                    try log.damage(battle.active(player.foe()), foe.stored(), .None);
+                    try log.damage(.{ battle.active(player.foe()), foe.stored(), Damage.None });
                     try buildRage(battle, player.foe(), options);
                 }
                 return null;
@@ -1284,7 +1284,7 @@ fn applyDamage(
 
     if (battle.last_damage > target.stored().hp) battle.last_damage = target.stored().hp;
     target.stored().hp -= battle.last_damage;
-    try options.log.damage(battle.active(target_player), target.stored(), reason);
+    try options.log.damage(.{ battle.active(target_player), target.stored(), reason });
     return false;
 }
 
@@ -1521,8 +1521,8 @@ fn handleResidual(battle: anytype, player: Player, options: anytype) !void {
 
         if (!showdown or damage > 0) {
             stored.hp -= damage;
-            // Pokémon Showdown uses damageOf here but its not relevant in Generation I
-            try options.log.damage(ident, stored, if (brn) Damage.Burn else Damage.Poison);
+            // Pokémon Showdown uses damage [of] here but its not relevant in Generation I
+            try options.log.damage(.{ ident, stored, if (brn) Damage.Burn else Damage.Poison });
         }
     }
 
@@ -1547,8 +1547,8 @@ fn handleResidual(battle: anytype, player: Player, options: anytype) !void {
         const amount = @min(damage, stored.hp);
         stored.hp -= amount;
 
-        // As above, Pokémon Showdown uses damageOf but its not relevant
-        if (amount > 0) try options.log.damage(ident, stored, .LeechSeed);
+        // As above, Pokémon Showdown uses damage [of] but its not relevant
+        if (amount > 0) try options.log.damage(.{ ident, stored, Damage.LeechSeed });
 
         const before = foe_stored.hp;
         // Uncapped damage is added back to the foe
@@ -2268,12 +2268,12 @@ pub const Effects = struct {
             @as(u8, if (side.last_selected_move == .Struggle) 2 else 4), 1));
         stored.hp = @intCast(@max(@as(i16, @intCast(stored.hp)) - damage, 0));
 
-        try options.log.damageOf(
+        try options.log.damage(.{
             battle.active(player),
             stored,
-            .RecoilOf,
+            Damage.RecoilOf,
             battle.active(player.foe()),
-        );
+        });
         if (showdown and stored.hp == 0) residual.* = false;
     }
 
@@ -2346,7 +2346,7 @@ pub const Effects = struct {
         side.active.volatiles.Substitute = true;
         try options.log.start(battle.active(player), .Substitute);
         if (hp > 0) {
-            try options.log.damage(battle.active(player), side.stored(), .None);
+            try options.log.damage(.{ battle.active(player), side.stored(), Damage.None });
             if (showdown and side.stored().hp == 0) residual.* = false;
         }
     }

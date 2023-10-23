@@ -408,34 +408,19 @@ pub fn Log(comptime Writer: type) type {
             try self.writer.writeAll(&.{ @intFromEnum(ArgType.Tie), @intFromEnum(ArgType.None) });
         }
 
-        pub fn damage(self: Self, ident: ID, pokemon: anytype, reason: Damage) Error!void {
+        // ident: ID, pokemon: anytype, reason: Damage, source?: ID
+        pub fn damage(self: Self, args: anytype) Error!void {
             if (!enabled) return;
 
-            assert(@intFromEnum(reason) <= @intFromEnum(Damage.LeechSeed));
-            try self.writer.writeAll(&.{ @intFromEnum(ArgType.Damage), @as(u8, @bitCast(ident)) });
-            try self.writer.writeIntNative(u16, pokemon.hp);
-            try self.writer.writeIntNative(u16, pokemon.stats.hp);
-            try self.writer.writeAll(&.{ pokemon.status, @intFromEnum(reason) });
-        }
-
-        pub fn damageOf(
-            self: Self,
-            ident: ID,
-            pokemon: anytype,
-            reason: Damage,
-            source: ID,
-        ) Error!void {
-            if (!enabled) return;
-
-            assert(@intFromEnum(reason) == @intFromEnum(Damage.RecoilOf));
-            try self.writer.writeAll(&.{ @intFromEnum(ArgType.Damage), @as(u8, @bitCast(ident)) });
-            try self.writer.writeIntNative(u16, pokemon.hp);
-            try self.writer.writeIntNative(u16, pokemon.stats.hp);
+            assert(@intFromEnum(args[2]) <= @intFromEnum(Damage.LeechSeed) or args.len == 4);
             try self.writer.writeAll(&.{
-                pokemon.status,
-                @intFromEnum(reason),
-                @as(u8, @bitCast(source)),
+                @intFromEnum(ArgType.Damage),
+                @as(u8, @bitCast(args[0])),
             });
+            try self.writer.writeIntNative(u16, args[1].hp);
+            try self.writer.writeIntNative(u16, args[1].stats.hp);
+            try self.writer.writeAll(&.{ args[1].status, @intFromEnum(args[2]) });
+            if (args.len == 4) try self.writer.writeByte(@as(u8, @bitCast(args[3])));
         }
 
         // ident: ID, pokemon: anytype, reason: Heal, target?: ID)
@@ -1462,7 +1447,7 @@ test "|-damage|" {
     var chansey = gen1.helpers.Pokemon.init(.{ .species = .Chansey, .moves = &.{.Splash} });
     chansey.hp = 612;
     chansey.status = gen1.Status.slp(1);
-    try log.damage(p2.ident(2), &chansey, .None);
+    try log.damage(.{ p2.ident(2), &chansey, Damage.None });
     var expected: []const u8 = switch (endian) {
         .Big => &.{ N(ArgType.Damage), 0b1010, 2, 100, 2, 191, 1, N(Damage.None) },
         .Little => &.{ N(ArgType.Damage), 0b1010, 100, 2, 191, 2, 1, N(Damage.None) },
@@ -1473,7 +1458,7 @@ test "|-damage|" {
     chansey.hp = 100;
     chansey.stats.hp = 256;
     chansey.status = 0;
-    try log.damage(p2.ident(2), &chansey, .Confusion);
+    try log.damage(.{ p2.ident(2), &chansey, Damage.Confusion });
     expected = switch (endian) {
         .Big => &.{ N(ArgType.Damage), 0b1010, 0, 100, 1, 0, 0, N(Damage.Confusion) },
         .Little => &.{ N(ArgType.Damage), 0b1010, 100, 0, 0, 1, 0, N(Damage.Confusion) },
@@ -1482,7 +1467,7 @@ test "|-damage|" {
     stream.reset();
 
     chansey.status = gen1.Status.init(.PSN);
-    try log.damageOf(p2.ident(2), &chansey, .RecoilOf, p1.ident(1));
+    try log.damage(.{ p2.ident(2), &chansey, Damage.RecoilOf, p1.ident(1) });
     expected = switch (endian) {
         .Big => &.{ N(ArgType.Damage), 0b1010, 0, 100, 1, 0, 0b1000, N(Damage.RecoilOf), 1 },
         .Little => &.{ N(ArgType.Damage), 0b1010, 100, 0, 0, 1, 0b1000, N(Damage.RecoilOf), 1 },

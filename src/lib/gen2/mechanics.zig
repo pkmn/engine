@@ -260,7 +260,7 @@ fn switchIn(battle: anytype, player: Player, slot: u8, kind: SwitchIn, options: 
 
     if (side.conditions.Spikes and !active.types.includes(.Flying)) {
         incoming.hp -|= @max(incoming.stats.hp / 8, 1);
-        try options.log.damage(battle.active(player), incoming, .Spikes);
+        try options.log.damage(.{ battle.active(player), incoming, Damage.Spikes });
     }
 }
 
@@ -930,8 +930,8 @@ fn handleResidual(battle: anytype, player: Player, options: anytype) !bool {
         }
 
         stored.hp -|= damage;
-        // Pokémon Showdown uses damageOf here but its not relevant in Generation II
-        try options.log.damage(ident, stored, if (brn) Damage.Burn else Damage.Poison);
+        // Pokémon Showdown uses damage [of] here but its not relevant in Generation II
+        try options.log.damage(.{ ident, stored, if (brn) Damage.Burn else Damage.Poison });
         if (stored.hp == 0) return true;
     }
 
@@ -947,8 +947,8 @@ fn handleResidual(battle: anytype, player: Player, options: anytype) !bool {
 
         const damage = @max(stored.stats.hp / 8, 1);
         stored.hp -|= damage;
-        // As above, Pokémon Showdown uses damageOf but its not relevant
-        try options.log.damage(ident, stored, .LeechSeed);
+        // As above, Pokémon Showdown uses damage [of] but its not relevant
+        try options.log.damage(.{ ident, stored, Damage.LeechSeed });
 
         const before = foe_stored.hp;
         foe_stored.hp = @min(foe_stored.hp + damage, foe_stored.stats.hp);
@@ -960,14 +960,14 @@ fn handleResidual(battle: anytype, player: Player, options: anytype) !bool {
     if (volatiles.Nightmare) {
         stored.hp -= @max(stored.stats.hp / 4, 1);
         // ibid
-        try options.log.damage(ident, stored, .Nightmare);
+        try options.log.damage(.{ ident, stored, Damage.Nightmare });
         if (stored.hp == 0) return true;
     }
 
     if (volatiles.Curse) {
         stored.hp -= @max(stored.stats.hp / 4, 1);
         // ibid
-        try options.log.damage(ident, stored, .Curse);
+        try options.log.damage(.{ ident, stored, Damage.Curse });
         if (stored.hp == 0) return true;
     }
 
@@ -1011,7 +1011,11 @@ fn betweenTurns(battle: anytype, mslot: u4, options: anytype) !?Result {
                     const active = side.active;
                     if (!(active.volatiles.Underground or active.types.sandstormImmune())) {
                         side.stored().hp -|= @max(side.stored().stats.hp / 8, 1);
-                        try options.log.damage(battle.active(player), side.stored(), .Sandstorm);
+                        try options.log.damage(.{
+                            battle.active(player),
+                            side.stored(),
+                            Damage.Sandstorm,
+                        });
                     }
                 }
                 if (try checkFaint(battle, .P1, options)) |r| return r;
@@ -1035,7 +1039,11 @@ fn betweenTurns(battle: anytype, mslot: u4, options: anytype) !?Result {
 
                 reason = @intFromEnum(Damage.Bind) + volatiles.bind.reason - 1;
                 side.stored().hp -|= @max(side.stored().stats.hp / 16, 1);
-                try options.log.damage(battle.active(player), side.stored(), @enumFromInt(reason));
+                try options.log.damage(.{
+                    battle.active(player),
+                    side.stored(),
+                    @as(Damage, @enumFromInt(reason)),
+                });
             }
         }
     }
@@ -1466,7 +1474,7 @@ pub const Effects = struct {
             try options.log.start(foe_ident, .Curse);
 
             side.stored().hp -= @max(side.stored().stats.hp / 2, 1);
-            try options.log.damage(ident, side.stored(), .Curse);
+            try options.log.damage(.{ ident, side.stored(), Damage.Curse });
         } else {
             var stats = &side.active.stats;
             var boosts = &side.active.boosts;
@@ -2220,12 +2228,12 @@ pub const Effects = struct {
         const damage: i16 = @intCast(@max(state.damage / 4, 1));
         stored.hp = @intCast(@max(@as(i16, @intCast(stored.hp)) - damage, 0));
 
-        try options.log.damageOf(
+        try options.log.damage(.{
             battle.active(player),
             stored,
-            .RecoilOf,
+            Damage.RecoilOf,
             battle.active(player.foe()),
-        );
+        });
     }
 
     pub fn reversal(battle: anytype, player: Player, state: *State, options: anytype) !void {
@@ -2429,7 +2437,7 @@ pub const Effects = struct {
         side.active.volatiles.Substitute = true;
         side.active.volatiles.bind = .{};
         try options.log.start(battle.active(player), .Substitute);
-        try options.log.damage(battle.active(player), side.stored(), .None);
+        try options.log.damage(.{ battle.active(player), side.stored(), Damage.None });
     }
 
     pub fn sunnyDay(battle: anytype, _: Player, _: *State, options: anytype) !void {
