@@ -3226,7 +3226,7 @@ pub const Rolls = struct {
 
         const move: Move = overridden orelse move: {
             if (showdown) {
-                var r = battle.rng.range(u8, 0, @intCast(Move.METRONOME.len - n));
+                var r = battle.rng.range(u8, 0, @as(u8, @intCast(Move.METRONOME.len - n)));
                 for (moves) |m| {
                     if (m.id == .None) break;
                     if (@intFromEnum(m.id) > @intFromEnum(Move.METRONOME[r])) break;
