@@ -4390,7 +4390,7 @@ test "DrainHP effect" {
     t.expected.p1.get(1).hp -= 1;
     try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
     t.expected.p2.get(1).hp += 1;
-    try t.log.expected.drain(P2.ident(1), t.expected.p2.get(1), P1.ident(1));
+    try t.log.expected.heal(.{ P2.ident(1), t.expected.p2.get(1), Heal.Drain, P1.ident(1) });
     try t.log.expected.faint(.{ P1.ident(1), true });
 
     // Heals at least 1 HP
@@ -4412,7 +4412,7 @@ test "DrainHP effect" {
     t.expected.p1.get(2).hp -= 16;
     try t.log.expected.damage(P1.ident(2), t.expected.p1.get(2), .None);
     t.expected.p2.get(1).hp += 8;
-    try t.log.expected.drain(P2.ident(1), t.expected.p2.get(1), P1.ident(2));
+    try t.log.expected.heal(.{ P2.ident(1), t.expected.p2.get(1), Heal.Drain, P1.ident(2) });
     try t.log.expected.turn(.{3});
 
     // Heals 1/2 of the damage dealt unless the user is at full health
@@ -4471,7 +4471,7 @@ test "DreamEater effect" {
         t.expected.p2.get(1).status -= 1;
         try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
         t.expected.p1.get(1).hp += 90;
-        try t.log.expected.drain(P1.ident(1), t.expected.p1.get(1), P2.ident(1));
+        try t.log.expected.heal(.{ P1.ident(1), t.expected.p1.get(1), Heal.Drain, P2.ident(1) });
         try t.log.expected.cant(.{ P2.ident(1), Cant.Sleep });
         try t.log.expected.turn(.{4});
 
@@ -4484,7 +4484,7 @@ test "DreamEater effect" {
         t.expected.p2.get(1).status -= 1;
         try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
         t.expected.p1.get(1).hp += 1;
-        try t.log.expected.drain(P1.ident(1), t.expected.p1.get(1), P2.ident(1));
+        try t.log.expected.heal(.{ P1.ident(1), t.expected.p1.get(1), Heal.Drain, P2.ident(1) });
         try t.log.expected.faint(.{ P2.ident(1), true });
 
         // Heals at least 1 HP
@@ -7659,7 +7659,7 @@ test "Counter glitches" {
         t.expected.p1.get(1).hp -= 19;
         try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
         t.expected.p2.get(1).hp += 9;
-        try t.log.expected.drain(P2.ident(1), t.expected.p2.get(1), P1.ident(1));
+        try t.log.expected.heal(.{ P2.ident(1), t.expected.p2.get(1), Heal.Drain, P1.ident(1) });
         try t.log.expected.turn(.{3});
 
         try expectEqual(Result.Default, try t.update(move(2), move(2)));
@@ -7715,7 +7715,7 @@ test "Counter glitches" {
         t.expected.p1.get(1).hp -= 19;
         try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .None);
         t.expected.p2.get(1).hp += 9;
-        try t.log.expected.drain(P2.ident(1), t.expected.p2.get(1), P1.ident(1));
+        try t.log.expected.heal(.{ P2.ident(1), t.expected.p2.get(1), Heal.Drain, P1.ident(1) });
         try t.log.expected.turn(.{3});
 
         try expectEqual(Result.Default, try t.update(move(2), move(2)));
@@ -9549,7 +9549,7 @@ test "Substitute HP drain bug" {
         try t.log.expected.move(.{ P1.ident(1), Move.MegaDrain, P2.ident(1) });
         try t.log.expected.activate(P2.ident(1), .Substitute);
         t.expected.p1.get(1).hp += 12;
-        try t.log.expected.drain(P1.ident(1), t.expected.p1.get(1), P2.ident(1));
+        try t.log.expected.heal(.{ P1.ident(1), t.expected.p1.get(1), Heal.Drain, P2.ident(1) });
         try t.log.expected.turn(.{3});
 
         try expectEqual(Result.Default, try t.update(move(1), move(2)));
@@ -9573,7 +9573,12 @@ test "Substitute HP drain bug" {
             try t.log.expected.resisted(.{P2.ident(1)});
             try t.log.expected.activate(P2.ident(1), .Substitute);
             t.expected.p1.get(1).hp += 1;
-            try t.log.expected.drain(P1.ident(1), t.expected.p1.get(1), P2.ident(1));
+            try t.log.expected.heal(.{
+                P1.ident(1),
+                t.expected.p1.get(1),
+                Heal.Drain,
+                P2.ident(1),
+            });
         } else {
             try t.log.expected.lastmiss(.{});
             try t.log.expected.miss(.{P1.ident(1)});

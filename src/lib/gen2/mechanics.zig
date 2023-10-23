@@ -1555,13 +1555,14 @@ pub const Effects = struct {
 
     pub fn drainHP(battle: anytype, player: Player, state: *State, options: anytype) !void {
         var stored = battle.side(player).stored();
+        const ident = battle.active(player);
 
         assert(state.damage != 0);
 
         if (stored.hp == stored.stats.hp) return;
         stored.hp = @min(stored.stats.hp, stored.hp + @max(state.damage / 2, 1));
 
-        try options.log.drain(battle.active(player), stored, battle.active(player.foe()));
+        try options.log.heal(.{ ident, stored, Heal.Drain, battle.active(player.foe()) });
     }
 
     pub fn encore(battle: anytype, player: Player, state: *State, options: anytype) !void {

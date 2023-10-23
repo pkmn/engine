@@ -438,28 +438,16 @@ pub fn Log(comptime Writer: type) type {
             });
         }
 
-        // args: ident: ID, pokemon: anytype, reason: Heal
+        // ident: ID, pokemon: anytype, reason: Heal, target?: ID)
         pub fn heal(self: Self, args: anytype) Error!void {
             if (!enabled) return;
 
-            assert(args[2] != .Drain);
+            assert(args[2] != .Drain or args.len == 4);
             try self.writer.writeAll(&.{ @intFromEnum(ArgType.Heal), @as(u8, @bitCast(args[0])) });
             try self.writer.writeIntNative(u16, args[1].hp);
             try self.writer.writeIntNative(u16, args[1].stats.hp);
             try self.writer.writeAll(&.{ args[1].status, @intFromEnum(args[2]) });
-        }
-
-        pub fn drain(self: Self, source: ID, pokemon: anytype, target: ID) Error!void {
-            if (!enabled) return;
-
-            try self.writer.writeAll(&.{ @intFromEnum(ArgType.Heal), @as(u8, @bitCast(source)) });
-            try self.writer.writeIntNative(u16, pokemon.hp);
-            try self.writer.writeIntNative(u16, pokemon.stats.hp);
-            try self.writer.writeAll(&.{
-                pokemon.status,
-                @intFromEnum(Heal.Drain),
-                @as(u8, @bitCast(target)),
-            });
+            if (args.len == 4) try self.writer.writeByte(@as(u8, @bitCast(args[3])));
         }
 
         pub fn status(self: Self, ident: ID, value: u8, reason: Status) Error!void {
@@ -1526,7 +1514,7 @@ test "|-heal|" {
     try expectLog1(expected, buf[0..8]);
     stream.reset();
 
-    try log.drain(p2.ident(2), &chansey, p1.ident(1));
+    try log.heal(.{ p2.ident(2), &chansey, Heal.Drain, p1.ident(1) });
     expected = switch (endian) {
         .Big => &.{ N(ArgType.Heal), 0b1010, 0, 100, 1, 0, 0, N(Heal.Drain), 1 },
         .Little => &.{ N(ArgType.Heal), 0b1010, 100, 0, 0, 1, 0, N(Heal.Drain), 1 },

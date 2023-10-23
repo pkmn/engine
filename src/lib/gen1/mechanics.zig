@@ -1902,6 +1902,7 @@ pub const Effects = struct {
 
     fn drainHP(battle: anytype, player: Player, options: anytype) !void {
         var stored = battle.side(player).stored();
+        const ident = battle.active(player);
 
         if (battle.last_damage == 0) {
             assert(showdown);
@@ -1914,7 +1915,7 @@ pub const Effects = struct {
         if (stored.hp == stored.stats.hp) return;
         stored.hp = @min(stored.stats.hp, stored.hp + drain);
 
-        try options.log.drain(battle.active(player), stored, battle.active(player.foe()));
+        try options.log.heal(.{ ident, stored, Heal.Drain, battle.active(player.foe()) });
     }
 
     fn explode(battle: anytype, player: Player) !void {
