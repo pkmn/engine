@@ -938,7 +938,7 @@ fn doMove(
             try log.fail(foe_ident, .None);
         } else {
             if (showdown or !zero) try options.chance.commit(player, .miss);
-            try log.lastmiss();
+            try log.lastmiss(.{});
             try log.miss(.{battle.active(player)});
         }
         if (move.effect == .JumpKick) {
@@ -983,7 +983,7 @@ fn doMove(
             }
         }
         if (!skip) nullified = try applyDamage(battle, player.foe(), player.foe(), .None, options);
-        if (hit == 0 and ohko) try log.ohko();
+        if (hit == 0 and ohko) try log.ohko(.{});
         hit += 1;
         if (foe.stored().hp == 0) break;
         if (!late and (!sub or move.effect == .Explode)) {
@@ -1349,7 +1349,7 @@ fn checkHit(battle: anytype, player: Player, move: Move.Data, options: anytype) 
         try options.log.fail(foe_ident, .None);
     } else {
         try options.chance.commit(player, .miss);
-        try options.log.lastmiss();
+        try options.log.lastmiss(.{});
         try options.log.miss(.{battle.active(player)});
     }
 
@@ -1451,7 +1451,7 @@ fn checkFaint(
     assert(!foe.active.volatiles.MultiHit);
 
     if (player_out and foe_out) {
-        try options.log.tie();
+        try options.log.tie(.{});
         return Result.Tie;
     } else if (player_out) {
         try options.log.win(.{player.foe()});
@@ -1565,12 +1565,12 @@ fn endTurn(battle: anytype, options: anytype) @TypeOf(options.log).Error!Result 
     battle.turn += 1;
 
     if (showdown and pkmn.options.ebc and checkEBC(battle)) {
-        try options.log.tie();
+        try options.log.tie(.{});
         return Result.Tie;
     }
 
     if (showdown and battle.turn >= 1000) {
-        try options.log.tie();
+        try options.log.tie(.{});
         return Result.Tie;
     } else if (battle.turn >= 65535) {
         return Result.Error;
@@ -1805,7 +1805,7 @@ pub const Effects = struct {
         volatiles.Charging = true;
         const move = side.last_selected_move;
         if (move == .Fly or move == .Dig) volatiles.Invulnerable = true;
-        try options.log.laststill();
+        try options.log.laststill(.{});
         try options.log.prepare(battle.active(player), move);
     }
 
@@ -1843,7 +1843,7 @@ pub const Effects = struct {
         const foe = battle.foe(player);
 
         if (foe.active.volatiles.Invulnerable) {
-            try options.log.lastmiss();
+            try options.log.lastmiss(.{});
             return options.log.miss(.{battle.active(player)});
         }
 
@@ -1989,7 +1989,7 @@ pub const Effects = struct {
         foe.active.stats = foe_stored.stats;
 
         try log.activate(player_ident, .Haze);
-        try log.clearallboost();
+        try log.clearallboost(.{});
 
         // Pokémon Showdown clears P1 then P2 instead of status -> side -> foe
         if (showdown) {
@@ -2060,7 +2060,7 @@ pub const Effects = struct {
         } else {
             if (!try checkHit(battle, player, move, options)) return;
             if (foe.active.types.includes(.Grass) or foe.active.volatiles.LeechSeed) {
-                try options.log.lastmiss();
+                try options.log.lastmiss(.{});
                 return options.log.miss(.{battle.active(player)});
             }
         }
@@ -2197,7 +2197,7 @@ pub const Effects = struct {
 
     fn payDay(battle: anytype, player: Player, options: anytype) !void {
         if (!showdown or !battle.foe(player).active.volatiles.Substitute) {
-            try options.log.fieldactivate();
+            try options.log.fieldactivate(.{});
         }
     }
 
@@ -2360,7 +2360,7 @@ pub const Effects = struct {
             battle.last_damage = 0;
         } else {
             try options.log.fail(battle.active(player), .None);
-            try options.log.laststill();
+            try options.log.laststill(.{});
         }
     }
 

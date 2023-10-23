@@ -849,7 +849,7 @@ fn checkFaint(
     if (foe_fainted) try faint(battle, player.foe(), !more, options);
 
     if (player_out and foe_out) {
-        try options.log.tie();
+        try options.log.tie(.{});
         return Result.Tie;
     } else if (player_out) {
         try options.log.win(.{player.foe()});
@@ -1220,7 +1220,7 @@ fn endTurn(battle: anytype, options: anytype) @TypeOf(options.log).Error!Result 
     battle.turn += 1;
 
     if (showdown and battle.turn >= 1000) {
-        try options.log.tie();
+        try options.log.tie(.{});
         return Result.Tie;
     } else if (battle.turn >= 65535) {
         return Result.Error;
@@ -1280,7 +1280,7 @@ pub const Effects = struct {
         if (gender + foe_gender != 1) {
             return options.log.immune(battle.active(player.foe()), .None);
         } else if (foe.active.volatiles.Flying or foe.active.volatiles.Underground) {
-            try options.log.lastmiss();
+            try options.log.lastmiss(.{});
             return options.log.miss(.{battle.active(player)});
         }
 
@@ -1454,7 +1454,7 @@ pub const Effects = struct {
 
         if (side.active.types.includes(.Ghost)) {
             if (foe.active.volatiles.Flying or foe.active.volatiles.Underground) {
-                try options.log.lastmiss();
+                try options.log.lastmiss(.{});
                 return options.log.miss(.{battle.active(player)});
             } else if (foe.active.volatiles.Substitute) {
                 return options.log.activateMove(foe_ident, .SubstituteBlock, state.move);
@@ -1683,7 +1683,7 @@ pub const Effects = struct {
         var foe = battle.foe(player);
 
         if (foe.active.volatiles.Flying or foe.active.volatiles.Underground) {
-            try options.log.lastmiss();
+            try options.log.lastmiss(.{});
             return options.log.miss(.{battle.active(player)});
         } else if (foe.active.volatiles.Foresight) {
             return options.log.fail(battle.active(player), .None);
@@ -1748,7 +1748,7 @@ pub const Effects = struct {
         inline for (STATS) |s| @field(foe.active.stats, s) = @field(stats, s);
         statusModify(foe.stored().status, &foe.active.stats);
 
-        try options.log.clearallboost();
+        try options.log.clearallboost(.{});
     }
 
     pub fn heal(battle: anytype, player: Player, state: *State, options: anytype) !void {
@@ -1807,7 +1807,7 @@ pub const Effects = struct {
             }
             try checkHit(battle, player, state, options);
             if (state.miss) {
-                try options.log.lastmiss();
+                try options.log.lastmiss(.{});
                 return options.log.miss(.{battle.active(player)});
             }
             if (foe.active.volatiles.LeechSeed) return;
@@ -1816,7 +1816,7 @@ pub const Effects = struct {
             const miss =
                 state.miss or foe.active.types.includes(.Grass) or foe.active.volatiles.LeechSeed;
             if (miss) {
-                try options.log.lastmiss();
+                try options.log.lastmiss(.{});
                 return options.log.miss(.{battle.active(player)});
             }
         }
@@ -1853,7 +1853,7 @@ pub const Effects = struct {
 
         if (foe.active.volatiles.Flying or foe.active.volatiles.Underground) {
             if (!showdown) return options.log.fail(battle.active(player.foe()), .None);
-            try options.log.lastmiss();
+            try options.log.lastmiss(.{});
             return options.log.miss(.{battle.active(player)});
         } else if (foe.active.volatiles.Trapped) {
             return options.log.fail(battle.active(player.foe()), .None);
@@ -1950,7 +1950,7 @@ pub const Effects = struct {
 
         if (foe_volatiles.Flying or foe_volatiles.Underground) {
             if (!showdown) return options.log.fail(battle.active(player.foe()), .None);
-            try options.log.lastmiss();
+            try options.log.lastmiss(.{});
             return options.log.miss(.{battle.active(player)});
         } else if (foe_volatiles.Substitute) {
             return options.log.activateMove(foe_ident, .SubstituteBlock, state.move);
@@ -2022,7 +2022,7 @@ pub const Effects = struct {
         if (state.immune()) return options.log.immune(foe_ident, .None);
         if (Status.any(foe.stored().status)) return options.log.fail(foe_ident, .None);
         if (state.miss) {
-            try options.log.lastmiss();
+            try options.log.lastmiss(.{});
             return options.log.miss(.{battle.active(player)});
         } else if (foe.active.volatiles.Substitute) {
             return options.log.activateMove(foe_ident, .SubstituteBlock, state.move);
@@ -2053,7 +2053,7 @@ pub const Effects = struct {
 
     pub fn payDay(battle: anytype, player: Player, _: *State, options: anytype) !void {
         if (!showdown or !battle.foe(player).active.volatiles.Substitute) {
-            try options.log.fieldactivate(); // FIXME .PayDay
+            try options.log.fieldactivate(.{}); // FIXME .PayDay
         }
     }
 
@@ -2072,7 +2072,7 @@ pub const Effects = struct {
         foe.active.volatiles.perish_song = 4;
         try options.log.start(battle.active(player.foe()), .PerishSong3Silent);
 
-        try options.log.fieldactivate(); // FIXME .PerishSong
+        try options.log.fieldactivate(.{}); // FIXME .PerishSong
     }
 
     pub fn poison(battle: anytype, player: Player, state: *State, options: anytype) !void {
@@ -2098,7 +2098,7 @@ pub const Effects = struct {
         } else if (foe.active.volatiles.Substitute) {
             return options.log.activateMove(foe_ident, .SubstituteBlock, state.move);
         } else if (state.miss) {
-            try options.log.lastmiss();
+            try options.log.lastmiss(.{});
             return options.log.miss(.{battle.active(player)});
         }
 
@@ -2445,7 +2445,7 @@ pub const Effects = struct {
         if (showdown) return;
 
         try options.log.fail(battle.active(player), .None);
-        try options.log.laststill();
+        try options.log.laststill(.{});
     }
 
     pub fn thief(battle: anytype, player: Player, state: *State, options: anytype) !void {
@@ -2489,7 +2489,7 @@ pub const Effects = struct {
             return options.log.fail(battle.active(player), .None);
         } else if (foe.active.volatiles.Flying or foe.active.volatiles.Underground) {
             if (!showdown) return options.log.fail(battle.active(player), .None);
-            try options.log.lastmiss();
+            try options.log.lastmiss(.{});
             return options.log.miss(.{battle.active(player)});
         }
 
@@ -2630,7 +2630,7 @@ pub const Effects = struct {
                 if (fail or boosts.atk == -6) {
                     return if (move.effect != .AttackDownChance) try log.fail(foe_ident, .None);
                 } else if (foe.active.volatiles.Flying or foe.active.volatiles.Underground) {
-                    try options.log.lastmiss();
+                    try options.log.lastmiss(.{});
                     return options.log.miss(.{battle.active(player)});
                 } else if (stats.atk == 1) {
                     return if (move.effect != .AttackDownChance) try log.fail(foe_ident, .None);
@@ -2644,7 +2644,7 @@ pub const Effects = struct {
                 if (fail or boosts.def == -6) {
                     return if (move.effect != .DefenseDownChance) try log.fail(foe_ident, .None);
                 } else if (foe.active.volatiles.Flying or foe.active.volatiles.Underground) {
-                    try options.log.lastmiss();
+                    try options.log.lastmiss(.{});
                     return options.log.miss(.{battle.active(player)});
                 } else if (stats.def == 1) {
                     return if (move.effect != .DefenseDownChance) try log.fail(foe_ident, .None);
@@ -2658,7 +2658,7 @@ pub const Effects = struct {
                 if (fail or boosts.spe == -6) {
                     return if (move.effect != .SpeedDownChance) try log.fail(foe_ident, .None);
                 } else if (foe.active.volatiles.Flying or foe.active.volatiles.Underground) {
-                    try options.log.lastmiss();
+                    try options.log.lastmiss(.{});
                     return options.log.miss(.{battle.active(player)});
                 } else if (stats.spe == 1) {
                     return if (move.effect != .SpeedDownChance) try log.fail(foe_ident, .None);
@@ -2671,7 +2671,7 @@ pub const Effects = struct {
                 assert(boosts.spd >= -6 and boosts.spd <= 6);
                 if (fail or boosts.spd == -6) return;
                 if (foe.active.volatiles.Flying or foe.active.volatiles.Underground) {
-                    try options.log.lastmiss();
+                    try options.log.lastmiss(.{});
                     return options.log.miss(.{battle.active(player)});
                 } else if (stats.spd == 1) return;
                 try unboostStat(battle, foe, stats, boosts, "spd", 1);
@@ -2682,7 +2682,7 @@ pub const Effects = struct {
                 if (fail or boosts.accuracy == -6) {
                     return if (move.effect != .AccuracyDownChance) try log.fail(foe_ident, .None);
                 } else if (foe.active.volatiles.Flying or foe.active.volatiles.Underground) {
-                    try options.log.lastmiss();
+                    try options.log.lastmiss(.{});
                     return options.log.miss(.{battle.active(player)});
                 }
                 boosts.accuracy = @intCast(@max(-6, @as(i8, boosts.accuracy) - 1));

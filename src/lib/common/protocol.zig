@@ -400,7 +400,7 @@ pub fn Log(comptime Writer: type) type {
             });
         }
 
-        pub fn tie(self: Self) Error!void {
+        pub fn tie(self: Self, _: anytype) Error!void {
             if (!enabled) return;
 
             try self.writer.writeAll(&.{ @intFromEnum(ArgType.Tie), @intFromEnum(ArgType.None) });
@@ -507,7 +507,7 @@ pub fn Log(comptime Writer: type) type {
             });
         }
 
-        pub fn clearallboost(self: Self) Error!void {
+        pub fn clearallboost(self: Self, _: anytype) Error!void {
             if (!enabled) return;
 
             try self.writer.writeAll(&.{@intFromEnum(ArgType.ClearAllBoost)});
@@ -594,7 +594,7 @@ pub fn Log(comptime Writer: type) type {
             });
         }
 
-        pub fn fieldactivate(self: Self) Error!void {
+        pub fn fieldactivate(self: Self, _: anytype) Error!void {
             if (!enabled) return;
 
             try self.writer.writeAll(&.{@intFromEnum(ArgType.FieldActivate)});
@@ -645,7 +645,7 @@ pub fn Log(comptime Writer: type) type {
             });
         }
 
-        pub fn ohko(self: Self) Error!void {
+        pub fn ohko(self: Self, _: anytype) Error!void {
             if (!enabled) return;
 
             try self.writer.writeAll(&.{@intFromEnum(ArgType.OHKO)});
@@ -830,13 +830,13 @@ pub fn Log(comptime Writer: type) type {
             });
         }
 
-        pub fn laststill(self: Self) Error!void {
+        pub fn laststill(self: Self, _: anytype) Error!void {
             if (!enabled) return;
 
             try self.writer.writeAll(&.{@intFromEnum(ArgType.LastStill)});
         }
 
-        pub fn lastmiss(self: Self) Error!void {
+        pub fn lastmiss(self: Self, _: anytype) Error!void {
             if (!enabled) return;
 
             try self.writer.writeAll(&.{@intFromEnum(ArgType.LastMiss)});
@@ -1340,7 +1340,7 @@ test "|move|" {
     stream.reset();
 
     try log.move(.{ p2.ident(4), M1.SkullBash, ID{} });
-    try log.laststill();
+    try log.laststill(.{});
     try expectLog1(
         &.{
             N(ArgType.Move),
@@ -1355,7 +1355,7 @@ test "|move|" {
     stream.reset();
 
     try log.move(.{ p2.ident(4), M1.Tackle, p1.ident(5) });
-    try log.lastmiss();
+    try log.lastmiss(.{});
     try expectLog1(
         &.{
             N(ArgType.Move),
@@ -1462,7 +1462,7 @@ test "|win|" {
 }
 
 test "|tie|" {
-    try log.tie();
+    try log.tie(.{});
     try expectLog1(&.{ N(ArgType.Tie), N(ArgType.None) }, buf[0..2]);
     stream.reset();
 }
@@ -1579,7 +1579,7 @@ test "|-boost|" {
 }
 
 test "|-clearallboost|" {
-    try log.clearallboost();
+    try log.clearallboost(.{});
     try expectLog1(&.{N(ArgType.ClearAllBoost)}, buf[0..1]);
     stream.reset();
 }
@@ -1650,7 +1650,7 @@ test "|-activate|" {
 }
 
 test "|-fieldactivate|" {
-    try log.fieldactivate();
+    try log.fieldactivate(.{});
     try expectLog1(&.{N(ArgType.FieldActivate)}, buf[0..1]);
     stream.reset();
 }
@@ -1698,7 +1698,7 @@ test "|-end|" {
 }
 
 test "|-ohko|" {
-    try log.ohko();
+    try log.ohko(.{});
     try expectLog1(&.{N(ArgType.OHKO)}, buf[0..1]);
     stream.reset();
 }
