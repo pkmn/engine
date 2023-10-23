@@ -433,7 +433,7 @@ fn beforeMove(battle: anytype, player: Player, move: Move, options: anytype) !bo
     if (volatiles.Recharging) {
         volatiles.Recharging = false;
         resetCant(volatiles);
-        try log.cant(ident, .Recharge);
+        try log.cant(.{ ident, Cant.Recharge });
         return false;
     }
 
@@ -457,7 +457,7 @@ fn beforeMove(battle: anytype, player: Player, move: Move, options: anytype) !bo
             resetCant(volatiles);
             volatiles.Nightmare = false;
         } else {
-            try log.cant(ident, .Sleep);
+            try log.cant(.{ ident, Cant.Sleep });
             if (move == .Snore or move == .SleepTalk) break :slp;
             resetCant(volatiles);
             return false;
@@ -466,7 +466,7 @@ fn beforeMove(battle: anytype, player: Player, move: Move, options: anytype) !bo
 
     if (Status.is(stored.status, .FRZ) and !(move == .FlameWheel or move == .SacredFire)) {
         resetCant(volatiles);
-        try log.cant(ident, .Freeze);
+        try log.cant(.{ ident, Cant.Freeze });
         return false;
     }
 
@@ -476,7 +476,7 @@ fn beforeMove(battle: anytype, player: Player, move: Move, options: anytype) !bo
         // if (!showdown) volatiles.Flinch = false;
         volatiles.Flinch = false;
         resetCant(volatiles);
-        try log.cant(ident, .Flinch);
+        try log.cant(.{ ident, Cant.Flinch });
         return false;
     }
 
@@ -527,7 +527,7 @@ fn beforeMove(battle: anytype, player: Player, move: Move, options: anytype) !bo
 
         if (try Rolls.attract(battle, player, options)) {
             resetCant(volatiles);
-            try log.cant(ident, .Attract);
+            try log.cant(.{ ident, Cant.Attract });
             return false;
         }
     }
@@ -538,14 +538,14 @@ fn beforeMove(battle: anytype, player: Player, move: Move, options: anytype) !bo
         if (m != .None and m == move) {
             side.active.volatiles.Charging = false;
             resetCant(volatiles);
-            try options.log.disabled(ident, move);
+            try options.log.cant(.{ ident, Cant.Disable, move });
             return false;
         }
     }
 
     if (Status.is(stored.status, .PAR) and try Rolls.paralyzed(battle, player, options)) {
         resetCant(volatiles);
-        try log.cant(ident, .Paralysis);
+        try log.cant(.{ ident, Cant.Paralysis });
         return false;
     }
 

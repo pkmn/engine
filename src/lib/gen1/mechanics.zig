@@ -21,6 +21,7 @@ const Player = common.Player;
 const Result = common.Result;
 
 const Boost = protocol.Boost;
+const Cant = protocol.Cant;
 const Damage = protocol.Damage;
 const Heal = protocol.Heal;
 
@@ -406,7 +407,7 @@ fn executeMove(
     if (side.last_selected_move == .SKIP_TURN) {
         assert(!showdown);
         if (battle.foe(player).active.volatiles.Binding) {
-            try options.log.cant(battle.active(player), .Bound);
+            try options.log.cant(.{ battle.active(player), Cant.Bound });
         }
         return null;
     }
@@ -499,20 +500,20 @@ fn beforeMove(
             try log.curestatus(ident, before, .Message);
             stored.status = 0; // clears EXT if present
         } else {
-            try log.cant(ident, .Sleep);
+            try log.cant(.{ ident, Cant.Sleep });
         }
         side.last_used_move = .None;
         return .done;
     }
 
     if (Status.is(stored.status, .FRZ)) {
-        try log.cant(ident, .Freeze);
+        try log.cant(.{ ident, Cant.Freeze });
         side.last_used_move = .None;
         return .done;
     }
 
     if (skip or foe.active.volatiles.Binding) {
-        try log.cant(ident, .Bound);
+        try log.cant(.{ ident, Cant.Bound });
         return .done;
     }
 
@@ -520,13 +521,13 @@ fn beforeMove(
         // Pokémon Showdown doesn't clear Flinch until its imaginary "residual" phase, meaning
         // Pokémon can sometimes flinch multiple times from the same original hit
         if (!showdown) volatiles.Flinch = false;
-        try log.cant(ident, .Flinch);
+        try log.cant(.{ ident, Cant.Flinch });
         return .done;
     }
 
     if (volatiles.Recharging) {
         volatiles.Recharging = false;
-        try log.cant(ident, .Recharge);
+        try log.cant(.{ ident, Cant.Recharge });
         return .done;
     }
 
@@ -618,7 +619,7 @@ fn beforeMove(
         volatiles.Binding = false;
         options.chance.clearDurations(player, null);
         // GLITCH: Invulnerable is not cleared, resulting in permanent Fly/Dig invulnerability
-        try log.cant(ident, .Paralysis);
+        try log.cant(.{ ident, Cant.Paralysis });
         return .done;
     }
 
@@ -1645,7 +1646,7 @@ fn disabled(side: *Side, ident: ID, options: anytype) !bool {
             side.last_selected_move;
         if (m != .None and m == last) {
             side.active.volatiles.Charging = false;
-            try options.log.disabled(ident, last);
+            try options.log.cant(.{ ident, Cant.Disable, last });
             return true;
         }
     }

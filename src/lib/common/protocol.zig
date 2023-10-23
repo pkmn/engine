@@ -359,26 +359,17 @@ pub fn Log(comptime Writer: type) type {
             try self.writer.writeAll(&.{pokemon.status});
         }
 
-        pub fn cant(self: Self, ident: ID, reason: Cant) Error!void {
+        // ident: ID, reason: Cant, m?: anytype
+        pub fn cant(self: Self, args: anytype) Error!void {
             if (!enabled) return;
 
-            assert(reason != .Disable);
+            assert(args[1] != .Disable or args.len == 3);
             try self.writer.writeAll(&.{
                 @intFromEnum(ArgType.Cant),
-                @as(u8, @bitCast(ident)),
-                @intFromEnum(reason),
+                @as(u8, @bitCast(args[0])),
+                @intFromEnum(args[1]),
             });
-        }
-
-        pub fn disabled(self: Self, ident: ID, m: anytype) Error!void {
-            if (!enabled) return;
-
-            try self.writer.writeAll(&.{
-                @intFromEnum(ArgType.Cant),
-                @as(u8, @bitCast(ident)),
-                @intFromEnum(Cant.Disable),
-                @intFromEnum(m),
-            });
+            if (args.len == 3) try self.writer.writeByte(@intFromEnum(args[2]));
         }
 
         pub fn faint(self: Self, ident: ID, done: bool) Error!void {
@@ -1421,11 +1412,11 @@ test "|switch|" {
 }
 
 test "|cant|" {
-    try log.cant(p2.ident(6), .Bound);
+    try log.cant(.{ p2.ident(6), Cant.Bound });
     try expectLog1(&.{ N(ArgType.Cant), 0b1110, N(Cant.Bound) }, buf[0..3]);
     stream.reset();
 
-    try log.disabled(p1.ident(2), M1.Earthquake);
+    try log.cant(.{ p1.ident(2), Cant.Disable, M1.Earthquake });
     try expectLog1(&.{ N(ArgType.Cant), 2, N(Cant.Disable), N(M1.Earthquake) }, buf[0..4]);
     stream.reset();
 }
