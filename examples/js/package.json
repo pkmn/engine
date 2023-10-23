@@ -2,7 +2,7 @@
   "dependencies": {
     "@pkmn/data": "^0.7.35",
     "@pkmn/dex": "^0.7.35",
-    "@pkmn/engine": "file:../../..",
+    "@pkmn/engine": "file:../..",
     "@pkmn/sets": "^5.0.4"
   },
   "devDependencies": {

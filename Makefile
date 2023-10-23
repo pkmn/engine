@@ -36,7 +36,7 @@ generate:
 
 .PHONY: zig-lint
 zig-lint:
-	ziglint --exclude src/examples/zig/example.zig,src/lib/gen1/calc.zig
+	ziglint --exclude examples/zig/example.zig,src/lib/gen1/calc.zig
 
 .PHONY: js-lint
 js-lint: node_modules
@@ -88,19 +88,19 @@ check: test lint
 
 .PHONY: c-example
 c-example:
-	$(MAKE) -C src/examples/c
-	./src/examples/c/example 1234
+	$(MAKE) -C examples/c
+	./examples/c/example 1234
 
-src/examples/js/node_modules:
-	npm -C src/examples/js install --install-links=false
+examples/js/node_modules:
+	npm -C examples/js install --install-links=false
 
 .PHONY: js-example
-js-example: src/examples/js/node_modules
-	npm -C src/examples/js start
+js-example: examples/js/node_modules
+	npm -C examples/js start
 
 .PHONY: zig-example
 zig-example:
-	cd src/examples/zig; zig build --summary all run -- 1234
+	cd examples/zig; zig build --summary all run -- 1234
 
 .PHONY: example
 example: c-example js-example zig-example
@@ -122,9 +122,9 @@ benchmark:
 
 .PHONY: clean-example
 clean-example:
-	$(MAKE) clean -C src/examples/c
-	rm -rf src/examples/js/.parcel* src/examples/js/{build,dist}
-	rm -rf src/examples/zig/zig-*
+	$(MAKE) clean -C examples/c
+	rm -rf examples/js/.parcel* examples/js/{build,dist}
+	rm -rf examples/zig/zig-*
 
 .PHONY: clean
 clean: clean-example

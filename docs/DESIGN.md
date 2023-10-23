@@ -90,7 +90,7 @@ though contains all of the information required to produce identical logs to eit
   `package.json`
   - [`build.zig`](../build.zig): deals with building all Zig code
   - [`package.json`](../package.json): deals with building all JavaScript code
-- [`examples`](../src/examples): examples of using the engine across all supported targets
+- [`examples`](../examples): examples of using the engine across all supported targets
 - [`lib`](../src/lib): the Zig code for the `libpkmn` engine
   - [`pkmn.zig`](../src/lib/pkmn.zig): the main entry point for the Zig library
   - [`bindings`](..src/lib/bindings): code which exposes the `libpkmn` API for non-Zig uses

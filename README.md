@@ -142,7 +142,7 @@ documentation](docs/PROTOCOL.md) goes into greater detail on the specifics of up
 potential logs that may result.
 
 *The snippets below are meant to merely illustrate in broad strokes how the pkmn engine can be used
-\- the [`examples`](src/examples) directory contains fully commented and runnable code.*
+\- the [`examples`](examples) directory contains fully commented and runnable code.*
 
 ### C
 
@@ -167,7 +167,7 @@ while (!pkmn_result_type(result = pkmn_battle_update(&battle, c1, c2, &options))
 if (pkmn_error(result)) exit(1);
 ```
 
-[(full code)](src/examples/c/example.c)
+[(full code)](examples/c/example.c)
 
 The C API doesn't export any helpers for creating or accessing the opaque battle objects - it's
 instead intended to be used as the foundation for more ergonomic bindings in [other
@@ -202,7 +202,7 @@ while (!(result = battle.update(c1, c2)).type) {
 console.log(result);
 ```
 
-[(full code)](src/examples/js/example.ts)
+[(full code)](examples/js/example.ts)
 
 By default, the `@pkmn/engine` package compiles the engine with `-Dshowdown`, though by running
 `install-pkmn-engine` directly and passing in `--options` you can override this default and build
@@ -214,7 +214,7 @@ library should be seamless.
 
 Despite relying on the native engine code, the `@pkmn/engine` code is designed to also work in
 browsers which support [WebAssembly](https://webassembly.org/). Running `npm run start:web` from the
-[`examples`](src/examples/js) directory starts a server that can be used to demonstrate the engine
+[`examples`](examples/js) directory starts a server that can be used to demonstrate the engine
 running in the browser.
 
 ### Zig
@@ -244,7 +244,7 @@ while (result.type == .None) : (result = try battle.update(c1, c2, &options)) {
 std.debug.print("{}\n", .{result.type});
 ```
 
-[(full code)](src/examples/zig/example.zig)
+[(full code)](examples/zig/example.zig)
 
 The Zig package also supports some APIs which are difficult to expose elsewhere such as the
 `FixedRNG` which allows you to fully specify the exact RNG frames (which can be useful for ensuring

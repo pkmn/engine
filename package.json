@@ -114,11 +114,11 @@
   },
   "eslintConfig": {
     "extends": "@pkmn",
-    "ignorePatterns": ["dist/", "node_modules/", "src/examples/zig", "build/"],
+    "ignorePatterns": ["dist/", "node_modules/", "examples/zig", "build/"],
     "env": {"es6": true, "node": true, "browser": true},
     "overrides": [{
       "files": ["**/*.ts"],
-      "parserOptions": {"project": ["./tsconfig.json", "./src/examples/js/tsconfig.json"]}
+      "parserOptions": {"project": ["./tsconfig.json", "./examples/js/tsconfig.json"]}
     }, {
       "files": ["src/pkg/index.ts", "src/test/display.ts", "src/test/integration.ts"],
       "rules": {
