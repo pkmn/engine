@@ -953,7 +953,7 @@ fn handleResidual(battle: anytype, player: Player, options: anytype) !bool {
         const before = foe_stored.hp;
         foe_stored.hp = @min(foe_stored.hp + damage, foe_stored.stats.hp);
         // Pokémon Showdown uses the less specific heal here instead of drain... because reasons?
-        if (foe_stored.hp > before) try options.log.heal(foe_ident, foe_stored, .Silent);
+        if (foe_stored.hp > before) try options.log.heal(.{ foe_ident, foe_stored, Heal.Silent });
         if (stored.hp == 0) return true;
     }
 
@@ -1069,7 +1069,9 @@ fn betweenTurns(battle: anytype, mslot: u4, options: anytype) !?Result {
         if (stored.item == .Leftovers) {
             const before = stored.hp;
             stored.hp = @min(stored.hp + @max(stored.stats.hp / 16, 1), stored.stats.hp);
-            if (stored.hp > before) try options.log.heal(battle.active(player), stored, .Leftovers);
+            if (stored.hp > before) {
+                try options.log.heal(.{ battle.active(player), stored, Heal.Leftovers });
+            }
         }
     }
 
@@ -1138,7 +1140,7 @@ fn betweenTurns(battle: anytype, mslot: u4, options: anytype) !?Result {
                     assert(offset < 3);
                     stored.hp = @min(stored.hp + ((offset + 1) * 10), stored.stats.hp);
                     const reason: Heal = @enumFromInt(@intFromEnum(Heal.Berry) + offset);
-                    try options.log.heal(ident, stored, reason);
+                    try options.log.heal(.{ ident, stored, reason });
                 }
             } else if (num < @intFromEnum(Item.BitterBerry)) {
                 const proc = if (stored.item == .MiracleBerry)
@@ -1768,7 +1770,7 @@ pub const Effects = struct {
         } else {
             stored.hp = @min(stored.stats.hp, stored.hp + (stored.stats.hp / 2));
         }
-        try options.log.heal(ident, stored, if (rest) Heal.Silent else Heal.None);
+        try options.log.heal(.{ ident, stored, if (rest) Heal.Silent else Heal.None });
     }
 
     pub fn healBell(battle: anytype, player: Player, _: *State, options: anytype) !void {
@@ -1934,7 +1936,7 @@ pub const Effects = struct {
             else => @min(stored.stats.hp, stored.hp + (stored.stats.hp / 4)),
         };
 
-        try options.log.heal(ident, stored, Heal.None);
+        try options.log.heal(.{ ident, stored, Heal.None });
     }
 
     pub fn multiHit(battle: anytype, player: Player, state: *State, options: anytype) !void {

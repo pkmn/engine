@@ -1553,7 +1553,7 @@ fn handleResidual(battle: anytype, player: Player, options: anytype) !void {
         // Uncapped damage is added back to the foe
         foe_stored.hp = @min(foe_stored.hp + damage, foe_stored.stats.hp);
         // Pokémon Showdown uses the less specific heal here instead of drain... because reasons?
-        if (foe_stored.hp > before) try options.log.heal(foe_ident, foe_stored, .Silent);
+        if (foe_stored.hp > before) try options.log.heal(.{ foe_ident, foe_stored, Heal.Silent });
     }
 }
 
@@ -2038,7 +2038,7 @@ pub const Effects = struct {
         } else {
             stored.hp = @min(stored.stats.hp, stored.hp + (stored.stats.hp / 2));
         }
-        try options.log.heal(ident, stored, if (rest) Heal.Silent else Heal.None);
+        try options.log.heal(.{ ident, stored, if (rest) Heal.Silent else Heal.None });
     }
 
     fn hyperBeam(battle: anytype, player: Player, options: anytype) !void {

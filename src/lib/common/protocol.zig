@@ -454,14 +454,15 @@ pub fn Log(comptime Writer: type) type {
             });
         }
 
-        pub fn heal(self: Self, ident: ID, pokemon: anytype, reason: Heal) Error!void {
+        // args: ident: ID, pokemon: anytype, reason: Heal
+        pub fn heal(self: Self, args: anytype) Error!void {
             if (!enabled) return;
 
-            assert(reason != .Drain);
-            try self.writer.writeAll(&.{ @intFromEnum(ArgType.Heal), @as(u8, @bitCast(ident)) });
-            try self.writer.writeIntNative(u16, pokemon.hp);
-            try self.writer.writeIntNative(u16, pokemon.stats.hp);
-            try self.writer.writeAll(&.{ pokemon.status, @intFromEnum(reason) });
+            assert(args[2] != .Drain);
+            try self.writer.writeAll(&.{ @intFromEnum(ArgType.Heal), @as(u8, @bitCast(args[0])) });
+            try self.writer.writeIntNative(u16, args[1].hp);
+            try self.writer.writeIntNative(u16, args[1].stats.hp);
+            try self.writer.writeAll(&.{ args[1].status, @intFromEnum(args[2]) });
         }
 
         pub fn drain(self: Self, source: ID, pokemon: anytype, target: ID) Error!void {
@@ -1510,7 +1511,7 @@ test "|-heal|" {
     var chansey = gen1.helpers.Pokemon.init(.{ .species = .Chansey, .moves = &.{.Splash} });
     chansey.hp = 612;
     chansey.status = gen1.Status.slp(1);
-    try log.heal(p2.ident(2), &chansey, .None);
+    try log.heal(.{ p2.ident(2), &chansey, Heal.None });
     var expected: []const u8 = switch (endian) {
         .Big => &.{ N(ArgType.Heal), 0b1010, 2, 100, 2, 191, 1, N(Heal.None) },
         .Little => &.{ N(ArgType.Heal), 0b1010, 100, 2, 191, 2, 1, N(Heal.None) },
@@ -1521,7 +1522,7 @@ test "|-heal|" {
     chansey.hp = 100;
     chansey.stats.hp = 256;
     chansey.status = 0;
-    try log.heal(p2.ident(2), &chansey, .Silent);
+    try log.heal(.{ p2.ident(2), &chansey, Heal.Silent });
     expected = switch (endian) {
         .Big => &.{ N(ArgType.Heal), 0b1010, 0, 100, 1, 0, 0, N(Heal.Silent) },
         .Little => &.{ N(ArgType.Heal), 0b1010, 100, 0, 0, 1, 0, N(Heal.Silent) },

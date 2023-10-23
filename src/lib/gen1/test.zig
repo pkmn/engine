@@ -33,6 +33,7 @@ const ArgType = protocol.ArgType;
 const ByteStream = protocol.ByteStream;
 const FixedLog = protocol.FixedLog;
 const Log = protocol.Log;
+const Heal = protocol.Heal;
 
 const Rational = rational.Rational;
 
@@ -758,7 +759,7 @@ test "fainting (single)" {
         t.expected.p2.get(1).hp = 0;
         try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .LeechSeed);
         t.expected.p1.get(1).hp += 15;
-        try t.log.expected.heal(P1.ident(1), t.expected.p1.get(1), .Silent);
+        try t.log.expected.heal(.{ P1.ident(1), t.expected.p1.get(1), Heal.Silent });
         try t.log.expected.faint(P2.ident(1), true);
 
         try expectEqual(Result{ .p1 = .Pass, .p2 = .Switch }, try t.update(move(1), move(1)));
@@ -4268,10 +4269,10 @@ test "Heal effect" {
 
     try t.log.expected.move(P1.ident(1), Move.Recover, P1.ident(1));
     t.expected.p1.get(1).hp += 51;
-    try t.log.expected.heal(P1.ident(1), t.expected.p1.get(1), .None);
+    try t.log.expected.heal(.{ P1.ident(1), t.expected.p1.get(1), Heal.None });
     try t.log.expected.move(P2.ident(1), Move.SoftBoiled, P2.ident(1));
     t.expected.p2.get(1).hp += 351;
-    try t.log.expected.heal(P2.ident(1), t.expected.p2.get(1), .None);
+    try t.log.expected.heal(.{ P2.ident(1), t.expected.p2.get(1), Heal.None });
     try t.log.expected.turn(4);
 
     // Heals 1/2 of maximum HP
@@ -4325,7 +4326,7 @@ test "Rest effect" {
     t.expected.p2.get(1).hp += 588;
     t.expected.p2.get(1).status = Status.slf(2);
     try t.log.expected.statusFrom(P2.ident(1), Status.slf(2), Move.Rest);
-    try t.log.expected.heal(P2.ident(1), t.expected.p2.get(1), .Silent);
+    try t.log.expected.heal(.{ P2.ident(1), t.expected.p2.get(1), Heal.Silent });
     try t.log.expected.turn(3);
 
     try expectEqual(Result.Default, try t.update(move(2), move(1)));
@@ -4510,7 +4511,7 @@ test "DreamEater effect" {
         t.expected.p2.get(2).hp += 80;
         t.expected.p2.get(2).status = Status.slf(2);
         try t.log.expected.statusFrom(P2.ident(2), t.expected.p2.get(2).status, Move.Rest);
-        try t.log.expected.heal(P2.ident(2), t.expected.p2.get(2), .Silent);
+        try t.log.expected.heal(.{ P2.ident(2), t.expected.p2.get(2), Heal.Silent });
         try t.log.expected.move(P1.ident(1), Move.DreamEater, P2.ident(2));
         if (showdown) {
             try t.log.expected.immune(P2.ident(2), .None);
@@ -4623,7 +4624,7 @@ test "LeechSeed effect" {
     t.expected.p2.get(1).hp -= 20;
     try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .LeechSeed);
     t.expected.p1.get(2).hp += 20;
-    try t.log.expected.heal(P1.ident(2), t.expected.p1.get(2), .Silent);
+    try t.log.expected.heal(.{ P1.ident(2), t.expected.p1.get(2), Heal.Silent });
     try t.log.expected.move(P1.ident(2), Move.LeechSeed, P2.ident(1));
     if (!showdown) {
         try t.log.expected.lastmiss();
@@ -4649,7 +4650,7 @@ test "LeechSeed effect" {
     t.expected.p2.get(2).hp = 0;
     try t.log.expected.damage(P2.ident(2), t.expected.p2.get(2), .LeechSeed);
     t.expected.p1.get(2).hp += 24;
-    try t.log.expected.heal(P1.ident(2), t.expected.p1.get(2), .Silent);
+    try t.log.expected.heal(.{ P1.ident(2), t.expected.p1.get(2), Heal.Silent });
     try t.log.expected.faint(P2.ident(2), true);
 
     // Leech Seed's uncapped damage is added back
@@ -5071,7 +5072,7 @@ test "Haze effect" {
     t.expected.p1.get(1).hp -= 22;
     try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .LeechSeed);
     t.expected.p2.get(1).hp += 22;
-    try t.log.expected.heal(P2.ident(1), t.expected.p2.get(1), .Silent);
+    try t.log.expected.heal(.{ P2.ident(1), t.expected.p2.get(1), Heal.Silent });
     try t.log.expected.move(P2.ident(1), Move.StunSpore, P1.ident(1));
     t.expected.p1.get(1).status = Status.init(.PAR);
     try t.log.expected.status(P1.ident(1), t.expected.p1.get(1).status, .None);
@@ -5094,7 +5095,7 @@ test "Haze effect" {
     t.expected.p1.get(1).hp -= 22;
     try t.log.expected.damage(P1.ident(1), t.expected.p1.get(1), .LeechSeed);
     t.expected.p2.get(1).hp += 22;
-    try t.log.expected.heal(P2.ident(1), t.expected.p2.get(1), .Silent);
+    try t.log.expected.heal(.{ P2.ident(1), t.expected.p2.get(1), Heal.Silent });
     try t.log.expected.turn(4);
 
     try expectEqual(Result.Default, try t.update(move(3), move(3)));
@@ -6057,7 +6058,7 @@ test "Bide residual bug" {
     t.expected.p2.get(1).hp -= 22;
     try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .LeechSeed);
     t.expected.p1.get(1).hp += 22;
-    try t.log.expected.heal(P1.ident(1), t.expected.p1.get(1), .Silent);
+    try t.log.expected.heal(.{ P1.ident(1), t.expected.p1.get(1), Heal.Silent });
     try t.log.expected.turn(3);
 
     try expectEqual(Result.Default, try t.update(move(2), move(2)));
@@ -6072,7 +6073,7 @@ test "Bide residual bug" {
     t.expected.p2.get(1).hp -= 22;
     try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .LeechSeed);
     t.expected.p1.get(1).hp += 22;
-    try t.log.expected.heal(P1.ident(1), t.expected.p1.get(1), .Silent);
+    try t.log.expected.heal(.{ P1.ident(1), t.expected.p1.get(1), Heal.Silent });
     try t.log.expected.turn(4);
 
     const choice = move(if (showdown) 2 else 0);
@@ -6562,7 +6563,7 @@ test "Counter + sleep = Desync Clause Mod bug" {
 
     try t.log.expected.move(P2.ident(1), Move.SoftBoiled, P2.ident(1));
     t.expected.p2.get(1).hp += 100;
-    try t.log.expected.heal(P2.ident(1), t.expected.p2.get(1), .None);
+    try t.log.expected.heal(.{ P2.ident(1), t.expected.p2.get(1), Heal.None });
     try t.log.expected.move(P1.ident(2), Move.BodySlam, P2.ident(1));
     t.expected.p2.get(1).hp -= 268;
     try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .None);
@@ -6574,7 +6575,7 @@ test "Counter + sleep = Desync Clause Mod bug" {
     try t.log.expected.switched(P1.ident(1), t.expected.p1.get(1));
     try t.log.expected.move(P2.ident(1), Move.SoftBoiled, P2.ident(1));
     t.expected.p2.get(1).hp += 268;
-    try t.log.expected.heal(P2.ident(1), t.expected.p2.get(1), .None);
+    try t.log.expected.heal(.{ P2.ident(1), t.expected.p2.get(1), Heal.None });
     try t.log.expected.turn(5);
 
     try expectEqual(Result.Default, try t.update(swtch(2), move(2)));
@@ -7299,7 +7300,7 @@ test "Min/max stat recalculation bug" {
     t.expected.p2.get(1).hp += 143;
     t.expected.p2.get(1).status = Status.slf(2);
     try t.log.expected.statusFrom(P2.ident(1), t.expected.p2.get(1).status, Move.Rest);
-    try t.log.expected.heal(P2.ident(1), t.expected.p2.get(1), .Silent);
+    try t.log.expected.heal(.{ P2.ident(1), t.expected.p2.get(1), Heal.Silent });
     try t.log.expected.turn(3);
 
     try expectEqual(Result.Default, try t.update(move(2), move(2)));
@@ -7349,7 +7350,7 @@ test "Min/max stat recalculation bug" {
     t.expected.p2.get(1).hp += 22;
     t.expected.p2.get(1).status = Status.slf(2);
     try t.log.expected.statusFrom(P2.ident(1), Status.slf(2), Move.Rest);
-    try t.log.expected.heal(P2.ident(1), t.expected.p2.get(1), .Silent);
+    try t.log.expected.heal(.{ P2.ident(1), t.expected.p2.get(1), Heal.Silent });
     try t.log.expected.turn(7);
 
     try expectEqual(Result.Default, try t.update(move(3), move(2)));
@@ -7832,7 +7833,7 @@ test "Toxic counter glitches" {
     try t.log.expected.statusFrom(P2.ident(1), Status.slf(2), Move.Rest);
     t.expected.p2.get(1).hp += 1;
     t.expected.p2.get(1).status = Status.slf(2);
-    try t.log.expected.heal(P2.ident(1), t.expected.p2.get(1), .Silent);
+    try t.log.expected.heal(.{ P2.ident(1), t.expected.p2.get(1), Heal.Silent });
     try t.log.expected.turn(2);
 
     try expectEqual(Result.Default, try t.update(move(1), move(2)));
@@ -7923,7 +7924,7 @@ test "Poison/Burn animation with 0 HP" {
         if (!showdown) {
             try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .Poison);
             t.expected.p1.get(1).hp += 90;
-            try t.log.expected.heal(P1.ident(1), t.expected.p1.get(1), .Silent);
+            try t.log.expected.heal(.{ P1.ident(1), t.expected.p1.get(1), Heal.Silent });
         }
         try t.log.expected.faint(P2.ident(1), true);
 
@@ -7971,7 +7972,7 @@ test "Poison/Burn animation with 0 HP" {
         if (!showdown) {
             try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .Poison);
             t.expected.p1.get(1).hp += 90;
-            try t.log.expected.heal(P1.ident(1), t.expected.p1.get(1), .Silent);
+            try t.log.expected.heal(.{ P1.ident(1), t.expected.p1.get(1), Heal.Silent });
         }
         try t.log.expected.faint(P2.ident(1), true);
 
@@ -8013,7 +8014,7 @@ test "Poison/Burn animation with 0 HP" {
         t.expected.p2.get(1).hp -= 30;
         try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .Poison);
         t.expected.p1.get(1).hp += 90;
-        try t.log.expected.heal(P1.ident(1), t.expected.p1.get(1), .Silent);
+        try t.log.expected.heal(.{ P1.ident(1), t.expected.p1.get(1), Heal.Silent });
         try t.log.expected.faint(P2.ident(1), true);
 
         try expectEqual(Result{ .p1 = .Pass, .p2 = .Switch }, try t.update(move(2), move(1)));
@@ -8052,7 +8053,7 @@ test "Poison/Burn animation with 0 HP" {
         t.expected.p2.get(1).hp -= 6;
         try t.log.expected.damage(P2.ident(1), t.expected.p2.get(1), .Confusion);
         t.expected.p1.get(1).hp += 30;
-        try t.log.expected.heal(P1.ident(1), t.expected.p1.get(1), .Silent);
+        try t.log.expected.heal(.{ P1.ident(1), t.expected.p1.get(1), Heal.Silent });
         try t.log.expected.faint(P2.ident(1), true);
 
         try expectEqual(Result{ .p1 = .Pass, .p2 = .Switch }, try t.update(move(2), move(1)));
@@ -9007,7 +9008,7 @@ test "Stat down modifier overflow glitch" {
 
         try t.log.expected.move(P2.ident(1), Move.Recover, P2.ident(1));
         t.expected.p2.get(1).hp += 2;
-        try t.log.expected.heal(P2.ident(1), t.expected.p2.get(1), .None);
+        try t.log.expected.heal(.{ P2.ident(1), t.expected.p2.get(1), Heal.None });
         try t.log.expected.move(P1.ident(1), Move.Psychic, P2.ident(1));
         if (showdown) {
             try t.log.expected.resisted(P2.ident(1));
@@ -9102,7 +9103,7 @@ test "Stat down modifier overflow glitch" {
 
         try t.log.expected.move(P2.ident(1), Move.Recover, P2.ident(1));
         t.expected.p2.get(1).hp += 2;
-        try t.log.expected.heal(P2.ident(1), t.expected.p2.get(1), .None);
+        try t.log.expected.heal(.{ P2.ident(1), t.expected.p2.get(1), Heal.None });
         try t.log.expected.move(P1.ident(1), Move.Psychic, P2.ident(1));
         try t.log.expected.resisted(P2.ident(1));
         t.expected.p2.get(1).hp = 0;
@@ -10016,7 +10017,7 @@ test "MAX_LOGS" {
     p1.get(1).hp -= 22;
     try expected.damage(P1.ident(1), p1.get(1), .LeechSeed);
     p2.get(1).hp += 22;
-    try expected.heal(P2.ident(1), p2.get(1), .Silent);
+    try expected.heal(.{ P2.ident(1), p2.get(1), Heal.Silent });
     try expected.activate(P2.ident(1), .Confusion);
     try expected.move(P2.ident(1), Move.Metronome, P2.ident(1));
     try expected.moveFrom(P2.ident(1), Move.MirrorMove, P2.ident(1), Move.Metronome);
@@ -10039,7 +10040,7 @@ test "MAX_LOGS" {
     p2.get(1).hp -= 22;
     try expected.damage(P2.ident(1), p2.get(1), .LeechSeed);
     p1.get(1).hp += 22;
-    try expected.heal(P1.ident(1), p1.get(1), .Silent);
+    try expected.heal(.{ P1.ident(1), p1.get(1), Heal.Silent });
     try expected.turn(4);
 
     // P1 uses Metronome -> Fury Swipes and P2 uses Metronome -> Mirror Move
