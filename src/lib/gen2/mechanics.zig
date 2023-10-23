@@ -852,10 +852,10 @@ fn checkFaint(
         try options.log.tie();
         return Result.Tie;
     } else if (player_out) {
-        try options.log.win(player.foe());
+        try options.log.win(.{player.foe()});
         return if (player == .P1) Result.Lose else Result.Win;
     } else if (foe_out) {
-        try options.log.win(player);
+        try options.log.win(.{player});
         return if (player == .P1) Result.Win else Result.Lose;
     }
 
@@ -885,19 +885,19 @@ fn faint(battle: anytype, player: Player, done: bool, options: anytype) !void {
             side.stored().stats.spe;
     }
 
-    try options.log.faint(battle.active(player), done);
+    try options.log.faint(.{ battle.active(player), done });
     options.calc.capped(player);
 }
 
 // TODO: see if we can move *before* applyDamage and include failuretext logic
 pub fn reportOutcome(battle: anytype, player: Player, state: *State, options: anytype) !void {
     const foe_ident = battle.active(player.foe());
-    if (state.crit) try options.log.crit(foe_ident);
+    if (state.crit) try options.log.crit(.{foe_ident});
     if (!state.immune()) {
         if (state.effectiveness > Effectiveness.neutral) {
-            try options.log.supereffective(foe_ident);
+            try options.log.supereffective(.{foe_ident});
         } else if (state.effectiveness < Effectiveness.neutral) {
-            try options.log.resisted(foe_ident);
+            try options.log.resisted(.{foe_ident});
         }
     }
 }
@@ -1226,7 +1226,7 @@ fn endTurn(battle: anytype, options: anytype) @TypeOf(options.log).Error!Result 
         return Result.Error;
     }
 
-    try options.log.turn(battle.turn);
+    try options.log.turn(.{battle.turn});
 
     return Result.Default;
 }
@@ -1281,7 +1281,7 @@ pub const Effects = struct {
             return options.log.immune(battle.active(player.foe()), .None);
         } else if (foe.active.volatiles.Flying or foe.active.volatiles.Underground) {
             try options.log.lastmiss();
-            return options.log.miss(battle.active(player));
+            return options.log.miss(.{battle.active(player)});
         }
 
         foe.active.volatiles.Attract = true;
@@ -1455,7 +1455,7 @@ pub const Effects = struct {
         if (side.active.types.includes(.Ghost)) {
             if (foe.active.volatiles.Flying or foe.active.volatiles.Underground) {
                 try options.log.lastmiss();
-                return options.log.miss(battle.active(player));
+                return options.log.miss(.{battle.active(player)});
             } else if (foe.active.volatiles.Substitute) {
                 return options.log.activateMove(foe_ident, .SubstituteBlock, state.move);
             } else if (foe.active.volatiles.Curse) {
@@ -1507,7 +1507,7 @@ pub const Effects = struct {
 
     pub fn destinyBond(battle: anytype, player: Player, _: *State, options: anytype) !void {
         battle.side(player).active.volatiles.DestinyBond = true;
-        try options.log.singlemove(battle.active(player), Move.DestinyBond);
+        try options.log.singlemove(.{ battle.active(player), Move.DestinyBond });
     }
 
     pub fn disable(battle: anytype, player: Player, _: *State, options: anytype) !void {
@@ -1684,7 +1684,7 @@ pub const Effects = struct {
 
         if (foe.active.volatiles.Flying or foe.active.volatiles.Underground) {
             try options.log.lastmiss();
-            return options.log.miss(battle.active(player));
+            return options.log.miss(.{battle.active(player)});
         } else if (foe.active.volatiles.Foresight) {
             return options.log.fail(battle.active(player), .None);
         }
@@ -1777,7 +1777,7 @@ pub const Effects = struct {
         var side = battle.side(player);
         side.active.volatiles.Nightmare = false;
 
-        try options.log.cureteam(battle.active(player));
+        try options.log.cureteam(.{battle.active(player)});
         for (&side.pokemon) |*p| p.status = 0;
 
         // We technically only need to recompute stats if the active Pokémon was burned/paralyzed,
@@ -1793,7 +1793,7 @@ pub const Effects = struct {
 
     pub fn hyperBeam(battle: anytype, player: Player, _: *State, options: anytype) !void {
         battle.side(player).active.volatiles.Recharging = true;
-        try options.log.mustrecharge(battle.active(player));
+        try options.log.mustrecharge(.{battle.active(player)});
     }
 
     pub fn leechSeed(battle: anytype, player: Player, state: *State, options: anytype) !void {
@@ -1808,7 +1808,7 @@ pub const Effects = struct {
             try checkHit(battle, player, state, options);
             if (state.miss) {
                 try options.log.lastmiss();
-                return options.log.miss(battle.active(player));
+                return options.log.miss(.{battle.active(player)});
             }
             if (foe.active.volatiles.LeechSeed) return;
         } else {
@@ -1817,7 +1817,7 @@ pub const Effects = struct {
                 state.miss or foe.active.types.includes(.Grass) or foe.active.volatiles.LeechSeed;
             if (miss) {
                 try options.log.lastmiss();
-                return options.log.miss(battle.active(player));
+                return options.log.miss(.{battle.active(player)});
             }
         }
 
@@ -1854,7 +1854,7 @@ pub const Effects = struct {
         if (foe.active.volatiles.Flying or foe.active.volatiles.Underground) {
             if (!showdown) return options.log.fail(battle.active(player.foe()), .None);
             try options.log.lastmiss();
-            return options.log.miss(battle.active(player));
+            return options.log.miss(.{battle.active(player)});
         } else if (foe.active.volatiles.Trapped) {
             return options.log.fail(battle.active(player.foe()), .None);
         }
@@ -1951,7 +1951,7 @@ pub const Effects = struct {
         if (foe_volatiles.Flying or foe_volatiles.Underground) {
             if (!showdown) return options.log.fail(battle.active(player.foe()), .None);
             try options.log.lastmiss();
-            return options.log.miss(battle.active(player));
+            return options.log.miss(.{battle.active(player)});
         } else if (foe_volatiles.Substitute) {
             return options.log.activateMove(foe_ident, .SubstituteBlock, state.move);
         } else if (!Status.is(foe.stored().status, .SLP) or foe_volatiles.Nightmare) {
@@ -2023,7 +2023,7 @@ pub const Effects = struct {
         if (Status.any(foe.stored().status)) return options.log.fail(foe_ident, .None);
         if (state.miss) {
             try options.log.lastmiss();
-            return options.log.miss(battle.active(player));
+            return options.log.miss(.{battle.active(player)});
         } else if (foe.active.volatiles.Substitute) {
             return options.log.activateMove(foe_ident, .SubstituteBlock, state.move);
         }
@@ -2099,7 +2099,7 @@ pub const Effects = struct {
             return options.log.activateMove(foe_ident, .SubstituteBlock, state.move);
         } else if (state.miss) {
             try options.log.lastmiss();
-            return options.log.miss(battle.active(player));
+            return options.log.miss(.{battle.active(player)});
         }
 
         foe_stored.status = Status.init(.PSN);
@@ -2150,7 +2150,7 @@ pub const Effects = struct {
         } else {
             volatiles.Protect = true;
         }
-        try options.log.singleturn(battle.active(player), state.move);
+        try options.log.singleturn(.{ battle.active(player), state.move });
     }
 
     pub fn psychUp(battle: anytype, player: Player, _: *State, options: anytype) !void {
@@ -2163,7 +2163,7 @@ pub const Effects = struct {
         }
 
         side.active.boosts = foe.active.boosts;
-        try options.log.copyboost(battle.active(player), battle.active(player.foe()));
+        try options.log.copyboost(.{ battle.active(player), battle.active(player.foe()) });
     }
 
     pub fn pursuit(battle: anytype, player: Player, state: *State, _: anytype) !void {
@@ -2174,7 +2174,7 @@ pub const Effects = struct {
     pub const rage = struct {
         pub fn start(battle: anytype, player: Player, _: *State, options: anytype) !void {
             battle.side(player).active.volatiles.Rage = true;
-            try options.log.singlemove(battle.active(player), Move.Rage);
+            try options.log.singlemove(.{ battle.active(player), Move.Rage });
         }
 
         pub fn damage(battle: anytype, player: Player, state: *State, _: anytype) !void {
@@ -2490,7 +2490,7 @@ pub const Effects = struct {
         } else if (foe.active.volatiles.Flying or foe.active.volatiles.Underground) {
             if (!showdown) return options.log.fail(battle.active(player), .None);
             try options.log.lastmiss();
-            return options.log.miss(battle.active(player));
+            return options.log.miss(.{battle.active(player)});
         }
 
         side.active.volatiles.Transform = true;
@@ -2512,7 +2512,7 @@ pub const Effects = struct {
             side.active.moves[i].pp = if (m.id != .None) if (m.id == .Sketch) 1 else 5 else 0;
         }
 
-        try options.log.transform(battle.active(player), foe_ident);
+        try options.log.transform(.{ battle.active(player), foe_ident });
     }
 
     pub fn triAttack(battle: anytype, player: Player, state: *State, options: anytype) !void {
@@ -2631,7 +2631,7 @@ pub const Effects = struct {
                     return if (move.effect != .AttackDownChance) try log.fail(foe_ident, .None);
                 } else if (foe.active.volatiles.Flying or foe.active.volatiles.Underground) {
                     try options.log.lastmiss();
-                    return options.log.miss(battle.active(player));
+                    return options.log.miss(.{battle.active(player)});
                 } else if (stats.atk == 1) {
                     return if (move.effect != .AttackDownChance) try log.fail(foe_ident, .None);
                 }
@@ -2645,7 +2645,7 @@ pub const Effects = struct {
                     return if (move.effect != .DefenseDownChance) try log.fail(foe_ident, .None);
                 } else if (foe.active.volatiles.Flying or foe.active.volatiles.Underground) {
                     try options.log.lastmiss();
-                    return options.log.miss(battle.active(player));
+                    return options.log.miss(.{battle.active(player)});
                 } else if (stats.def == 1) {
                     return if (move.effect != .DefenseDownChance) try log.fail(foe_ident, .None);
                 }
@@ -2659,7 +2659,7 @@ pub const Effects = struct {
                     return if (move.effect != .SpeedDownChance) try log.fail(foe_ident, .None);
                 } else if (foe.active.volatiles.Flying or foe.active.volatiles.Underground) {
                     try options.log.lastmiss();
-                    return options.log.miss(battle.active(player));
+                    return options.log.miss(.{battle.active(player)});
                 } else if (stats.spe == 1) {
                     return if (move.effect != .SpeedDownChance) try log.fail(foe_ident, .None);
                 }
@@ -2672,7 +2672,7 @@ pub const Effects = struct {
                 if (fail or boosts.spd == -6) return;
                 if (foe.active.volatiles.Flying or foe.active.volatiles.Underground) {
                     try options.log.lastmiss();
-                    return options.log.miss(battle.active(player));
+                    return options.log.miss(.{battle.active(player)});
                 } else if (stats.spd == 1) return;
                 try unboostStat(battle, foe, stats, boosts, "spd", 1);
                 try log.boost(foe_ident, .SpecialDefense, -1);
@@ -2683,7 +2683,7 @@ pub const Effects = struct {
                     return if (move.effect != .AccuracyDownChance) try log.fail(foe_ident, .None);
                 } else if (foe.active.volatiles.Flying or foe.active.volatiles.Underground) {
                     try options.log.lastmiss();
-                    return options.log.miss(battle.active(player));
+                    return options.log.miss(.{battle.active(player)});
                 }
                 boosts.accuracy = @intCast(@max(-6, @as(i8, boosts.accuracy) - 1));
                 try log.boost(foe_ident, .Accuracy, -1);

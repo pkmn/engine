@@ -939,7 +939,7 @@ fn doMove(
         } else {
             if (showdown or !zero) try options.chance.commit(player, .miss);
             try log.lastmiss();
-            try log.miss(battle.active(player));
+            try log.miss(.{battle.active(player)});
         }
         if (move.effect == .JumpKick) {
             // Recoil is supposed to be damage/8 but damage will always be 0 here
@@ -975,11 +975,11 @@ fn doMove(
     var hit: u4 = 0;
     while (hit < hits) {
         if (hit == 0) {
-            if (crit) try log.crit(battle.active(player.foe()));
+            if (crit) try log.crit(.{battle.active(player.foe())});
             if (effectiveness > Effectiveness.neutral) {
-                try log.supereffective(battle.active(player.foe()));
+                try log.supereffective(.{battle.active(player.foe())});
             } else if (effectiveness < Effectiveness.neutral) {
-                try log.resisted(battle.active(player.foe()));
+                try log.resisted(.{battle.active(player.foe())});
             }
         }
         if (!skip) nullified = try applyDamage(battle, player.foe(), player.foe(), .None, options);
@@ -1350,7 +1350,7 @@ fn checkHit(battle: anytype, player: Player, move: Move.Data, options: anytype) 
     } else {
         try options.chance.commit(player, .miss);
         try options.log.lastmiss();
-        try options.log.miss(battle.active(player));
+        try options.log.miss(.{battle.active(player)});
     }
 
     return false;
@@ -1454,10 +1454,10 @@ fn checkFaint(
         try options.log.tie();
         return Result.Tie;
     } else if (player_out) {
-        try options.log.win(player.foe());
+        try options.log.win(.{player.foe()});
         return if (player == .P1) Result.Lose else Result.Win;
     } else if (foe_out) {
-        try options.log.win(player);
+        try options.log.win(.{player});
         return if (player == .P1) Result.Win else Result.Lose;
     }
 
@@ -1499,7 +1499,7 @@ fn faint(battle: anytype, player: Player, done: bool, options: anytype) !?Result
             side.stored().stats.spe;
     }
 
-    try options.log.faint(battle.active(player), done);
+    try options.log.faint(.{ battle.active(player), done });
     options.calc.capped(player);
     return null;
 }
@@ -1576,7 +1576,7 @@ fn endTurn(battle: anytype, options: anytype) @TypeOf(options.log).Error!Result 
         return Result.Error;
     }
 
-    try options.log.turn(battle.turn);
+    try options.log.turn(.{battle.turn});
 
     return Result.Default;
 }
@@ -1844,7 +1844,7 @@ pub const Effects = struct {
 
         if (foe.active.volatiles.Invulnerable) {
             try options.log.lastmiss();
-            return options.log.miss(battle.active(player));
+            return options.log.miss(.{battle.active(player)});
         }
 
         battle.side(player).active.types = foe.active.types;
@@ -2044,7 +2044,7 @@ pub const Effects = struct {
 
     fn hyperBeam(battle: anytype, player: Player, options: anytype) !void {
         battle.side(player).active.volatiles.Recharging = true;
-        try options.log.mustrecharge(battle.active(player));
+        try options.log.mustrecharge(.{battle.active(player)});
     }
 
     fn leechSeed(battle: anytype, player: Player, move: Move.Data, options: anytype) !void {
@@ -2061,7 +2061,7 @@ pub const Effects = struct {
             if (!try checkHit(battle, player, move, options)) return;
             if (foe.active.types.includes(.Grass) or foe.active.volatiles.LeechSeed) {
                 try options.log.lastmiss();
-                return options.log.miss(battle.active(player));
+                return options.log.miss(.{battle.active(player)});
             }
         }
 
@@ -2399,7 +2399,7 @@ pub const Effects = struct {
             side.active.moves[i].pp = if (m.id != .None) 5 else 0;
         }
 
-        try options.log.transform(battle.active(player), foe_ident);
+        try options.log.transform(.{ battle.active(player), foe_ident });
     }
 
     fn binding(battle: anytype, player: Player, rewrap: bool, options: anytype) !void {

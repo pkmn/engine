@@ -372,27 +372,30 @@ pub fn Log(comptime Writer: type) type {
             if (args.len == 3) try self.writer.writeByte(@intFromEnum(args[2]));
         }
 
-        pub fn faint(self: Self, ident: ID, done: bool) Error!void {
+        // ident: ID, done: bool
+        pub fn faint(self: Self, args: anytype) Error!void {
             if (!enabled) return;
 
-            try self.writer.writeAll(&.{ @intFromEnum(ArgType.Faint), @as(u8, @bitCast(ident)) });
-            if (done) try self.writer.writeByte(@intFromEnum(ArgType.None));
+            try self.writer.writeAll(&.{ @intFromEnum(ArgType.Faint), @as(u8, @bitCast(args[0])) });
+            if (args[1]) try self.writer.writeByte(@intFromEnum(ArgType.None));
         }
 
-        pub fn turn(self: Self, num: u16) Error!void {
+        // num: u16
+        pub fn turn(self: Self, args: anytype) Error!void {
             if (!enabled) return;
 
             try self.writer.writeByte(@intFromEnum(ArgType.Turn));
-            try self.writer.writeIntNative(u16, num);
+            try self.writer.writeIntNative(u16, args[0]);
             try self.writer.writeByte(@intFromEnum(ArgType.None));
         }
 
-        pub fn win(self: Self, player: Player) Error!void {
+        // player: Player
+        pub fn win(self: Self, args: anytype) Error!void {
             if (!enabled) return;
 
             try self.writer.writeAll(&.{
                 @intFromEnum(ArgType.Win),
-                @intFromEnum(player),
+                @intFromEnum(args[0]),
                 @intFromEnum(ArgType.None),
             });
         }
@@ -520,10 +523,11 @@ pub fn Log(comptime Writer: type) type {
             });
         }
 
-        pub fn miss(self: Self, source: ID) Error!void {
+        // source: ID
+        pub fn miss(self: Self, args: anytype) Error!void {
             if (!enabled) return;
 
-            try self.writer.writeAll(&.{ @intFromEnum(ArgType.Miss), @as(u8, @bitCast(source)) });
+            try self.writer.writeAll(&.{ @intFromEnum(ArgType.Miss), @as(u8, @bitCast(args[0])) });
         }
 
         pub fn hitcount(self: Self, ident: ID, num: u8) Error!void {
@@ -546,12 +550,13 @@ pub fn Log(comptime Writer: type) type {
             });
         }
 
-        pub fn mustrecharge(self: Self, ident: ID) Error!void {
+        // ident: ID
+        pub fn mustrecharge(self: Self, args: anytype) Error!void {
             if (!enabled) return;
 
             try self.writer.writeAll(&.{
                 @intFromEnum(ArgType.MustRecharge),
-                @as(u8, @bitCast(ident)),
+                @as(u8, @bitCast(args[0])),
             });
         }
 
@@ -646,27 +651,30 @@ pub fn Log(comptime Writer: type) type {
             try self.writer.writeAll(&.{@intFromEnum(ArgType.OHKO)});
         }
 
-        pub fn crit(self: Self, ident: ID) Error!void {
+        // ident: ID
+        pub fn crit(self: Self, args: anytype) Error!void {
             if (!enabled) return;
 
-            try self.writer.writeAll(&.{ @intFromEnum(ArgType.Crit), @as(u8, @bitCast(ident)) });
+            try self.writer.writeAll(&.{ @intFromEnum(ArgType.Crit), @as(u8, @bitCast(args[0])) });
         }
 
-        pub fn supereffective(self: Self, ident: ID) Error!void {
+        // ident: ID
+        pub fn supereffective(self: Self, args: anytype) Error!void {
             if (!enabled) return;
 
             try self.writer.writeAll(&.{
                 @intFromEnum(ArgType.SuperEffective),
-                @as(u8, @bitCast(ident)),
+                @as(u8, @bitCast(args[0])),
             });
         }
 
-        pub fn resisted(self: Self, ident: ID) Error!void {
+        // ident: ID
+        pub fn resisted(self: Self, args: anytype) Error!void {
             if (!enabled) return;
 
             try self.writer.writeAll(&.{
                 @intFromEnum(ArgType.Resisted),
-                @as(u8, @bitCast(ident)),
+                @as(u8, @bitCast(args[0])),
             });
         }
 
@@ -680,13 +688,14 @@ pub fn Log(comptime Writer: type) type {
             });
         }
 
-        pub fn transform(self: Self, source: ID, target: ID) Error!void {
+        // source: ID, target: ID
+        pub fn transform(self: Self, args: anytype) Error!void {
             if (!enabled) return;
 
             try self.writer.writeAll(&.{
                 @intFromEnum(ArgType.Transform),
-                @as(u8, @bitCast(source)),
-                @as(u8, @bitCast(target)),
+                @as(u8, @bitCast(args[0])),
+                @as(u8, @bitCast(args[1])),
             });
         }
 
@@ -716,12 +725,13 @@ pub fn Log(comptime Writer: type) type {
             });
         }
 
-        pub fn cureteam(self: Self, source: ID) Error!void {
+        // source: ID
+        pub fn cureteam(self: Self, args: anytype) Error!void {
             if (!enabled) return;
 
             try self.writer.writeAll(&.{
                 @intFromEnum(ArgType.CureTeam),
-                @as(u8, @bitCast(source)),
+                @as(u8, @bitCast(args[0])),
             });
         }
 
@@ -745,13 +755,14 @@ pub fn Log(comptime Writer: type) type {
             });
         }
 
-        pub fn copyboost(self: Self, source: ID, target: ID) Error!void {
+        // source: ID, target: ID
+        pub fn copyboost(self: Self, args: anytype) Error!void {
             if (!enabled) return;
 
             try self.writer.writeAll(&.{
                 @intFromEnum(ArgType.CopyBoost),
-                @as(u8, @bitCast(source)),
-                @as(u8, @bitCast(target)),
+                @as(u8, @bitCast(args[0])),
+                @as(u8, @bitCast(args[1])),
             });
         }
 
@@ -787,21 +798,24 @@ pub fn Log(comptime Writer: type) type {
             });
         }
 
-        pub fn singlemove(self: Self, ident: ID, m: anytype) Error!void {
-            return single(self, .SingleMove, ident, m);
+        // ident: ID, move: anytype
+        pub fn singlemove(self: Self, args: anytype) Error!void {
+            return single(self, .SingleMove, args);
         }
 
-        pub fn singleturn(self: Self, ident: ID, m: anytype) Error!void {
-            return single(self, .SingleTurn, ident, m);
+        // ident: ID, m: anytype
+        pub fn singleturn(self: Self, args: anytype) Error!void {
+            return single(self, .SingleTurn, args);
         }
 
-        fn single(self: Self, arg: ArgType, ident: ID, m: anytype) Error!void {
+        // ident: ID, move: anytype
+        fn single(self: Self, arg: ArgType, args: anytype) Error!void {
             if (!enabled) return;
 
             try self.writer.writeAll(&.{
                 @intFromEnum(arg),
-                @as(u8, @bitCast(ident)),
-                @intFromEnum(m),
+                @as(u8, @bitCast(args[0])),
+                @intFromEnum(args[1]),
             });
         }
 
@@ -1422,17 +1436,17 @@ test "|cant|" {
 }
 
 test "|faint|" {
-    try log.faint(p2.ident(2), false);
+    try log.faint(.{ p2.ident(2), false });
     try expectLog1(&.{ N(ArgType.Faint), 0b1010 }, buf[0..2]);
     stream.reset();
 
-    try log.faint(p2.ident(2), true);
+    try log.faint(.{ p2.ident(2), true });
     try expectLog1(&.{ N(ArgType.Faint), 0b1010, N(ArgType.None) }, buf[0..3]);
     stream.reset();
 }
 
 test "|turn|" {
-    try log.turn(42);
+    try log.turn(.{42});
     var expected = switch (endian) {
         .Big => &.{ N(ArgType.Turn), 0, 42, N(ArgType.None) },
         .Little => &.{ N(ArgType.Turn), 42, 0, N(ArgType.None) },
@@ -1442,7 +1456,7 @@ test "|turn|" {
 }
 
 test "|win|" {
-    try log.win(.P2);
+    try log.win(.{Player.P2});
     try expectLog1(&.{ N(ArgType.Win), 1, N(ArgType.None) }, buf[0..3]);
     stream.reset();
 }
@@ -1589,7 +1603,7 @@ test "|-fail|" {
 }
 
 test "|-miss|" {
-    try log.miss(p2.ident(4));
+    try log.miss(.{p2.ident(4)});
     try expectLog1(&.{ N(ArgType.Miss), 0b1100 }, buf[0..2]);
     stream.reset();
 }
@@ -1606,7 +1620,7 @@ test "|-prepare|" {
 }
 
 test "|-mustrecharge|" {
-    try log.mustrecharge(p1.ident(6));
+    try log.mustrecharge(.{p1.ident(6)});
     try expectLog1(&.{ N(ArgType.MustRecharge), 0b0110 }, buf[0..2]);
     stream.reset();
 }
@@ -1690,19 +1704,19 @@ test "|-ohko|" {
 }
 
 test "|-crit|" {
-    try log.crit(p2.ident(5));
+    try log.crit(.{p2.ident(5)});
     try expectLog1(&.{ N(ArgType.Crit), 0b1101 }, buf[0..2]);
     stream.reset();
 }
 
 test "|-supereffective|" {
-    try log.supereffective(p1.ident(1));
+    try log.supereffective(.{p1.ident(1)});
     try expectLog1(&.{ N(ArgType.SuperEffective), 0b0001 }, buf[0..2]);
     stream.reset();
 }
 
 test "|-resisted|" {
-    try log.resisted(p2.ident(2));
+    try log.resisted(.{p2.ident(2)});
     try expectLog1(&.{ N(ArgType.Resisted), 0b1010 }, buf[0..2]);
     stream.reset();
 }
@@ -1718,7 +1732,7 @@ test "|-immune|" {
 }
 
 test "|-transform|" {
-    try log.transform(p2.ident(4), p1.ident(5));
+    try log.transform(.{ p2.ident(4), p1.ident(5) });
     try expectLog1(&.{ N(ArgType.Transform), 0b1100, 0b0101 }, buf[0..3]);
     stream.reset();
 }
@@ -1762,7 +1776,7 @@ test "|-enditem|" {
 }
 
 test "|-cureteam|" {
-    try log.cureteam(p2.ident(5));
+    try log.cureteam(.{p2.ident(5)});
     try expectLog2(&.{ N(ArgType.CureTeam), 0b1101 }, buf[0..2]);
     stream.reset();
 }
@@ -1790,7 +1804,7 @@ test "|-setboost|" {
 }
 
 test "|-copyboost|" {
-    try log.copyboost(p2.ident(3), p1.ident(6));
+    try log.copyboost(.{ p2.ident(3), p1.ident(6) });
     try expectLog2(&.{ N(ArgType.CopyBoost), 0b1011, 0b0110 }, buf[0..3]);
     stream.reset();
 }
@@ -1817,13 +1831,13 @@ test "|-sideend|" {
 }
 
 test "|-singlemove|" {
-    try log.singlemove(p2.ident(2), M2.DestinyBond);
+    try log.singlemove(.{ p2.ident(2), M2.DestinyBond });
     try expectLog2(&.{ N(ArgType.SingleMove), 0b1010, N(M2.DestinyBond) }, buf[0..3]);
     stream.reset();
 }
 
 test "|-singleturn|" {
-    try log.singleturn(p1.ident(3), M2.Protect);
+    try log.singleturn(.{ p1.ident(3), M2.Protect });
     try expectLog2(&.{ N(ArgType.SingleTurn), 0b0011, N(M2.Protect) }, buf[0..3]);
     stream.reset();
 }
