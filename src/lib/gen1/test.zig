@@ -924,7 +924,8 @@ test "fainting (double)" {
         try t.log.expected.activate(P2.ident(1), .Splash);
         try t.log.expected.move(.{ P1.ident(1), Move.ThunderWave, P2.ident(1) });
         t.expected.p2.get(1).status = Status.init(.PAR);
-        try t.log.expected.status(P2.ident(1), t.expected.p2.get(1).status, .None);
+        const reason: protocol.Status = .None;
+        try t.log.expected.status(.{ P2.ident(1), t.expected.p2.get(1).status, reason });
         try t.log.expected.turn(.{2});
 
         try expectEqual(Result.Default, try t.update(move(1), move(1)));
@@ -1347,12 +1348,13 @@ test "Twineedle effect" {
     t.expected.p2.get(1).hp -= 36;
     try t.log.expected.damage(.{ P2.ident(1), t.expected.p2.get(1), Damage.None });
     t.expected.p2.get(1).status = Status.init(.PSN);
+    const reason: protocol.Status = .None;
     if (showdown) {
-        try t.log.expected.status(P2.ident(1), t.expected.p2.get(1).status, .None);
+        try t.log.expected.status(.{ P2.ident(1), t.expected.p2.get(1).status, reason });
         try t.log.expected.hitcount(P2.ident(1), 2);
     } else {
         try t.log.expected.hitcount(P2.ident(1), 2);
-        try t.log.expected.status(P2.ident(1), t.expected.p2.get(1).status, .None);
+        try t.log.expected.status(.{ P2.ident(1), t.expected.p2.get(1).status, reason });
     }
     try t.log.expected.turn(.{4});
 
@@ -1420,7 +1422,8 @@ test "Poison effect" {
         try t.log.expected.switched(.{ P2.ident(2), t.expected.p2.get(2) });
         try t.log.expected.move(.{ P1.ident(1), Move.Toxic, P2.ident(2) });
         t.expected.p2.get(2).status = if (showdown) Status.TOX else Status.init(.PSN);
-        try t.log.expected.status(P2.ident(2), t.expected.p2.get(2).status, .None);
+        const reason: protocol.Status = .None;
+        try t.log.expected.status(.{ P2.ident(2), t.expected.p2.get(2).status, reason });
         try t.log.expected.turn(.{4});
 
         // Toxic damage increases each turn
@@ -1432,7 +1435,7 @@ test "Poison effect" {
         try t.log.expected.switched(.{ P1.ident(2), t.expected.p1.get(2) });
         try t.log.expected.move(.{ P2.ident(2), Move.PoisonGas, P1.ident(2) });
         t.expected.p1.get(2).status = Status.init(.PSN);
-        try t.log.expected.status(P1.ident(2), t.expected.p1.get(2).status, .None);
+        try t.log.expected.status(.{ P1.ident(2), t.expected.p1.get(2).status, reason });
         t.expected.p2.get(2).hp -= 20;
         try t.log.expected.damage(.{ P2.ident(2), t.expected.p2.get(2), Damage.Poison });
         try t.log.expected.turn(.{5});
@@ -1555,7 +1558,7 @@ test "PoisonChance effect" {
     t.expected.p2.get(1).hp -= 18;
     try t.log.expected.damage(.{ P2.ident(1), t.expected.p2.get(1), Damage.None });
     t.expected.p2.get(1).status = Status.init(.PSN);
-    try t.log.expected.status(P2.ident(1), t.expected.p2.get(1).status, .None);
+    try t.log.expected.status(.{ P2.ident(1), t.expected.p2.get(1).status, protocol.Status.None });
     try t.log.expected.turn(.{4});
 
     try expectEqual(Result.Default, try t.update(move(1), move(3)));
@@ -1644,7 +1647,7 @@ test "BurnChance effect" {
     t.expected.p2.get(1).hp -= 51;
     try t.log.expected.damage(.{ P2.ident(1), t.expected.p2.get(1), Damage.None });
     t.expected.p2.get(1).status = Status.init(.BRN);
-    try t.log.expected.status(P2.ident(1), t.expected.p2.get(1).status, .None);
+    try t.log.expected.status(.{ P2.ident(1), t.expected.p2.get(1).status, protocol.Status.None });
     try t.log.expected.turn(.{4});
 
     try expectEqual(Result.Default, try t.update(move(1), move(3)));
@@ -1718,7 +1721,7 @@ test "FreezeChance effect" {
     try t.log.expected.damage(.{ P2.ident(1), t.expected.p2.get(1), Damage.None });
     try t.log.expected.move(.{ P2.ident(1), Move.ThunderWave, P1.ident(1) });
     t.expected.p1.get(1).status = Status.init(.PAR);
-    try t.log.expected.status(P1.ident(1), t.expected.p1.get(1).status, .None);
+    try t.log.expected.status(.{ P1.ident(1), t.expected.p1.get(1).status, protocol.Status.None });
     try t.log.expected.turn(.{2});
 
     // Can't freeze Ice-types
@@ -1742,7 +1745,7 @@ test "FreezeChance effect" {
     t.expected.p1.get(2).hp -= 140;
     try t.log.expected.damage(.{ P1.ident(2), t.expected.p1.get(2), Damage.None });
     t.expected.p1.get(2).status = Status.init(.FRZ);
-    try t.log.expected.status(P1.ident(2), t.expected.p1.get(2).status, .None);
+    try t.log.expected.status(.{ P1.ident(2), t.expected.p1.get(2).status, protocol.Status.None });
     try t.log.expected.turn(.{4});
 
     // Can freeze Fire types
@@ -1779,7 +1782,8 @@ test "FreezeChance effect" {
         t.expected.p1.get(3).status = 0;
     } else {
         t.expected.p1.get(3).status = Status.init(.FRZ);
-        try t.log.expected.status(P1.ident(3), t.expected.p1.get(3).status, .None);
+        const reason: protocol.Status = .None;
+        try t.log.expected.status(.{ P1.ident(3), t.expected.p1.get(3).status, reason });
     }
     try t.log.expected.turn(.{6});
 
@@ -1891,7 +1895,7 @@ test "Paralyze effect" {
     try t.log.expected.lastmiss(.{});
     try t.log.expected.miss(.{P1.ident(1)});
     try t.log.expected.move(.{ P2.ident(1), Move.ThunderWave, P1.ident(1) });
-    try t.log.expected.status(P1.ident(1), Status.init(.PAR), .None);
+    try t.log.expected.status(.{ P1.ident(1), Status.init(.PAR), protocol.Status.None });
     try t.log.expected.turn(.{2});
 
     // Glare can miss
@@ -1901,7 +1905,7 @@ test "Paralyze effect" {
     try t.log.expected.move(.{ P2.ident(1), Move.ThunderWave, P1.ident(1) });
     try t.log.expected.fail(P1.ident(1), .Paralysis);
     try t.log.expected.move(.{ P1.ident(1), Move.Glare, P2.ident(1) });
-    try t.log.expected.status(P2.ident(1), Status.init(.PAR), .None);
+    try t.log.expected.status(.{ P2.ident(1), Status.init(.PAR), protocol.Status.None });
     try t.log.expected.turn(.{3});
 
     // Electric-type Pokémon can be paralyzed
@@ -1919,7 +1923,7 @@ test "Paralyze effect" {
     try t.log.expected.move(.{ P2.ident(2), Move.Toxic, P1.ident(1) });
     try t.log.expected.fail(P1.ident(1), .None);
     try t.log.expected.move(.{ P1.ident(1), Move.Glare, P2.ident(2) });
-    try t.log.expected.status(P2.ident(2), Status.init(.PAR), .None);
+    try t.log.expected.status(.{ P2.ident(2), Status.init(.PAR), protocol.Status.None });
     try t.log.expected.turn(.{5});
 
     // Glare ignores type immunity
@@ -1940,7 +1944,7 @@ test "Paralyze effect" {
     t.expected.p1.get(2).hp -= 68;
     try t.log.expected.damage(.{ P1.ident(2), t.expected.p1.get(2), Damage.None });
     try t.log.expected.move(.{ P2.ident(2), Move.Glare, P1.ident(2) });
-    try t.log.expected.status(P1.ident(2), Status.init(.PAR), .None);
+    try t.log.expected.status(.{ P1.ident(2), Status.init(.PAR), protocol.Status.None });
     try t.log.expected.turn(.{7});
 
     // Primary paralysis ignores Substitute
@@ -2009,7 +2013,7 @@ test "ParalyzeChance effect" {
     t.expected.p1.get(1).hp -= 110;
     try t.log.expected.damage(.{ P1.ident(1), t.expected.p1.get(1), Damage.None });
     t.expected.p1.get(1).status = Status.init(.PAR);
-    try t.log.expected.status(P1.ident(1), t.expected.p1.get(1).status, .None);
+    try t.log.expected.status(.{ P1.ident(1), t.expected.p1.get(1).status, protocol.Status.None });
     try t.log.expected.turn(.{3});
 
     //  Moves have different paralysis rates / Electric-type Pokémon can be paralyzed
@@ -2081,7 +2085,8 @@ test "Sleep effect" {
 
     try t.log.expected.move(.{ P1.ident(1), Move.Spore, P2.ident(1) });
     t.expected.p2.get(1).status = Status.slp(1);
-    try t.log.expected.statusFrom(P2.ident(1), t.expected.p2.get(1).status, Move.Spore);
+    const reason: protocol.Status = .From;
+    try t.log.expected.status(.{ P2.ident(1), t.expected.p2.get(1).status, reason, Move.Spore });
     try t.log.expected.curestatus(P2.ident(1), t.expected.p2.get(1).status, .Message);
     try t.log.expected.turn(.{2});
 
@@ -2092,7 +2097,7 @@ test "Sleep effect" {
 
     try t.log.expected.move(.{ P1.ident(1), Move.Spore, P2.ident(1) });
     t.expected.p2.get(1).status = Status.slp(2);
-    try t.log.expected.statusFrom(P2.ident(1), t.expected.p2.get(1).status, Move.Spore);
+    try t.log.expected.status(.{ P2.ident(1), t.expected.p2.get(1).status, reason, Move.Spore });
     t.expected.p2.get(1).status -= 1;
     try t.log.expected.cant(.{ P2.ident(1), Cant.Sleep });
     try t.log.expected.turn(.{3});
@@ -2108,7 +2113,12 @@ test "Sleep effect" {
         t.expected.p2.get(2).status = 0;
     } else {
         t.expected.p2.get(2).status = Status.slp(2);
-        try t.log.expected.statusFrom(P2.ident(2), t.expected.p2.get(2).status, Move.Spore);
+        try t.log.expected.status(.{
+            P2.ident(2),
+            t.expected.p2.get(2).status,
+            reason,
+            Move.Spore,
+        });
     }
     try t.log.expected.turn(.{4});
 
@@ -2888,7 +2898,8 @@ test "Fly/Dig effect" {
 
         try t.log.expected.move(.{ P1.ident(1), Move.Toxic, P2.ident(1) });
         t.expected.p2.get(1).status = if (showdown) Status.TOX else Status.init(.PSN);
-        try t.log.expected.status(P2.ident(1), t.expected.p2.get(1).status, .None);
+        var reason: protocol.Status = .None;
+        try t.log.expected.status(.{ P2.ident(1), t.expected.p2.get(1).status, reason });
         try t.log.expected.move(.{ P2.ident(1), Move.Splash, P2.ident(1) });
         try t.log.expected.activate(P2.ident(1), .Splash);
         t.expected.p2.get(1).hp -= 16;
@@ -2918,7 +2929,8 @@ test "Fly/Dig effect" {
         try t.log.expected.switched(.{ P2.ident(1), t.expected.p2.get(1) });
         if (showdown) {
             t.expected.p2.get(1).status = Status.init(.PSN);
-            try t.log.expected.status(P2.ident(1), t.expected.p2.get(1).status, .Silent);
+            reason = .Silent;
+            try t.log.expected.status(.{ P2.ident(1), t.expected.p2.get(1).status, reason });
         }
         t.expected.p2.get(1).hp = 0;
         try t.log.expected.damage(.{ P2.ident(1), t.expected.p2.get(1), Damage.Poison });
@@ -3115,7 +3127,7 @@ test "Binding effect" {
     try t.log.expected.boost(P1.ident(1), .Speed, 2);
     try t.log.expected.move(.{ P2.ident(2), Move.StunSpore, P1.ident(1) });
     t.expected.p1.get(1).status = Status.init(.PAR);
-    try t.log.expected.status(P1.ident(1), t.expected.p1.get(1).status, .None);
+    try t.log.expected.status(.{ P1.ident(1), t.expected.p1.get(1).status, protocol.Status.None });
     try t.log.expected.turn(.{5});
 
     try expectEqual(Result.Default, try t.update(move(2), move(2)));
@@ -3511,7 +3523,8 @@ test "Thrashing effect" {
         try t.log.expected.activate(P1.ident(1), .Confusion);
         try t.log.expected.move(.{ P1.ident(1), Move.ThunderWave, P2.ident(1) });
         t.expected.p2.get(1).status = Status.init(.PAR);
-        try t.log.expected.status(P2.ident(1), t.expected.p2.get(1).status, .None);
+        const reason: protocol.Status = .None;
+        try t.log.expected.status(.{ P2.ident(1), t.expected.p2.get(1).status, reason });
         try t.log.expected.cant(.{ P2.ident(1), Cant.Paralysis });
         try t.log.expected.turn(.{5});
 
@@ -4213,7 +4226,8 @@ test "Counter effect" {
 
     try t.log.expected.move(.{ P1.ident(3), Move.LovelyKiss, P2.ident(1) });
     t.expected.p2.get(1).status = Status.slp(3);
-    try t.log.expected.statusFrom(P2.ident(1), t.expected.p2.get(1).status, Move.LovelyKiss);
+    const from: protocol.Status = .From;
+    try t.log.expected.status(.{ P2.ident(1), t.expected.p2.get(1).status, from, Move.LovelyKiss });
     try t.log.expected.cant(.{ P2.ident(1), Cant.Sleep });
     try t.log.expected.turn(.{11});
 
@@ -4312,7 +4326,7 @@ test "Rest effect" {
     try t.log.expected.fail(P2.ident(1), .None);
     try t.log.expected.move(.{ P1.ident(1), Move.ThunderWave, P2.ident(1) });
     t.expected.p2.get(1).status = Status.init(.PAR);
-    try t.log.expected.status(P2.ident(1), t.expected.p2.get(1).status, .None);
+    try t.log.expected.status(.{ P2.ident(1), t.expected.p2.get(1).status, protocol.Status.None });
     try t.log.expected.turn(.{2});
 
     // Fails at specific fractions
@@ -4328,7 +4342,7 @@ test "Rest effect" {
     try t.log.expected.move(.{ P2.ident(1), Move.Rest, P2.ident(1) });
     t.expected.p2.get(1).hp += 588;
     t.expected.p2.get(1).status = Status.slf(2);
-    try t.log.expected.statusFrom(P2.ident(1), Status.slf(2), Move.Rest);
+    try t.log.expected.status(.{ P2.ident(1), Status.slf(2), protocol.Status.From, Move.Rest });
     try t.log.expected.heal(.{ P2.ident(1), t.expected.p2.get(1), Heal.Silent });
     try t.log.expected.turn(.{3});
 
@@ -4460,7 +4474,13 @@ test "DreamEater effect" {
 
         try t.log.expected.move(.{ P1.ident(1), Move.Hypnosis, P2.ident(1) });
         t.expected.p2.get(1).status = Status.slp(7);
-        try t.log.expected.statusFrom(P2.ident(1), t.expected.p2.get(1).status, Move.Hypnosis);
+        const reason: protocol.Status = .From;
+        try t.log.expected.status(.{
+            P2.ident(1),
+            t.expected.p2.get(1).status,
+            reason,
+            Move.Hypnosis,
+        });
         try t.log.expected.cant(.{ P2.ident(1), Cant.Sleep });
         try t.log.expected.turn(.{3});
 
@@ -4513,7 +4533,7 @@ test "DreamEater effect" {
         try t.log.expected.move(.{ P2.ident(2), Move.Rest, P2.ident(2) });
         t.expected.p2.get(2).hp += 80;
         t.expected.p2.get(2).status = Status.slf(2);
-        try t.log.expected.statusFrom(P2.ident(2), t.expected.p2.get(2).status, Move.Rest);
+        try t.log.expected.status(.{ P2.ident(2), t.expected.p2.get(2).status, reason, Move.Rest });
         try t.log.expected.heal(.{ P2.ident(2), t.expected.p2.get(2), Heal.Silent });
         try t.log.expected.move(.{ P1.ident(1), Move.DreamEater, P2.ident(2) });
         if (showdown) {
@@ -5058,7 +5078,7 @@ test "Haze effect" {
 
     try t.log.expected.move(.{ P1.ident(1), Move.Toxic, P2.ident(1) });
     t.expected.p2.get(1).status = if (showdown) Status.TOX else Status.init(.PSN);
-    try t.log.expected.status(P2.ident(1), t.expected.p2.get(1).status, .None);
+    try t.log.expected.status(.{ P2.ident(1), t.expected.p2.get(1).status, protocol.Status.None });
     try t.log.expected.move(.{ P2.ident(1), Move.LeechSeed, P1.ident(1) });
     try t.log.expected.start(P1.ident(1), .LeechSeed);
     t.expected.p2.get(1).hp -= 24;
@@ -5078,7 +5098,7 @@ test "Haze effect" {
     try t.log.expected.heal(.{ P2.ident(1), t.expected.p2.get(1), Heal.Silent });
     try t.log.expected.move(.{ P2.ident(1), Move.StunSpore, P1.ident(1) });
     t.expected.p1.get(1).status = Status.init(.PAR);
-    try t.log.expected.status(P1.ident(1), t.expected.p1.get(1).status, .None);
+    try t.log.expected.status(.{ P1.ident(1), t.expected.p1.get(1).status, protocol.Status.None });
     t.expected.p2.get(1).hp -= 48;
     try t.log.expected.damage(.{ P2.ident(1), t.expected.p2.get(1), Damage.Poison });
     try t.log.expected.turn(.{3});
@@ -5143,7 +5163,7 @@ test "Haze effect" {
     t.expected.p2.get(1).hp -= 42;
     try t.log.expected.damage(.{ P2.ident(1), t.expected.p2.get(1), Damage.None });
     t.expected.p2.get(1).status = Status.init(.BRN);
-    try t.log.expected.status(P2.ident(1), t.expected.p2.get(1).status, .None);
+    try t.log.expected.status(.{ P2.ident(1), t.expected.p2.get(1).status, protocol.Status.None });
     try t.log.expected.move(.{ P2.ident(1), Move.Splash, P2.ident(1) });
     try t.log.expected.activate(P2.ident(1), .Splash);
     t.expected.p2.get(1).hp -= 24;
@@ -5686,7 +5706,7 @@ test "Explode effect" {
 
     try t.log.expected.move(.{ P1.ident(1), Move.Toxic, P2.ident(1) });
     t.expected.p2.get(1).status = if (showdown) Status.TOX else Status.init(.PSN);
-    try t.log.expected.status(P2.ident(1), t.expected.p2.get(1).status, .None);
+    try t.log.expected.status(.{ P2.ident(1), t.expected.p2.get(1).status, protocol.Status.None });
     try t.log.expected.move(.{ P2.ident(1), Move.Substitute, P2.ident(1) });
     try t.log.expected.start(P2.ident(1), .Substitute);
     t.expected.p2.get(1).hp -= 175;
@@ -6043,7 +6063,7 @@ test "Bide residual bug" {
     try t.log.expected.start(P2.ident(1), .LeechSeed);
     try t.log.expected.move(.{ P2.ident(1), Move.Toxic, P1.ident(1) });
     t.expected.p1.get(1).status = if (showdown) Status.TOX else Status.init(.PSN);
-    try t.log.expected.status(P1.ident(1), t.expected.p1.get(1).status, .None);
+    try t.log.expected.status(.{ P1.ident(1), t.expected.p1.get(1).status, protocol.Status.None });
     t.expected.p2.get(1).hp -= 22;
     try t.log.expected.damage(.{ P2.ident(1), t.expected.p2.get(1), Damage.LeechSeed });
     try t.log.expected.turn(.{2});
@@ -6155,7 +6175,7 @@ test "Flinch persistence bug" {
 
     try t.log.expected.move(.{ P1.ident(1), Move.PoisonPowder, P2.ident(1) });
     t.expected.p2.get(1).status = Status.init(.PSN);
-    try t.log.expected.status(P2.ident(1), t.expected.p2.get(1).status, .None);
+    try t.log.expected.status(.{ P2.ident(1), t.expected.p2.get(1).status, protocol.Status.None });
     try t.log.expected.move(.{ P2.ident(1), Move.RollingKick, P1.ident(1) });
     try t.log.expected.supereffective(.{P1.ident(1)});
     t.expected.p1.get(1).hp -= 127;
@@ -6269,7 +6289,7 @@ test "Disable + Bide bug" {
 
     try t.log.expected.move(.{ P1.ident(1), Move.Glare, P2.ident(1) });
     t.expected.p2.get(1).status = Status.init(.PAR);
-    try t.log.expected.status(P2.ident(1), t.expected.p2.get(1).status, .None);
+    try t.log.expected.status(.{ P2.ident(1), t.expected.p2.get(1).status, protocol.Status.None });
     try t.log.expected.move(.{ P2.ident(1), Move.Bide, P2.ident(1) });
     try t.log.expected.start(P2.ident(1), .Bide);
     try t.log.expected.turn(.{2});
@@ -6335,7 +6355,8 @@ test "Charge + Sleep bug" {
     try t.log.expected.prepare(P1.ident(1), Move.SolarBeam);
     try t.log.expected.move(.{ P2.ident(1), Move.LovelyKiss, P1.ident(1) });
     t.expected.p1.get(1).status = Status.slp(1);
-    try t.log.expected.statusFrom(P1.ident(1), t.expected.p1.get(1).status, Move.LovelyKiss);
+    const from: protocol.Status = .From;
+    try t.log.expected.status(.{ P1.ident(1), t.expected.p1.get(1).status, from, Move.LovelyKiss });
     try t.log.expected.turn(.{2});
 
     try expectEqual(Result.Default, try t.update(move(1), move(1)));
@@ -6550,7 +6571,8 @@ test "Counter + sleep = Desync Clause Mod bug" {
     try t.log.expected.damage(.{ P2.ident(1), t.expected.p2.get(1), Damage.None });
     try t.log.expected.move(.{ P2.ident(1), Move.Sing, P1.ident(1) });
     t.expected.p1.get(1).status = Status.slp(7);
-    try t.log.expected.statusFrom(P1.ident(1), t.expected.p1.get(1).status, Move.Sing);
+    const reason: protocol.Status = .From;
+    try t.log.expected.status(.{ P1.ident(1), t.expected.p1.get(1).status, reason, Move.Sing });
     try t.log.expected.turn(.{2});
 
     try expectEqual(Result.Default, try t.update(move(1), move(1)));
@@ -7057,7 +7079,7 @@ test "Wrap locking + KOs bug" {
     t.expected.p1.get(1).hp -= 20;
     try t.log.expected.damage(.{ P1.ident(1), t.expected.p1.get(1), Damage.None });
     t.expected.p1.get(1).status = Status.init(.PSN);
-    try t.log.expected.status(P1.ident(1), t.expected.p1.get(1).status, .None);
+    try t.log.expected.status(.{ P1.ident(1), t.expected.p1.get(1).status, protocol.Status.None });
     try t.log.expected.move(.{ P1.ident(1), Move.Wrap, P2.ident(1) });
     t.expected.p2.get(1).hp -= 17;
     try t.log.expected.damage(.{ P2.ident(1), t.expected.p2.get(1), Damage.None });
@@ -7092,7 +7114,7 @@ test "Wrap locking + KOs bug" {
     t.expected.p2.get(1).hp -= 91;
     try t.log.expected.damage(.{ P2.ident(1), t.expected.p2.get(1), Damage.None });
     t.expected.p2.get(1).status = Status.init(.BRN);
-    try t.log.expected.status(P2.ident(1), t.expected.p2.get(1).status, .None);
+    try t.log.expected.status(.{ P2.ident(1), t.expected.p2.get(1).status, protocol.Status.None });
     try t.log.expected.move(.{ P2.ident(1), Move.PoisonSting, P1.ident(2) });
     try t.log.expected.lastmiss(.{});
     try t.log.expected.miss(.{P2.ident(1)});
@@ -7298,11 +7320,12 @@ test "Min/max stat recalculation bug" {
 
     try t.log.expected.move(.{ P1.ident(1), Move.ThunderWave, P2.ident(1) });
     t.expected.p2.get(1).status = Status.init(.PAR);
-    try t.log.expected.status(P2.ident(1), t.expected.p2.get(1).status, .None);
+    try t.log.expected.status(.{ P2.ident(1), t.expected.p2.get(1).status, protocol.Status.None });
     try t.log.expected.move(.{ P2.ident(1), Move.Rest, P2.ident(1) });
     t.expected.p2.get(1).hp += 143;
     t.expected.p2.get(1).status = Status.slf(2);
-    try t.log.expected.statusFrom(P2.ident(1), t.expected.p2.get(1).status, Move.Rest);
+    const from: protocol.Status = .From;
+    try t.log.expected.status(.{ P2.ident(1), t.expected.p2.get(1).status, from, Move.Rest });
     try t.log.expected.heal(.{ P2.ident(1), t.expected.p2.get(1), Heal.Silent });
     try t.log.expected.turn(.{3});
 
@@ -7348,11 +7371,11 @@ test "Min/max stat recalculation bug" {
     t.expected.p2.get(1).hp -= 22;
     try t.log.expected.damage(.{ P2.ident(1), t.expected.p2.get(1), Damage.None });
     t.expected.p2.get(1).status = Status.init(.PAR);
-    try t.log.expected.status(P2.ident(1), t.expected.p2.get(1).status, .None);
+    try t.log.expected.status(.{ P2.ident(1), t.expected.p2.get(1).status, protocol.Status.None });
     try t.log.expected.move(.{ P2.ident(1), Move.Rest, P2.ident(1) });
     t.expected.p2.get(1).hp += 22;
     t.expected.p2.get(1).status = Status.slf(2);
-    try t.log.expected.statusFrom(P2.ident(1), Status.slf(2), Move.Rest);
+    try t.log.expected.status(.{ P2.ident(1), Status.slf(2), from, Move.Rest });
     try t.log.expected.heal(.{ P2.ident(1), t.expected.p2.get(1), Heal.Silent });
     try t.log.expected.turn(.{7});
 
@@ -7382,7 +7405,7 @@ test "Min/max stat recalculation bug" {
 
     try t.log.expected.move(.{ P1.ident(1), Move.ThunderWave, P2.ident(1) });
     t.expected.p2.get(1).status = Status.init(.PAR);
-    try t.log.expected.status(P2.ident(1), t.expected.p2.get(1).status, .None);
+    try t.log.expected.status(.{ P2.ident(1), t.expected.p2.get(1).status, protocol.Status.None });
     try t.log.expected.move(.{ P2.ident(1), Move.Splash, P2.ident(1) });
     try t.log.expected.activate(P2.ident(1), .Splash);
     try t.log.expected.turn(.{10});
@@ -7566,7 +7589,8 @@ test "Bide damage accumulation glitches" {
 
         try t.log.expected.move(.{ P2.ident(1), Move.Toxic, P1.ident(1) });
         t.expected.p1.get(1).status = if (showdown) Status.TOX else Status.init(.PSN);
-        try t.log.expected.status(P1.ident(1), t.expected.p1.get(1).status, .None);
+        const reason: protocol.Status = .None;
+        try t.log.expected.status(.{ P1.ident(1), t.expected.p1.get(1).status, reason });
         try t.log.expected.move(.{ P1.ident(1), Move.Splash, P1.ident(1) });
         try t.log.expected.activate(P1.ident(1), .Splash);
         t.expected.p1.get(1).hp -= 30;
@@ -7621,6 +7645,8 @@ test "Counter glitches" {
     const PAR_CAN = MAX;
     const PAR_CANT = MIN;
 
+    const reason: protocol.Status = .None;
+
     // self-Counter
     {
         var t = Test(
@@ -7647,7 +7673,7 @@ test "Counter glitches" {
         try t.log.expected.boost(P1.ident(1), .Speed, 2);
         try t.log.expected.move(.{ P2.ident(1), Move.ThunderWave, P1.ident(1) });
         t.expected.p1.get(1).status = Status.init(.PAR);
-        try t.log.expected.status(P1.ident(1), t.expected.p1.get(1).status, .None);
+        try t.log.expected.status(.{ P1.ident(1), t.expected.p1.get(1).status, reason });
         try t.log.expected.turn(.{2});
 
         try expectEqual(Result.Default, try t.update(move(1), move(1)));
@@ -7703,7 +7729,7 @@ test "Counter glitches" {
         try t.log.expected.boost(P1.ident(1), .Speed, 2);
         try t.log.expected.move(.{ P2.ident(1), Move.ThunderWave, P1.ident(1) });
         t.expected.p1.get(1).status = Status.init(.PAR);
-        try t.log.expected.status(P1.ident(1), t.expected.p1.get(1).status, .None);
+        try t.log.expected.status(.{ P1.ident(1), t.expected.p1.get(1).status, reason });
         try t.log.expected.turn(.{2});
 
         try expectEqual(Result.Default, try t.update(move(1), move(1)));
@@ -7767,7 +7793,7 @@ test "Freeze top move selection glitch" {
     t.expected.p1.get(1).hp -= 50;
     try t.log.expected.damage(.{ P1.ident(1), t.expected.p1.get(1), Damage.None });
     t.expected.p1.get(1).status = Status.init(.FRZ);
-    try t.log.expected.status(P1.ident(1), t.expected.p1.get(1).status, .None);
+    try t.log.expected.status(.{ P1.ident(1), t.expected.p1.get(1).status, protocol.Status.None });
     try t.log.expected.cant(.{ P1.ident(1), Cant.Freeze });
     try t.log.expected.turn(.{2});
 
@@ -7831,9 +7857,13 @@ test "Toxic counter glitches" {
     defer t.deinit();
 
     try t.log.expected.move(.{ P1.ident(1), Move.Toxic, P2.ident(1) });
-    try t.log.expected.status(P2.ident(1), if (showdown) Status.TOX else Status.init(.PSN), .None);
+    try t.log.expected.status(.{
+        P2.ident(1),
+        if (showdown) Status.TOX else Status.init(.PSN),
+        protocol.Status.None,
+    });
     try t.log.expected.move(.{ P2.ident(1), Move.Rest, P2.ident(1) });
-    try t.log.expected.statusFrom(P2.ident(1), Status.slf(2), Move.Rest);
+    try t.log.expected.status(.{ P2.ident(1), Status.slf(2), protocol.Status.From, Move.Rest });
     t.expected.p2.get(1).hp += 1;
     t.expected.p2.get(1).status = Status.slf(2);
     try t.log.expected.heal(.{ P2.ident(1), t.expected.p2.get(1), Heal.Silent });
@@ -7868,7 +7898,7 @@ test "Toxic counter glitches" {
     t.expected.p2.get(1).hp -= 96;
     try t.log.expected.damage(.{ P2.ident(1), t.expected.p2.get(1), Damage.None });
     t.expected.p2.get(1).status = Status.init(.BRN);
-    try t.log.expected.status(P2.ident(1), t.expected.p2.get(1).status, .None);
+    try t.log.expected.status(.{ P2.ident(1), t.expected.p2.get(1).status, protocol.Status.None });
     try t.log.expected.move(.{ P2.ident(1), Move.Splash, P2.ident(1) });
     try t.log.expected.activate(P2.ident(1), .Splash);
     t.expected.p2.get(1).hp -= 48;
@@ -7886,6 +7916,7 @@ test "Toxic counter glitches" {
 
 test "Poison/Burn animation with 0 HP" {
     // https://pkmn.cc/bulba/List_of_graphical_quirks_(Generation_I)
+    const reason: protocol.Status = .None;
 
     // Faint from Recoil (no healing on Pokémon Showdown)
     {
@@ -7906,7 +7937,7 @@ test "Poison/Burn animation with 0 HP" {
 
         try t.log.expected.move(.{ P1.ident(1), Move.Toxic, P2.ident(1) });
         t.expected.p2.get(1).status = if (showdown) Status.TOX else Status.init(.PSN);
-        try t.log.expected.status(P2.ident(1), t.expected.p2.get(1).status, .None);
+        try t.log.expected.status(.{ P2.ident(1), t.expected.p2.get(1).status, reason });
         try t.log.expected.move(.{ P2.ident(1), Move.Splash, P2.ident(1) });
         try t.log.expected.activate(P2.ident(1), .Splash);
         t.expected.p2.get(1).hp -= 30;
@@ -7959,7 +7990,7 @@ test "Poison/Burn animation with 0 HP" {
 
         try t.log.expected.move(.{ P1.ident(1), Move.Toxic, P2.ident(1) });
         t.expected.p2.get(1).status = if (showdown) Status.TOX else Status.init(.PSN);
-        try t.log.expected.status(P2.ident(1), t.expected.p2.get(1).status, .None);
+        try t.log.expected.status(.{ P2.ident(1), t.expected.p2.get(1).status, reason });
         try t.log.expected.move(.{ P2.ident(1), Move.Splash, P2.ident(1) });
         try t.log.expected.activate(P2.ident(1), .Splash);
         t.expected.p2.get(1).hp -= 30;
@@ -8004,7 +8035,7 @@ test "Poison/Burn animation with 0 HP" {
 
         try t.log.expected.move(.{ P1.ident(1), Move.Toxic, P2.ident(1) });
         t.expected.p2.get(1).status = if (showdown) Status.TOX else Status.init(.PSN);
-        try t.log.expected.status(P2.ident(1), t.expected.p2.get(1).status, .None);
+        try t.log.expected.status(.{ P2.ident(1), t.expected.p2.get(1).status, reason });
         try t.log.expected.move(.{ P2.ident(1), Move.Splash, P2.ident(1) });
         try t.log.expected.activate(P2.ident(1), .Splash);
         t.expected.p2.get(1).hp -= 30;
@@ -8110,7 +8141,7 @@ test "Defrost move forcing" {
     t.expected.p2.get(2).hp -= 23;
     try t.log.expected.damage(.{ P2.ident(2), t.expected.p2.get(2), Damage.None });
     t.expected.p2.get(2).status = Status.init(.FRZ);
-    try t.log.expected.status(P2.ident(2), t.expected.p2.get(2).status, .None);
+    try t.log.expected.status(.{ P2.ident(2), t.expected.p2.get(2).status, protocol.Status.None });
     try t.log.expected.turn(.{3});
 
     // Switching clears last_used_move but not last_selected_move
@@ -8402,7 +8433,7 @@ test "Hyper Beam + Freeze permanent helplessness" {
     t.expected.p1.get(1).hp -= 39;
     try t.log.expected.damage(.{ P1.ident(1), t.expected.p1.get(1), Damage.None });
     t.expected.p1.get(1).status = Status.init(.FRZ);
-    try t.log.expected.status(P1.ident(1), t.expected.p1.get(1).status, .None);
+    try t.log.expected.status(.{ P1.ident(1), t.expected.p1.get(1).status, protocol.Status.None });
     try t.log.expected.turn(.{2});
 
     try expectEqual(Result.Default, try t.update(move(1), move(1)));
@@ -8516,7 +8547,7 @@ test "Hyper Beam + Sleep move glitch" {
 
     try t.log.expected.move(.{ P1.ident(1), Move.Toxic, P2.ident(1) });
     t.expected.p2.get(1).status = if (showdown) Status.TOX else Status.init(.PSN);
-    try t.log.expected.status(P2.ident(1), t.expected.p2.get(1).status, .None);
+    try t.log.expected.status(.{ P2.ident(1), t.expected.p2.get(1).status, protocol.Status.None });
     try t.log.expected.move(.{ P2.ident(1), Move.HyperBeam, P1.ident(1) });
     t.expected.p1.get(1).hp -= 217;
     try t.log.expected.damage(.{ P1.ident(1), t.expected.p1.get(1), Damage.None });
@@ -8533,7 +8564,8 @@ test "Hyper Beam + Sleep move glitch" {
 
     try t.log.expected.move(.{ P1.ident(1), Move.Hypnosis, P2.ident(1) });
     t.expected.p2.get(1).status = Status.slp(2);
-    try t.log.expected.statusFrom(P2.ident(1), t.expected.p2.get(1).status, Move.Hypnosis);
+    const from: protocol.Status = .From;
+    try t.log.expected.status(.{ P2.ident(1), t.expected.p2.get(1).status, from, Move.Hypnosis });
     t.expected.p2.get(1).status -= 1;
     try t.log.expected.cant(.{ P2.ident(1), Cant.Sleep });
     try t.log.expected.turn(.{3});
@@ -8557,7 +8589,7 @@ test "Hyper Beam + Sleep move glitch" {
     t.expected.p2.get(1).hp -= 78;
     try t.log.expected.damage(.{ P2.ident(1), t.expected.p2.get(1), Damage.None });
     t.expected.p2.get(1).status = Status.init(.BRN);
-    try t.log.expected.status(P2.ident(1), t.expected.p2.get(1).status, .None);
+    try t.log.expected.status(.{ P2.ident(1), t.expected.p2.get(1).status, protocol.Status.None });
     try t.log.expected.move(.{ P2.ident(1), Move.HyperBeam, P1.ident(1) });
     try t.log.expected.lastmiss(.{});
     try t.log.expected.miss(.{P2.ident(1)});
@@ -8729,7 +8761,7 @@ test "Invulnerability glitch" {
     try t.log.expected.boost(P1.ident(1), .Speed, 2);
     try t.log.expected.move(.{ P2.ident(1), Move.ThunderWave, P1.ident(1) });
     t.expected.p1.get(1).status = Status.init(.PAR);
-    try t.log.expected.status(P1.ident(1), t.expected.p1.get(1).status, .None);
+    try t.log.expected.status(.{ P1.ident(1), t.expected.p1.get(1).status, protocol.Status.None });
     try t.log.expected.turn(.{2});
 
     try expectEqual(Result.Default, try t.update(move(1), move(1)));
@@ -8823,7 +8855,7 @@ test "Stat modification errors" {
         try t.log.expected.move(.{ P2.ident(1), Move.SandAttack, P1.ident(1) });
         try t.log.expected.boost(P1.ident(1), .Accuracy, -1);
         try t.log.expected.move(.{ P1.ident(1), Move.StunSpore, P2.ident(1) });
-        try t.log.expected.status(P2.ident(1), Status.init(.PAR), .None);
+        try t.log.expected.status(.{ P2.ident(1), Status.init(.PAR), protocol.Status.None });
         try t.log.expected.turn(.{2});
 
         try expectEqual(Result.Default, try t.update(move(1), move(1)));
@@ -8886,7 +8918,7 @@ test "Stat modification errors" {
 
         try t.log.expected.switched(.{ P1.ident(2), t.expected.p1.get(2) });
         try t.log.expected.move(.{ P2.ident(1), Move.ThunderWave, P1.ident(2) });
-        try t.log.expected.status(P1.ident(2), Status.init(.PAR), .None);
+        try t.log.expected.status(.{ P1.ident(2), Status.init(.PAR), protocol.Status.None });
         try t.log.expected.turn(.{2});
 
         try expectEqual(Result.Default, try t.update(swtch(2), move(1)));
@@ -9281,7 +9313,12 @@ test "Trapping sleep glitch" {
     try t.log.expected.switched(.{ P2.ident(2), t.expected.p2.get(2) });
     try t.log.expected.move(.{ P1.ident(1), Move.SleepPowder, P2.ident(2) });
     t.expected.p2.get(2).status = Status.slp(5);
-    try t.log.expected.statusFrom(P2.ident(2), t.expected.p2.get(2).status, Move.SleepPowder);
+    try t.log.expected.status(.{
+        P2.ident(2),
+        t.expected.p2.get(2).status,
+        protocol.Status.From,
+        Move.SleepPowder,
+    });
     try t.log.expected.turn(.{4});
 
     try expectEqual(Result.Default, try t.update(move(2), swtch(2)));
@@ -9433,10 +9470,10 @@ test "Rage stat modification error bug" {
 
     try t.log.expected.move(.{ P1.ident(1), Move.Glare, P2.ident(1) });
     t.expected.p2.get(1).status = Status.init(.PAR);
-    try t.log.expected.status(P2.ident(1), t.expected.p2.get(1).status, .None);
+    try t.log.expected.status(.{ P2.ident(1), t.expected.p2.get(1).status, protocol.Status.None });
     try t.log.expected.move(.{ P2.ident(1), Move.StunSpore, P1.ident(1) });
     t.expected.p1.get(1).status = Status.init(.PAR);
-    try t.log.expected.status(P1.ident(1), t.expected.p1.get(1).status, .None);
+    try t.log.expected.status(.{ P1.ident(1), t.expected.p1.get(1).status, protocol.Status.None });
     try t.log.expected.turn(.{2});
 
     try expectEqual(Result.Default, try t.update(move(1), move(1)));

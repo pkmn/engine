@@ -263,7 +263,7 @@ fn switchIn(battle: anytype, player: Player, slot: u8, initial: bool, options: a
         incoming.status = Status.init(.PSN);
         // Technically, Pokémon Showdown adds these after *both* Pokémon have switched, but we'd
         // rather not clutter up turnOrder just for this (incorrect) log message
-        try options.log.status(battle.active(player), incoming.status, .Silent);
+        try options.log.status(.{ battle.active(player), incoming.status, protocol.Status.Silent });
     }
 }
 
@@ -1795,7 +1795,8 @@ pub const Effects = struct {
         foe_stored.status = Status.init(.BRN);
         foe.active.stats.atk = @max(foe.active.stats.atk / 2, 1);
 
-        try options.log.status(battle.active(player.foe()), foe_stored.status, .None);
+        const reason: protocol.Status = .None;
+        try options.log.status(.{ battle.active(player.foe()), foe_stored.status, reason });
     }
 
     fn charge(battle: anytype, player: Player, options: anytype) !void {
@@ -1969,7 +1970,7 @@ pub const Effects = struct {
         foe_stored.status = Status.init(.FRZ);
         // GLITCH: Hyper Beam recharging status is not cleared
 
-        try options.log.status(foe_ident, foe_stored.status, .None);
+        try options.log.status(.{ foe_ident, foe_stored.status, protocol.Status.None });
     }
 
     fn haze(battle: anytype, player: Player, options: anytype) !void {
@@ -2002,7 +2003,7 @@ pub const Effects = struct {
                     s.stored().status = 0;
                 } else if (showdown and s.stored().status == Status.TOX) {
                     s.stored().status = Status.init(.PSN);
-                    try log.status(battle.active(p), s.stored().status, .None);
+                    try log.status(.{ battle.active(p), s.stored().status, protocol.Status.None });
                 }
                 try clearVolatiles(battle, p, p != player, options);
             }
@@ -2035,7 +2036,7 @@ pub const Effects = struct {
             // Adding the sleep status runs the sleep condition handler to roll duration
             if (showdown) battle.rng.advance(1);
             stored.status = Status.slf(2);
-            try options.log.statusFrom(ident, stored.status, Move.Rest);
+            try options.log.status(.{ ident, stored.status, protocol.Status.From, Move.Rest });
             stored.hp = stored.stats.hp;
         } else {
             stored.hp = @min(stored.stats.hp, stored.hp + (stored.stats.hp / 2));
@@ -2171,7 +2172,7 @@ pub const Effects = struct {
         foe_stored.status = Status.init(.PAR);
         foe.active.stats.spe = @max(foe.active.stats.spe / 4, 1);
 
-        try log.status(foe_ident, foe_stored.status, .None);
+        try log.status(.{ foe_ident, foe_stored.status, protocol.Status.None });
     }
 
     fn paralyzeChance(battle: anytype, player: Player, move: Move.Data, options: anytype) !void {
@@ -2193,7 +2194,8 @@ pub const Effects = struct {
         foe_stored.status = Status.init(.PAR);
         foe.active.stats.spe = @max(foe.active.stats.spe / 4, 1);
 
-        try options.log.status(battle.active(player.foe()), foe_stored.status, .None);
+        const reason: protocol.Status = .None;
+        try options.log.status(.{ battle.active(player.foe()), foe_stored.status, reason });
     }
 
     fn payDay(battle: anytype, player: Player, options: anytype) !void {
@@ -2248,7 +2250,7 @@ pub const Effects = struct {
             foe.active.volatiles.toxic = 0;
         }
 
-        try log.status(foe_ident, foe_stored.status, .None);
+        try log.status(.{ foe_ident, foe_stored.status, protocol.Status.None });
     }
 
     fn rage(battle: anytype, player: Player) !void {
@@ -2317,7 +2319,7 @@ pub const Effects = struct {
 
         foe_stored.status = Status.slp(Rolls.sleepDuration(battle, player, options));
         const last = battle.side(player).last_selected_move;
-        try options.log.statusFrom(foe_ident, foe_stored.status, last);
+        try options.log.status(.{ foe_ident, foe_stored.status, protocol.Status.From, last });
     }
 
     fn splash(battle: anytype, player: Player, options: anytype) !void {

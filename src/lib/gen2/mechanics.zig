@@ -1388,7 +1388,9 @@ pub const Effects = struct {
 
         foe_stored.status = Status.init(.BRN);
         foe.active.stats.atk = @max(foe.active.stats.atk / 2, 1);
-        try options.log.status(battle.active(player.foe()), foe_stored.status, .None);
+
+        const reason: protocol.Status = .None;
+        try options.log.status(.{ battle.active(player.foe()), foe_stored.status, reason });
 
         // TODO: check for status berry
     }
@@ -1722,7 +1724,7 @@ pub const Effects = struct {
         if (showdown) for (foe.pokemon) |p| if (Status.is(p.status, .FRZ)) return;
 
         foe_stored.status = Status.init(.FRZ);
-        try options.log.status(foe_ident, foe_stored.status, .None);
+        try options.log.status(.{ foe_ident, foe_stored.status, protocol.Status.None });
 
         // TODO: check for status berry
 
@@ -1774,7 +1776,7 @@ pub const Effects = struct {
             side.active.volatiles.Toxic = false;
             stored.status = Status.slf(2);
             recomputeStats(battle, side);
-            try options.log.statusFrom(ident, stored.status, Move.Rest);
+            try options.log.status(.{ ident, stored.status, protocol.Status.From, Move.Rest });
             stored.hp = stored.stats.hp;
         } else {
             stored.hp = @min(stored.stats.hp, stored.hp + (stored.stats.hp / 2));
@@ -2040,7 +2042,7 @@ pub const Effects = struct {
         foe.stored().status = Status.init(.PAR);
         foe.active.stats.spe = @max(foe.active.stats.spe / 4, 1);
 
-        try options.log.status(foe_ident, foe.stored().status, .None);
+        try options.log.status(.{ foe_ident, foe.stored().status, protocol.Status.None });
     }
 
     pub fn paralyzeChance(battle: anytype, player: Player, state: *State, options: anytype) !void {
@@ -2055,7 +2057,9 @@ pub const Effects = struct {
 
         foe_stored.status = Status.init(.PAR);
         foe.active.stats.spe = @max(foe.active.stats.spe / 4, 1);
-        try options.log.status(battle.active(player.foe()), foe_stored.status, .None);
+
+        const reason: protocol.Status = .None;
+        try options.log.status(.{ battle.active(player.foe()), foe_stored.status, reason });
 
         // TODO: check for status berry
     }
@@ -2118,7 +2122,7 @@ pub const Effects = struct {
             foe.active.volatiles.toxic = 0;
         }
 
-        try options.log.status(foe_ident, foe_stored.status, .None);
+        try options.log.status(.{ foe_ident, foe_stored.status, protocol.Status.None });
 
         // TODO: check for status berry
     }
@@ -2134,7 +2138,8 @@ pub const Effects = struct {
         if (foe.conditions.Safeguard) return;
 
         foe_stored.status = Status.init(.PSN);
-        try options.log.status(battle.active(player.foe()), foe_stored.status, .None);
+        const reason: protocol.Status = .None;
+        try options.log.status(.{ battle.active(player.foe()), foe_stored.status, reason });
 
         // TODO: check for status berry
     }
@@ -2365,7 +2370,7 @@ pub const Effects = struct {
         }
 
         foe_stored.status = Status.slp(Rolls.sleepDuration(battle, player, options));
-        try options.log.statusFrom(foe_ident, foe_stored.status, state.move);
+        try options.log.status(.{ foe_ident, foe_stored.status, protocol.Status.From, state.move });
     }
 
     pub fn sleepTalk(battle: anytype, player: Player, state: *State, options: anytype) !void {

@@ -435,28 +435,18 @@ pub fn Log(comptime Writer: type) type {
             if (args.len == 4) try self.writer.writeByte(@as(u8, @bitCast(args[3])));
         }
 
-        pub fn status(self: Self, ident: ID, value: u8, reason: Status) Error!void {
+        // ident: ID, value: u8, reason: Status, m?: anytype)
+        pub fn status(self: Self, args: anytype) Error!void {
             if (!enabled) return;
 
-            assert(reason != .From);
+            assert(args[2] != .From or args.len == 4);
             try self.writer.writeAll(&.{
                 @intFromEnum(ArgType.Status),
-                @as(u8, @bitCast(ident)),
-                value,
-                @intFromEnum(reason),
+                @as(u8, @bitCast(args[0])),
+                args[1],
+                @intFromEnum(args[2]),
             });
-        }
-
-        pub fn statusFrom(self: Self, ident: ID, value: u8, m: anytype) Error!void {
-            if (!enabled) return;
-
-            try self.writer.writeAll(&.{
-                @intFromEnum(ArgType.Status),
-                @as(u8, @bitCast(ident)),
-                value,
-                @intFromEnum(Status.From),
-                @intFromEnum(m),
-            });
+            if (args.len == 4) try self.writer.writeByte(@intFromEnum(args[3]));
         }
 
         pub fn curestatus(self: Self, ident: ID, value: u8, reason: CureStatus) Error!void {
@@ -1509,15 +1499,15 @@ test "|-heal|" {
 }
 
 test "|-status|" {
-    try log.status(p2.ident(6), gen1.Status.init(.BRN), .None);
+    try log.status(.{ p2.ident(6), gen1.Status.init(.BRN), Status.None });
     try expectLog1(&.{ N(ArgType.Status), 0b1110, 0b10000, N(Status.None) }, buf[0..4]);
     stream.reset();
 
-    try log.status(p2.ident(2), gen1.Status.init(.PSN), .Silent);
+    try log.status(.{ p2.ident(2), gen1.Status.init(.PSN), Status.Silent });
     try expectLog1(&.{ N(ArgType.Status), 0b1010, 0b1000, N(Status.Silent) }, buf[0..4]);
     stream.reset();
 
-    try log.statusFrom(p1.ident(1), gen1.Status.init(.PAR), M1.BodySlam);
+    try log.status(.{ p1.ident(1), gen1.Status.init(.PAR), Status.From, M1.BodySlam });
     try expectLog1(
         &.{ N(ArgType.Status), 0b0001, 0b1000000, N(Status.From), N(M1.BodySlam) },
         buf[0..5],
