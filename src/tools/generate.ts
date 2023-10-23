@@ -597,7 +597,7 @@ const moveFns = async (
     cancharge: () => write('if (!try canCharge(battle, player, state, options)) return;'),
     usedmovetext: () => write(
       '// usedmovetext',
-      'try log.move(ident, state.move, foe_ident); // FIXME self? from?',
+      'try log.move(.{ ident, state.move, foe_ident }); // FIXME self? from?',
     ),
     doturn: () => write(
       '// doturn',

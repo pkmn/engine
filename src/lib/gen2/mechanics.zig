@@ -569,7 +569,7 @@ pub fn canMove(battle: anytype, player: Player, state: *State, options: anytype)
 
     // FIXME: pass in target to avoid lookup?
     const target = if (Move.get(state.move).target == .Self) player else player.foe();
-    try options.log.moveFrom(battle.active(player), state.move, battle.active(target), state.from);
+    try options.log.move(.{ battle.active(player), state.move, battle.active(target), state.from });
 
     const charging = false; // TODO charging uses doUse
     const skip_pp = charging or state.move == .Struggle or

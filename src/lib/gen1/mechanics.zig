@@ -687,7 +687,7 @@ fn beforeMove(
         if (!showdown and handleThrashing(battle, active, player, options)) {
             try log.start(battle.active(player), .ConfusionSilent);
         }
-        try log.move(ident, side.last_selected_move, battle.active(player.foe()));
+        try log.move(.{ ident, side.last_selected_move, battle.active(player.foe()) });
         if (showdown) {
             // This shouldn't actually set last_used_move, but Pokémon Showdown sets last
             // used in useMove and doesn't have the notion of skipping canMove semantics
@@ -709,7 +709,7 @@ fn beforeMove(
         }
         try options.chance.binding(player, volatiles.attacks);
 
-        try log.move(battle.active(player), side.last_selected_move, battle.active(player.foe()));
+        try log.move(.{ ident, side.last_selected_move, battle.active(player.foe()) });
         if (showdown or battle.last_damage != 0) {
             const sub = showdown and foe.active.volatiles.Substitute;
             _ = try applyDamage(battle, player.foe(), player.foe(), .None, options);
@@ -742,7 +742,7 @@ fn canMove(
         side.active.volatiles.Charging = false;
         side.active.volatiles.Invulnerable = false;
     } else if (move.effect == .Charge) {
-        try options.log.moveFrom(player_ident, side.last_selected_move, .{}, from);
+        try options.log.move(.{ player_ident, side.last_selected_move, ID{}, from });
         setCounterable(battle, player, side, move);
         try Effects.charge(battle, player, options);
         return false;
@@ -752,7 +752,7 @@ fn canMove(
     if (!skip) decrementPP(side, mslot, auto);
 
     const target = if (move.target == .Self) player else player.foe();
-    try options.log.moveFrom(player_ident, side.last_selected_move, battle.active(target), from);
+    try options.log.move(.{ player_ident, side.last_selected_move, battle.active(target), from });
     setCounterable(battle, player, side, move);
 
     if (move.effect.onBegin()) {

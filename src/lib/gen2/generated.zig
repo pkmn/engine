@@ -175,7 +175,7 @@ pub fn runMove(battle: anytype, player: Player, state: *State, options: anytype)
             if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
             // TODO rampage
             // usedmovetext
-            try log.move(ident, state.move, foe_ident); // FIXME self? from?
+            try log.move(.{ ident, state.move, foe_ident }); // FIXME self? from?
             try checkHit(battle, player, state, options);
             try checkCriticalHit(battle, player, state, options);
             try calcDamage(battle, player, state, options);
@@ -368,7 +368,7 @@ pub fn runMove(battle: anytype, player: Player, state: *State, options: anytype)
                 (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
             if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
             // usedmovetext
-            try log.move(ident, state.move, foe_ident); // FIXME self? from?
+            try log.move(.{ ident, state.move, foe_ident }); // FIXME self? from?
             try Effects.bide.unleash(battle, player, state, options);
 
             if (state.immune()) {
@@ -555,7 +555,7 @@ pub fn runMove(battle: anytype, player: Player, state: *State, options: anytype)
                 (volatiles.BeatUp or volatiles.Thrashing or volatiles.Bide);
             if (!skip_pp) _ = decrementPP(side, state.move, state.mslot); // TODO if no pp return
             // usedmovetext
-            try log.move(ident, state.move, foe_ident); // FIXME self? from?
+            try log.move(.{ ident, state.move, foe_ident }); // FIXME self? from?
             try checkCriticalHit(battle, player, state, options);
             try calcDamage(battle, player, state, options);
             try adjustDamage(battle, player, state, options);
