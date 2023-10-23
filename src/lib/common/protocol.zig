@@ -402,6 +402,7 @@ pub fn Log(comptime Writer: type) type {
             });
         }
 
+        // -
         pub fn tie(self: Self, _: anytype) Error!void {
             if (!enabled) return;
 
@@ -472,6 +473,7 @@ pub fn Log(comptime Writer: type) type {
             });
         }
 
+        // -
         pub fn clearallboost(self: Self, _: anytype) Error!void {
             if (!enabled) return;
 
@@ -495,23 +497,25 @@ pub fn Log(comptime Writer: type) type {
             try self.writer.writeAll(&.{ @intFromEnum(ArgType.Miss), @as(u8, @bitCast(args[0])) });
         }
 
-        pub fn hitcount(self: Self, ident: ID, num: u8) Error!void {
+        // ident: ID, num: u8
+        pub fn hitcount(self: Self, args: anytype) Error!void {
             if (!enabled) return;
 
             try self.writer.writeAll(&.{
                 @intFromEnum(ArgType.HitCount),
-                @as(u8, @bitCast(ident)),
-                num,
+                @as(u8, @bitCast(args[0])),
+                args[1],
             });
         }
 
-        pub fn prepare(self: Self, source: ID, m: anytype) Error!void {
+        // source: ID, m: anytype
+        pub fn prepare(self: Self, args: anytype) Error!void {
             if (!enabled) return;
 
             try self.writer.writeAll(&.{
                 @intFromEnum(ArgType.Prepare),
-                @as(u8, @bitCast(source)),
-                @intFromEnum(m),
+                @as(u8, @bitCast(args[0])),
+                @intFromEnum(args[1]),
             });
         }
 
@@ -559,6 +563,7 @@ pub fn Log(comptime Writer: type) type {
             });
         }
 
+        // -
         pub fn fieldactivate(self: Self, _: anytype) Error!void {
             if (!enabled) return;
 
@@ -610,6 +615,7 @@ pub fn Log(comptime Writer: type) type {
             });
         }
 
+        // -
         pub fn ohko(self: Self, _: anytype) Error!void {
             if (!enabled) return;
 
@@ -669,25 +675,27 @@ pub fn Log(comptime Writer: type) type {
             return switchDrag(self, .Drag, args);
         }
 
-        pub fn item(self: Self, target: ID, i: anytype, source: ID) Error!void {
+        // target: ID, i: anytype, source: ID
+        pub fn item(self: Self, args: anytype) Error!void {
             if (!enabled) return;
 
             try self.writer.writeAll(&.{
                 @intFromEnum(ArgType.Item),
-                @as(u8, @bitCast(target)),
-                @intFromEnum(i),
-                @as(u8, @bitCast(source)),
+                @as(u8, @bitCast(args[0])),
+                @intFromEnum(args[1]),
+                @as(u8, @bitCast(args[2])),
             });
         }
 
-        pub fn enditem(self: Self, ident: ID, i: anytype, reason: EndItem) Error!void {
+        // ident: ID, i: anytype, reason: EndItem
+        pub fn enditem(self: Self, args: anytype) Error!void {
             if (!enabled) return;
 
             try self.writer.writeAll(&.{
                 @intFromEnum(ArgType.EndItem),
-                @as(u8, @bitCast(ident)),
-                @intFromEnum(i),
-                @intFromEnum(reason),
+                @as(u8, @bitCast(args[0])),
+                @intFromEnum(args[1]),
+                @intFromEnum(args[2]),
             });
         }
 
@@ -701,23 +709,25 @@ pub fn Log(comptime Writer: type) type {
             });
         }
 
-        pub fn sethp(self: Self, ident: ID, pokemon: anytype, reason: SetHP) Error!void {
+        // ident: ID, pokemon: anytype, reason: SetHP
+        pub fn sethp(self: Self, args: anytype) Error!void {
             if (!enabled) return;
 
-            try self.writer.writeAll(&.{ @intFromEnum(ArgType.SetHP), @as(u8, @bitCast(ident)) });
-            try self.writer.writeIntNative(u16, pokemon.hp);
-            try self.writer.writeIntNative(u16, pokemon.stats.hp);
-            try self.writer.writeAll(&.{pokemon.status});
-            try self.writer.writeByte(@intFromEnum(reason));
+            try self.writer.writeAll(&.{ @intFromEnum(ArgType.SetHP), @as(u8, @bitCast(args[0])) });
+            try self.writer.writeIntNative(u16, args[1].hp);
+            try self.writer.writeIntNative(u16, args[1].stats.hp);
+            try self.writer.writeAll(&.{args[1].status});
+            try self.writer.writeByte(@intFromEnum(args[2]));
         }
 
-        pub fn setboost(self: Self, ident: ID, num: i8) Error!void {
+        // ident: ID, num: i8
+        pub fn setboost(self: Self, args: anytype) Error!void {
             if (!enabled) return;
 
             try self.writer.writeAll(&.{
                 @intFromEnum(ArgType.SetBoost),
-                @as(u8, @bitCast(ident)),
-                @as(u8, @intCast(num + 6)),
+                @as(u8, @bitCast(args[0])),
+                @as(u8, @intCast(args[1] + 6)),
             });
         }
 
@@ -732,36 +742,28 @@ pub fn Log(comptime Writer: type) type {
             });
         }
 
-        pub fn sidestart(self: Self, player: Player, reason: Side) Error!void {
+        // player: Player, reason: Side
+        pub fn sidestart(self: Self, args: anytype) Error!void {
             if (!enabled) return;
 
             try self.writer.writeAll(&.{
                 @intFromEnum(ArgType.SideStart),
-                @intFromEnum(player),
-                @intFromEnum(reason),
+                @intFromEnum(args[0]),
+                @intFromEnum(args[1]),
             });
         }
 
-        pub fn sideend(self: Self, player: Player, reason: Side) Error!void {
+        // player: Player, reason: Side, source?: ID
+        pub fn sideend(self: Self, args: anytype) Error!void {
             if (!enabled) return;
 
-            assert(@intFromEnum(reason) != @intFromEnum(Side.Spikes));
+            assert(@intFromEnum(args[1]) != @intFromEnum(Side.Spikes) or args.len == 3);
             try self.writer.writeAll(&.{
                 @intFromEnum(ArgType.SideEnd),
-                @intFromEnum(player),
-                @intFromEnum(reason),
+                @intFromEnum(args[0]),
+                @intFromEnum(args[1]),
             });
-        }
-
-        pub fn spikesend(self: Self, source: ID) Error!void {
-            if (!enabled) return;
-
-            try self.writer.writeAll(&.{
-                @intFromEnum(ArgType.SideEnd),
-                @intFromEnum(source.player),
-                @intFromEnum(Side.Spikes),
-                @as(u8, @bitCast(source)),
-            });
+            if (args.len == 3) try self.writer.writeByte(@as(u8, @bitCast(args[2])));
         }
 
         // ident: ID, move: anytype
@@ -785,23 +787,26 @@ pub fn Log(comptime Writer: type) type {
             });
         }
 
-        pub fn weather(self: Self, w: anytype, reason: Weather) Error!void {
+        // w: anytype, reason: Weather
+        pub fn weather(self: Self, args: anytype) Error!void {
             if (!enabled) return;
 
-            assert(!(w == .None and reason == .Upkeep));
+            assert(!(args[0] == .None and args[1] == .Upkeep));
             try self.writer.writeAll(&.{
                 @intFromEnum(ArgType.Weather),
-                @intFromEnum(w),
-                @intFromEnum(reason),
+                @intFromEnum(args[0]),
+                @intFromEnum(args[1]),
             });
         }
 
+        // -
         pub fn laststill(self: Self, _: anytype) Error!void {
             if (!enabled) return;
 
             try self.writer.writeAll(&.{@intFromEnum(ArgType.LastStill)});
         }
 
+        // -
         pub fn lastmiss(self: Self, _: anytype) Error!void {
             if (!enabled) return;
 
@@ -1574,13 +1579,13 @@ test "|-miss|" {
     stream.reset();
 }
 test "|-hitcount|" {
-    try log.hitcount(p2.ident(1), 5);
+    try log.hitcount(.{ p2.ident(1), 5 });
     try expectLog1(&.{ N(ArgType.HitCount), 0b1001, 5 }, buf[0..3]);
     stream.reset();
 }
 
 test "|-prepare|" {
-    try log.prepare(p2.ident(2), M1.Dig);
+    try log.prepare(.{ p2.ident(2), M1.Dig });
     try expectLog1(&.{ N(ArgType.Prepare), 0b1010, N(M1.Dig) }, buf[0..3]);
     stream.reset();
 }
@@ -1726,17 +1731,17 @@ test "|drag|" {
 }
 
 test "|-item|" {
-    try log.item(p2.ident(2), I2.GoldBerry, p1.ident(4));
+    try log.item(.{ p2.ident(2), I2.GoldBerry, p1.ident(4) });
     try expectLog2(&.{ N(ArgType.Item), 0b1010, N(I2.GoldBerry), 0b0100 }, buf[0..4]);
     stream.reset();
 }
 
 test "|-enditem|" {
-    try log.enditem(p1.ident(1), I2.BerserkGene, .None);
+    try log.enditem(.{ p1.ident(1), I2.BerserkGene, EndItem.None });
     try expectLog2(&.{ N(ArgType.EndItem), 0b0001, N(I2.BerserkGene), N(EndItem.None) }, buf[0..4]);
     stream.reset();
 
-    try log.enditem(p2.ident(4), I2.PRZCureBerry, .Eat);
+    try log.enditem(.{ p2.ident(4), I2.PRZCureBerry, EndItem.Eat });
     try expectLog2(&.{ N(ArgType.EndItem), 0b1100, N(I2.PRZCureBerry), N(EndItem.Eat) }, buf[0..4]);
     stream.reset();
 }
@@ -1750,7 +1755,7 @@ test "|-cureteam|" {
 test "|-sethp|" {
     var blissey = gen2.helpers.Pokemon.init(.{ .species = .Blissey, .moves = &.{.PainSplit} });
     blissey.hp = 612;
-    try log.sethp(p2.ident(2), &blissey, .Silent);
+    try log.sethp(.{ p2.ident(2), &blissey, SetHP.Silent });
     var expected: []const u8 = switch (endian) {
         .Big => &.{ N(ArgType.SetHP), 0b1010, 2, 100, 2, 201, 0, N(SetHP.Silent) },
         .Little => &.{ N(ArgType.SetHP), 0b1010, 100, 2, 201, 2, 0, N(SetHP.Silent) },
@@ -1760,11 +1765,11 @@ test "|-sethp|" {
 }
 
 test "|-setboost|" {
-    try log.setboost(p2.ident(6), 6);
+    try log.setboost(.{ p2.ident(6), 6 });
     try expectLog2(&.{ N(ArgType.SetBoost), 0b1110, 12 }, buf[0..3]);
     stream.reset();
 
-    try log.setboost(p2.ident(3), 2);
+    try log.setboost(.{ p2.ident(3), 2 });
     try expectLog2(&.{ N(ArgType.SetBoost), 0b1011, 8 }, buf[0..3]);
     stream.reset();
 }
@@ -1776,17 +1781,17 @@ test "|-copyboost|" {
 }
 
 test "|-sidestart|" {
-    try log.sidestart(.P2, .Reflect);
+    try log.sidestart(.{ Player.P2, Side.Reflect });
     try expectLog2(&.{ N(ArgType.SideStart), 1, N(Side.Reflect) }, buf[0..3]);
     stream.reset();
 }
 
 test "|-sideend|" {
-    try log.sideend(.P2, .LightScreen);
+    try log.sideend(.{ Player.P2, Side.LightScreen });
     try expectLog2(&.{ N(ArgType.SideEnd), 1, N(Side.LightScreen) }, buf[0..3]);
     stream.reset();
 
-    try log.spikesend(p1.ident(3));
+    try log.sideend(.{ Player.P1, Side.Spikes, p1.ident(3) });
     try expectLog2(&.{
         N(ArgType.SideEnd),
         0,
@@ -1809,11 +1814,11 @@ test "|-singleturn|" {
 }
 
 test "|-weather|" {
-    try log.weather(W2.Rain, .Upkeep);
+    try log.weather(.{ W2.Rain, Weather.Upkeep });
     try expectLog2(&.{ N(ArgType.Weather), N(W2.Rain), N(Weather.Upkeep) }, buf[0..3]);
     stream.reset();
 
-    try log.weather(W2.None, .None);
+    try log.weather(.{ W2.None, Weather.None });
     try expectLog2(&.{ N(ArgType.Weather), N(W2.None), N(Weather.None) }, buf[0..3]);
     stream.reset();
 }

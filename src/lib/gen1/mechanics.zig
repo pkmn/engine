@@ -1000,7 +1000,7 @@ fn doMove(
         if (showdown and move.effect == .Twineedle and !nullified and foe.stored().hp > 0) {
             try Effects.poison(battle, player, Move.get(.PoisonSting), options);
         }
-        try log.hitcount(battle.active(player.foe()), hit);
+        try log.hitcount(.{ battle.active(player.foe()), hit });
     } else if (showdown) {
         // This should be handled much earlier but Pokémon Showdown does it here... ¯\_(ツ)_/¯
         if (move.effect == .Binding) {
@@ -1807,7 +1807,7 @@ pub const Effects = struct {
         const move = side.last_selected_move;
         if (move == .Fly or move == .Dig) volatiles.Invulnerable = true;
         try options.log.laststill(.{});
-        try options.log.prepare(battle.active(player), move);
+        try options.log.prepare(.{ battle.active(player), move });
     }
 
     fn confusion(battle: anytype, player: Player, move: Move.Data, options: anytype) !void {

@@ -507,11 +507,11 @@ test "turn order (complex speed tie)" {
         try t.log.expected.move(.{ P2.ident(1), Move.Metronome, P2.ident(1) });
         try t.log.expected.move(.{ P2.ident(1), Move.Fly, ID{}, Move.Metronome });
         try t.log.expected.laststill(.{});
-        try t.log.expected.prepare(P2.ident(1), Move.Fly);
+        try t.log.expected.prepare(.{ P2.ident(1), Move.Fly });
         try t.log.expected.move(.{ P1.ident(1), Move.Metronome, P1.ident(1) });
         try t.log.expected.move(.{ P1.ident(1), Move.Dig, ID{}, Move.Metronome });
         try t.log.expected.laststill(.{});
-        try t.log.expected.prepare(P1.ident(1), Move.Dig);
+        try t.log.expected.prepare(.{ P1.ident(1), Move.Dig });
         try t.log.expected.turn(.{2});
 
         try expectEqual(Result.Default, try t.update(move(1), move(1)));
@@ -1216,7 +1216,7 @@ test "MultiHit effect" {
     try t.log.expected.damage(.{ P2.ident(1), t.expected.p2.get(1), Damage.None });
     t.expected.p2.get(1).hp -= 31;
     try t.log.expected.damage(.{ P2.ident(1), t.expected.p2.get(1), Damage.None });
-    try t.log.expected.hitcount(P2.ident(1), 3);
+    try t.log.expected.hitcount(.{ P2.ident(1), 3 });
     try t.log.expected.move(.{ P2.ident(1), Move.Substitute, P2.ident(1) });
     try t.log.expected.start(P2.ident(1), .Substitute);
     t.expected.p2.get(1).hp -= 95;
@@ -1231,7 +1231,7 @@ test "MultiHit effect" {
     try t.log.expected.activate(P2.ident(1), .Substitute);
     try t.log.expected.activate(P2.ident(1), .Substitute);
     try t.log.expected.end(P2.ident(1), .Substitute);
-    try t.log.expected.hitcount(P2.ident(1), 4);
+    try t.log.expected.hitcount(.{ P2.ident(1), 4 });
     try t.log.expected.move(.{ P2.ident(1), Move.Splash, P2.ident(1) });
     try t.log.expected.activate(P2.ident(1), .Splash);
     try t.log.expected.turn(.{3});
@@ -1260,7 +1260,7 @@ test "DoubleHit effect" {
     try t.log.expected.damage(.{ P2.ident(1), t.expected.p2.get(1), Damage.None });
     t.expected.p2.get(1).hp -= 91;
     try t.log.expected.damage(.{ P2.ident(1), t.expected.p2.get(1), Damage.None });
-    try t.log.expected.hitcount(P2.ident(1), 2);
+    try t.log.expected.hitcount(.{ P2.ident(1), 2 });
     try t.log.expected.move(.{ P2.ident(1), Move.Substitute, P2.ident(1) });
     try t.log.expected.start(P2.ident(1), .Substitute);
     t.expected.p2.get(1).hp -= 77;
@@ -1272,7 +1272,7 @@ test "DoubleHit effect" {
 
     try t.log.expected.move(.{ P1.ident(1), Move.Bonemerang, P2.ident(1) });
     try t.log.expected.end(P2.ident(1), .Substitute);
-    try t.log.expected.hitcount(P2.ident(1), 1);
+    try t.log.expected.hitcount(.{ P2.ident(1), 1 });
     try t.log.expected.move(.{ P2.ident(1), Move.Splash, P2.ident(1) });
     try t.log.expected.activate(P2.ident(1), .Splash);
     try t.log.expected.turn(.{3});
@@ -1319,7 +1319,7 @@ test "Twineedle effect" {
     try t.log.expected.move(.{ P1.ident(1), Move.Twineedle, P2.ident(1) });
     try t.log.expected.crit(.{P2.ident(1)});
     try t.log.expected.end(P2.ident(1), .Substitute);
-    try t.log.expected.hitcount(P2.ident(1), 1);
+    try t.log.expected.hitcount(.{ P2.ident(1), 1 });
     try t.log.expected.turn(.{2});
 
     // Breaking a target's Substitute ends the move
@@ -1333,7 +1333,7 @@ test "Twineedle effect" {
     try t.log.expected.damage(.{ P2.ident(1), t.expected.p2.get(1), Damage.None });
     t.expected.p2.get(1).hp -= 36;
     try t.log.expected.damage(.{ P2.ident(1), t.expected.p2.get(1), Damage.None });
-    try t.log.expected.hitcount(P2.ident(1), 2);
+    try t.log.expected.hitcount(.{ P2.ident(1), 2 });
     try t.log.expected.turn(.{3});
 
     try expectEqual(Result.Default, try t.update(move(1), move(2)));
@@ -1351,9 +1351,9 @@ test "Twineedle effect" {
     const reason: protocol.Status = .None;
     if (showdown) {
         try t.log.expected.status(.{ P2.ident(1), t.expected.p2.get(1).status, reason });
-        try t.log.expected.hitcount(P2.ident(1), 2);
+        try t.log.expected.hitcount(.{ P2.ident(1), 2 });
     } else {
-        try t.log.expected.hitcount(P2.ident(1), 2);
+        try t.log.expected.hitcount(.{ P2.ident(1), 2 });
         try t.log.expected.status(.{ P2.ident(1), t.expected.p2.get(1).status, reason });
     }
     try t.log.expected.turn(.{4});
@@ -1370,7 +1370,7 @@ test "Twineedle effect" {
     try t.log.expected.damage(.{ P2.ident(2), t.expected.p2.get(2), Damage.None });
     t.expected.p2.get(2).hp -= 45;
     try t.log.expected.damage(.{ P2.ident(2), t.expected.p2.get(2), Damage.None });
-    try t.log.expected.hitcount(P2.ident(2), 2);
+    try t.log.expected.hitcount(.{ P2.ident(2), 2 });
     try t.log.expected.turn(.{5});
 
     // Poison types cannot be poisoned
@@ -2709,7 +2709,7 @@ test "OHKO effect" {
 
     try t.log.expected.move(.{ P2.ident(2), Move.Dig, ID{} });
     try t.log.expected.laststill(.{});
-    try t.log.expected.prepare(P2.ident(2), Move.Dig);
+    try t.log.expected.prepare(.{ P2.ident(2), Move.Dig });
     try t.log.expected.move(.{ P1.ident(2), Move.HornDrill, P2.ident(2) });
     if (showdown) {
         try t.log.expected.lastmiss(.{});
@@ -2759,7 +2759,7 @@ test "Charge effect" {
 
     try t.log.expected.move(.{ P1.ident(1), Move.SkullBash, ID{} });
     try t.log.expected.laststill(.{});
-    try t.log.expected.prepare(P1.ident(1), Move.SkullBash);
+    try t.log.expected.prepare(.{ P1.ident(1), Move.SkullBash });
     try t.log.expected.move(.{ P2.ident(1), Move.Scratch, P1.ident(1) });
     t.expected.p1.get(1).hp -= 23;
     try t.log.expected.damage(.{ P1.ident(1), t.expected.p1.get(1), Damage.None });
@@ -2794,7 +2794,7 @@ test "Charge effect" {
 
     try t.log.expected.move(.{ P1.ident(1), Move.SkullBash, ID{} });
     try t.log.expected.laststill(.{});
-    try t.log.expected.prepare(P1.ident(1), Move.SkullBash);
+    try t.log.expected.prepare(.{ P1.ident(1), Move.SkullBash });
     try t.log.expected.move(.{ P2.ident(1), Move.Disable, P1.ident(1) });
     try t.log.expected.startEffect(P1.ident(1), .Disable, Move.SkullBash);
     try t.log.expected.turn(.{4});
@@ -2849,7 +2849,7 @@ test "Fly/Dig effect" {
 
         try t.log.expected.move(.{ P1.ident(1), Move.Fly, ID{} });
         try t.log.expected.laststill(.{});
-        try t.log.expected.prepare(P1.ident(1), Move.Fly);
+        try t.log.expected.prepare(.{ P1.ident(1), Move.Fly });
         try t.log.expected.move(.{ P2.ident(1), Move.Strength, P1.ident(1) });
         try t.log.expected.lastmiss(.{});
         try t.log.expected.miss(.{P2.ident(1)});
@@ -2918,7 +2918,7 @@ test "Fly/Dig effect" {
 
         try t.log.expected.move(.{ P1.ident(2), Move.Dig, ID{} });
         try t.log.expected.laststill(.{});
-        try t.log.expected.prepare(P1.ident(2), Move.Dig);
+        try t.log.expected.prepare(.{ P1.ident(2), Move.Dig });
         try t.log.expected.move(.{ P2.ident(2), Move.Splash, P2.ident(2) });
         try t.log.expected.activate(P2.ident(2), .Splash);
         try t.log.expected.turn(.{4});
@@ -4131,7 +4131,7 @@ test "Counter effect" {
     try t.log.expected.damage(.{ P2.ident(1), t.expected.p2.get(1), Damage.None });
     t.expected.p2.get(1).hp -= 17;
     try t.log.expected.damage(.{ P2.ident(1), t.expected.p2.get(1), Damage.None });
-    try t.log.expected.hitcount(P2.ident(1), 2);
+    try t.log.expected.hitcount(.{ P2.ident(1), 2 });
     try t.log.expected.move(.{ P2.ident(1), Move.Counter, P1.ident(1) });
     t.expected.p1.get(1).hp -= 34;
     try t.log.expected.damage(.{ P1.ident(1), t.expected.p1.get(1), Damage.None });
@@ -4169,7 +4169,7 @@ test "Counter effect" {
     try t.log.expected.damage(.{ P2.ident(1), t.expected.p2.get(1), Damage.None });
     t.expected.p2.get(1).hp -= 17;
     try t.log.expected.damage(.{ P2.ident(1), t.expected.p2.get(1), Damage.None });
-    try t.log.expected.hitcount(P2.ident(1), 2);
+    try t.log.expected.hitcount(.{ P2.ident(1), 2 });
     try t.log.expected.move(.{ P2.ident(1), Move.Counter, P1.ident(1) });
     t.expected.p1.get(1).hp -= 34;
     try t.log.expected.damage(.{ P1.ident(1), t.expected.p1.get(1), Damage.None });
@@ -4564,7 +4564,7 @@ test "DreamEater effect" {
 
         try t.log.expected.move(.{ P2.ident(1), Move.Dig, ID{} });
         try t.log.expected.laststill(.{});
-        try t.log.expected.prepare(P2.ident(1), Move.Dig);
+        try t.log.expected.prepare(.{ P2.ident(1), Move.Dig });
         try t.log.expected.move(.{ P1.ident(1), Move.DreamEater, P2.ident(1) });
         if (showdown) {
             try t.log.expected.lastmiss(.{});
@@ -5260,7 +5260,7 @@ test "Bide effect" {
 
         try t.log.expected.move(.{ P2.ident(2), Move.Dig, ID{} });
         try t.log.expected.laststill(.{});
-        try t.log.expected.prepare(P2.ident(2), Move.Dig);
+        try t.log.expected.prepare(.{ P2.ident(2), Move.Dig });
         try t.log.expected.end(P1.ident(1), .Bide);
         t.expected.p2.get(2).hp -= 120;
         try t.log.expected.damage(.{ P2.ident(2), t.expected.p2.get(2), Damage.None });
@@ -5626,7 +5626,7 @@ test "MirrorMove effect" {
 
     try t.log.expected.move(.{ P1.ident(1), Move.Fly, ID{} });
     try t.log.expected.laststill(.{});
-    try t.log.expected.prepare(P1.ident(1), Move.Fly);
+    try t.log.expected.prepare(.{ P1.ident(1), Move.Fly });
     try t.log.expected.move(.{ P2.ident(1), Move.MirrorMove, P2.ident(1) });
     try t.log.expected.move(.{ P2.ident(1), Move.Swift, P1.ident(1), Move.MirrorMove });
     t.expected.p1.get(1).hp -= 74;
@@ -5647,7 +5647,7 @@ test "MirrorMove effect" {
     try t.log.expected.move(.{ P2.ident(1), Move.MirrorMove, P2.ident(1) });
     try t.log.expected.move(.{ P2.ident(1), Move.Fly, ID{}, Move.MirrorMove });
     try t.log.expected.laststill(.{});
-    try t.log.expected.prepare(P2.ident(1), Move.Fly);
+    try t.log.expected.prepare(.{ P2.ident(1), Move.Fly });
     try t.log.expected.turn(.{7});
 
     try expectEqual(Result.Default, try t.update(forced, move(1)));
@@ -5767,7 +5767,7 @@ test "Swift effect" {
 
     try t.log.expected.move(.{ P2.ident(1), Move.Dig, ID{} });
     try t.log.expected.laststill(.{});
-    try t.log.expected.prepare(P2.ident(1), Move.Dig);
+    try t.log.expected.prepare(.{ P2.ident(1), Move.Dig });
     try t.log.expected.move(.{ P1.ident(1), Move.Swift, P2.ident(1) });
     t.expected.p2.get(1).hp -= 91;
     try t.log.expected.damage(.{ P2.ident(1), t.expected.p2.get(1), Damage.None });
@@ -5823,7 +5823,7 @@ test "Transform effect" {
 
     try t.log.expected.move(.{ P2.ident(1), Move.Fly, ID{} });
     try t.log.expected.laststill(.{});
-    try t.log.expected.prepare(P2.ident(1), Move.Fly);
+    try t.log.expected.prepare(.{ P2.ident(1), Move.Fly });
     try t.log.expected.move(.{ P1.ident(1), Move.Transform, P2.ident(1) });
     try t.log.expected.transform(.{ P1.ident(1), P2.ident(1) });
     try t.log.expected.turn(.{3});
@@ -6352,7 +6352,7 @@ test "Charge + Sleep bug" {
 
     try t.log.expected.move(.{ P1.ident(1), Move.SolarBeam, ID{} });
     try t.log.expected.laststill(.{});
-    try t.log.expected.prepare(P1.ident(1), Move.SolarBeam);
+    try t.log.expected.prepare(.{ P1.ident(1), Move.SolarBeam });
     try t.log.expected.move(.{ P2.ident(1), Move.LovelyKiss, P1.ident(1) });
     t.expected.p1.get(1).status = Status.slp(1);
     const from: protocol.Status = .From;
@@ -6401,7 +6401,7 @@ test "Explosion invulnerability bug" {
 
     try t.log.expected.move(.{ P1.ident(1), Move.Dig, ID{} });
     try t.log.expected.laststill(.{});
-    try t.log.expected.prepare(P1.ident(1), Move.Dig);
+    try t.log.expected.prepare(.{ P1.ident(1), Move.Dig });
     try t.log.expected.move(.{ P2.ident(1), Move.Explosion, P1.ident(1) });
     try t.log.expected.lastmiss(.{});
     try t.log.expected.miss(.{P2.ident(1)});
@@ -6717,7 +6717,7 @@ test "Infinite Metronome" {
         try t.log.expected.move(.{ P2.ident(1), Move.Metronome, P2.ident(1) });
         try t.log.expected.move(.{ P2.ident(1), Move.SkullBash, ID{}, Move.Metronome });
         try t.log.expected.laststill(.{});
-        try t.log.expected.prepare(P2.ident(1), Move.SkullBash);
+        try t.log.expected.prepare(.{ P2.ident(1), Move.SkullBash });
         try t.log.expected.move(.{ P1.ident(1), Move.Metronome, P1.ident(1) });
         try t.log.expected.move(.{ P1.ident(1), Move.MirrorMove, P1.ident(1), Move.Metronome });
         try t.log.expected.move(.{ P1.ident(1), Move.Metronome, P1.ident(1), Move.MirrorMove });
@@ -6725,7 +6725,7 @@ test "Infinite Metronome" {
         try t.log.expected.move(.{ P1.ident(1), Move.Metronome, P1.ident(1), Move.MirrorMove });
         try t.log.expected.move(.{ P1.ident(1), Move.Fly, ID{}, Move.Metronome });
         try t.log.expected.laststill(.{});
-        try t.log.expected.prepare(P1.ident(1), Move.Fly);
+        try t.log.expected.prepare(.{ P1.ident(1), Move.Fly });
 
         try t.log.expected.turn(.{2});
 
@@ -6824,11 +6824,11 @@ test "Mirror Move/Metronome + Substitute bug" {
     try t.log.expected.damage(.{ P2.ident(1), t.expected.p2.get(1), Damage.None });
     // BUG: Pokémon Showdown's broken useMove mechanics mean subFainted never gets cleared
     // if (showdown) {
-    //     try t.log.expected.hitcount(P2.ident(1), 1);
+    //     try t.log.expected.hitcount(.{ P2.ident(1), 1 });
     // } else {
     t.expected.p2.get(1).hp -= 71;
     try t.log.expected.damage(.{ P2.ident(1), t.expected.p2.get(1), Damage.None });
-    try t.log.expected.hitcount(P2.ident(1), 2);
+    try t.log.expected.hitcount(.{ P2.ident(1), 2 });
     // }
     try t.log.expected.turn(.{3});
 
@@ -8770,7 +8770,7 @@ test "Invulnerability glitch" {
 
     try t.log.expected.move(.{ P1.ident(1), Move.Fly, ID{} });
     try t.log.expected.laststill(.{});
-    try t.log.expected.prepare(P1.ident(1), Move.Fly);
+    try t.log.expected.prepare(.{ P1.ident(1), Move.Fly });
     try t.log.expected.move(.{ P2.ident(1), Move.ThunderShock, P1.ident(1) });
     try t.log.expected.lastmiss(.{});
     try t.log.expected.miss(.{P2.ident(1)});
@@ -8802,7 +8802,7 @@ test "Invulnerability glitch" {
 
     try t.log.expected.move(.{ P1.ident(1), Move.Fly, ID{} });
     try t.log.expected.laststill(.{});
-    try t.log.expected.prepare(P1.ident(1), Move.Fly);
+    try t.log.expected.prepare(.{ P1.ident(1), Move.Fly });
     try t.log.expected.move(.{ P2.ident(1), Move.ThunderShock, P1.ident(1) });
     try t.log.expected.lastmiss(.{});
     try t.log.expected.miss(.{P2.ident(1)});
@@ -10066,7 +10066,7 @@ test "MAX_LOGS" {
     try expected.damage(.{ P2.ident(1), p2.get(1), Damage.None });
     p2.get(1).hp -= 17;
     try expected.damage(.{ P2.ident(1), p2.get(1), Damage.None });
-    try expected.hitcount(P2.ident(1), 5);
+    try expected.hitcount(.{ P2.ident(1), 5 });
     p1.get(1).hp -= 22;
     try expected.damage(.{ P1.ident(1), p1.get(1), Damage.Burn });
     p1.get(1).hp -= 22;
@@ -10089,7 +10089,7 @@ test "MAX_LOGS" {
     try expected.damage(.{ P1.ident(1), p1.get(1), Damage.None });
     p1.get(1).hp -= 19;
     try expected.damage(.{ P1.ident(1), p1.get(1), Damage.None });
-    try expected.hitcount(P1.ident(1), 5);
+    try expected.hitcount(.{ P1.ident(1), 5 });
     p2.get(1).hp -= 22;
     try expected.damage(.{ P2.ident(1), p2.get(1), Damage.Burn });
     p2.get(1).hp -= 22;

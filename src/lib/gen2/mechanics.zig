@@ -29,6 +29,8 @@ const Boost = protocol.Boost;
 const Cant = protocol.Cant;
 const Damage = protocol.Damage;
 const End = protocol.End;
+const EndItem = protocol.EndItem;
+const SetHP = protocol.SetHP;
 const Heal = protocol.Heal;
 const Start = protocol.Start;
 
@@ -1002,9 +1004,9 @@ fn betweenTurns(battle: anytype, mslot: u4, options: anytype) !?Result {
 
         if (battle.field.weather_duration == 0) {
             battle.field.weather = .None;
-            try options.log.weather(battle.field.weather, .None);
+            try options.log.weather(.{ battle.field.weather, protocol.Weather.None });
         } else {
-            try options.log.weather(battle.field.weather, .Upkeep);
+            try options.log.weather(.{ battle.field.weather, protocol.Weather.Upkeep });
             if (battle.field.weather == .Sandstorm) {
                 inline for (players) |player| {
                     var side = battle.side(player);
@@ -1141,7 +1143,7 @@ fn betweenTurns(battle: anytype, mslot: u4, options: anytype) !?Result {
                     stored.hp < stored.stats.hp;
                 if (proc) {
                     assert(stored.hp != 0);
-                    try options.log.enditem(ident, stored.item, .Eat);
+                    try options.log.enditem(.{ ident, stored.item, EndItem.Eat });
                     stored.item = .None;
 
                     const offset = num - @intFromEnum(Item.Berry);
@@ -1158,7 +1160,7 @@ fn betweenTurns(battle: anytype, mslot: u4, options: anytype) !?Result {
 
                 if (proc) {
                     assert(Status.any(stored.status));
-                    try options.log.enditem(ident, stored.item, .Eat);
+                    try options.log.enditem(.{ ident, stored.item, EndItem.Eat });
                     stored.item = .None;
 
                     // FIXME wtf?
@@ -1176,7 +1178,7 @@ fn betweenTurns(battle: anytype, mslot: u4, options: anytype) !?Result {
                 }
             } else if (num == @intFromEnum(Item.BitterBerry)) {
                 if (side.active.volatiles.Confusion) {
-                    try options.log.enditem(ident, stored.item, .Eat);
+                    try options.log.enditem(.{ ident, stored.item, EndItem.Eat });
                     stored.item = .None;
 
                     side.active.volatiles.Confusion = false;
@@ -1219,7 +1221,7 @@ fn updateSideCondition(
 
         if (@field(side.conditions, value) == 0) {
             @field(side.conditions, key) = false;
-            try options.log.sideend(player, @field(protocol.Side, key));
+            try options.log.sideend(.{ player, @field(protocol.Side, key) });
         }
     }
 }
@@ -2021,8 +2023,8 @@ pub const Effects = struct {
         foe.stored().hp -= avg;
         side.stored().hp = avg;
 
-        try options.log.sethp(foe_ident, foe.stored(), .Silent);
-        try options.log.sethp(ident, side.stored(), .None);
+        try options.log.sethp(.{ foe_ident, foe.stored(), SetHP.Silent });
+        try options.log.sethp(.{ ident, side.stored(), SetHP.None });
     }
 
     pub fn paralyze(battle: anytype, player: Player, state: *State, options: anytype) !void {
@@ -2213,7 +2215,7 @@ pub const Effects = struct {
         }
 
         if (side.conditions.Spikes) {
-            try options.log.spikesend(battle.active(player));
+            try options.log.sideend(.{ player, protocol.Side.Spikes, battle.active(player) });
             side.conditions.Spikes = false;
         }
 
@@ -2329,7 +2331,7 @@ pub const Effects = struct {
 
         @field(side.conditions, key) = true;
         @field(side.conditions, value) = 5;
-        try options.log.sidestart(player, @field(protocol.Side, key));
+        try options.log.sidestart(.{ player, @field(protocol.Side, key) });
     }
 
     pub fn sketch(battle: anytype, player: Player, _: *State, options: anytype) !void {
@@ -2403,7 +2405,7 @@ pub const Effects = struct {
         if (foe.conditions.Spikes) return options.log.fail(battle.active(player), .None);
 
         foe.conditions.Spikes = true;
-        try options.log.sidestart(player.foe(), .Spikes);
+        try options.log.sidestart(.{ player.foe(), protocol.Side.Spikes });
     }
 
     pub fn spite(battle: anytype, player: Player, state: *State, options: anytype) !void {
@@ -2452,7 +2454,7 @@ pub const Effects = struct {
     fn weather(battle: anytype, w: Weather, options: anytype) !void {
         battle.field.weather = w;
         battle.field.weather_duration = 5;
-        try options.log.weather(w, .None);
+        try options.log.weather(.{ w, protocol.Weather.None });
     }
 
     pub fn teleport(battle: anytype, player: Player, _: *State, options: anytype) !void {
@@ -2474,11 +2476,11 @@ pub const Effects = struct {
         side.stored().item = foe.stored().item;
         foe.stored().item = .None;
 
-        try options.log.item(
+        try options.log.item(.{
             battle.active(player),
             side.stored().item,
             battle.active(player.foe()),
-        );
+        });
     }
 
     pub fn thrashing(battle: anytype, player: Player, _: *State, options: anytype) !void {
