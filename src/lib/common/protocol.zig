@@ -337,26 +337,28 @@ pub fn Log(comptime Writer: type) type {
                 &.{ @intFromEnum(Move.From), @intFromEnum(args[3]) });
         }
 
-        pub fn switched(self: Self, ident: ID, pokemon: anytype) Error!void {
-            return switchDrag(self, .Switch, ident, pokemon);
+        // ident: ID, pokemon: anytype
+        pub fn switched(self: Self, args: anytype) Error!void {
+            return switchDrag(self, .Switch, args);
         }
 
-        fn switchDrag(self: Self, arg: ArgType, ident: ID, pokemon: anytype) Error!void {
+        // ident: ID, pokemon: anytype
+        fn switchDrag(self: Self, arg: ArgType, args: anytype) Error!void {
             if (!enabled) return;
 
-            try self.writer.writeAll(&.{ @intFromEnum(arg), @as(u8, @bitCast(ident)) });
-            if (@hasField(@TypeOf(pokemon.*), "dvs")) {
+            try self.writer.writeAll(&.{ @intFromEnum(arg), @as(u8, @bitCast(args[0])) });
+            if (@hasField(@TypeOf(args[1].*), "dvs")) {
                 try self.writer.writeAll(&.{
-                    @intFromEnum(pokemon.species),
-                    @intFromEnum(pokemon.dvs.gender),
-                    pokemon.level,
+                    @intFromEnum(args[1].species),
+                    @intFromEnum(args[1].dvs.gender),
+                    args[1].level,
                 });
             } else {
-                try self.writer.writeAll(&.{ @intFromEnum(pokemon.species), pokemon.level });
+                try self.writer.writeAll(&.{ @intFromEnum(args[1].species), args[1].level });
             }
-            try self.writer.writeIntNative(u16, pokemon.hp);
-            try self.writer.writeIntNative(u16, pokemon.stats.hp);
-            try self.writer.writeAll(&.{pokemon.status});
+            try self.writer.writeIntNative(u16, args[1].hp);
+            try self.writer.writeIntNative(u16, args[1].stats.hp);
+            try self.writer.writeAll(&.{args[1].status});
         }
 
         // ident: ID, reason: Cant, m?: anytype
@@ -699,8 +701,9 @@ pub fn Log(comptime Writer: type) type {
             });
         }
 
-        pub fn drag(self: Self, ident: ID, pokemon: anytype) Error!void {
-            return switchDrag(self, .Drag, ident, pokemon);
+        // ident: ID, pokemon: anytype
+        pub fn drag(self: Self, args: anytype) Error!void {
+            return switchDrag(self, .Drag, args);
         }
 
         pub fn item(self: Self, target: ID, i: anytype, source: ID) Error!void {
@@ -1376,7 +1379,7 @@ test "|switch|" {
     snorlax.hp = 200;
     snorlax.stats.hp = 400;
     snorlax.status = gen1.Status.init(.PAR);
-    try log.switched(p2.ident(3), &snorlax);
+    try log.switched(.{ p2.ident(3), &snorlax });
     const par = 0b1000000;
     var expected: []const u8 = switch (endian) {
         .Big => &.{ N(ArgType.Switch), 0b1011, N(S1.Snorlax), 91, 0, 200, 1, 144, par },
@@ -1388,7 +1391,7 @@ test "|switch|" {
     snorlax.level = 100;
     snorlax.hp = 0;
     snorlax.status = 0;
-    try log.switched(p2.ident(3), &snorlax);
+    try log.switched(.{ p2.ident(3), &snorlax });
     expected = switch (endian) {
         .Big => &.{ N(ArgType.Switch), 0b1011, N(S1.Snorlax), 100, 0, 0, 1, 144, 0 },
         .Little => &.{ N(ArgType.Switch), 0b1011, N(S1.Snorlax), 100, 0, 0, 144, 1, 0 },
@@ -1397,7 +1400,7 @@ test "|switch|" {
     stream.reset();
 
     snorlax.hp = 400;
-    try log.switched(p2.ident(3), &snorlax);
+    try log.switched(.{ p2.ident(3), &snorlax });
     expected = switch (endian) {
         .Big => &.{ N(ArgType.Switch), 0b1011, N(S1.Snorlax), 100, 1, 144, 1, 144, 0 },
         .Little => &.{ N(ArgType.Switch), 0b1011, N(S1.Snorlax), 100, 144, 1, 144, 1, 0 },
@@ -1410,7 +1413,7 @@ test "|switch|" {
     blissey.hp = 200;
     blissey.stats.hp = 400;
     blissey.status = gen2.Status.init(.PAR);
-    try log.switched(p2.ident(3), &blissey);
+    try log.switched(.{ p2.ident(3), &blissey });
     expected = &(.{
         N(ArgType.Switch),
         0b1011,
@@ -1743,7 +1746,7 @@ test "|drag|" {
     blissey.hp = 200;
     blissey.stats.hp = 400;
     blissey.status = gen2.Status.init(.PAR);
-    try log.drag(p2.ident(3), &blissey);
+    try log.drag(.{ p2.ident(3), &blissey });
     const par = 0b1000000;
     const expected = &(.{
         N(ArgType.Drag),

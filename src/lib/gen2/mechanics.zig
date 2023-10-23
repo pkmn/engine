@@ -252,9 +252,9 @@ fn switchIn(battle: anytype, player: Player, slot: u8, kind: SwitchIn, options: 
     statusModify(incoming.status, &active.stats);
 
     if (kind == .Drag) {
-        try options.log.drag(battle.active(player), incoming);
+        try options.log.drag(.{ battle.active(player), incoming });
     } else {
-        try options.log.switched(battle.active(player), incoming);
+        try options.log.switched(.{ battle.active(player), incoming });
     }
     options.chance.switched(player, side.pokemon[0].position, out);
 

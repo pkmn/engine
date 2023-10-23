@@ -97,8 +97,8 @@ test "start (first fainted)" {
     );
     defer t.deinit();
 
-    try t.log.expected.switched(P1.ident(2), t.expected.p1.get(2));
-    try t.log.expected.switched(P2.ident(2), t.expected.p2.get(2));
+    try t.log.expected.switched(.{ P1.ident(2), t.expected.p1.get(2) });
+    try t.log.expected.switched(.{ P2.ident(2), t.expected.p2.get(2) });
     try t.log.expected.turn(.{1});
 
     try expectEqual(Result.Default, try t.battle.actual.update(.{}, .{}, &t.options));
@@ -172,8 +172,8 @@ test "switching (order)" {
     var expected: FixedLog = .{ .writer = expected_stream.writer() };
     var actual: FixedLog = .{ .writer = actual_stream.writer() };
 
-    try expected.switched(P1.ident(3), &p1.pokemon[2]);
-    try expected.switched(P2.ident(2), &p2.pokemon[1]);
+    try expected.switched(.{ P1.ident(3), &p1.pokemon[2] });
+    try expected.switched(.{ P2.ident(2), &p2.pokemon[1] });
     try expected.turn(.{7});
 
     var options = pkmn.battle.options(actual, chance.NULL, calc.NULL);
@@ -208,7 +208,7 @@ test "switching (reset)" {
     // p2.volatiles.DefenseCurl = true;
     // t.actual.p2.get(1).status = Status.init(.PAR);
 
-    // try t.log.expected.switched(P2.ident(2), t.expected.p2.get(2));
+    // try t.log.expected.switched(.{ P2.ident(2), t.expected.p2.get(2) });
     // try t.log.expected.move(P1.ident(1), Move.Teleport, P1.ident(1), null);
     // try t.log.expected.turn(.{2});
 
@@ -1474,8 +1474,8 @@ fn Test(comptime rolls: anytype) type {
             var expected: FixedLog = .{ .writer = expected_stream.writer() };
             var actual: FixedLog = .{ .writer = actual_stream.writer() };
 
-            try expected.switched(P1.ident(1), self.actual.p1.get(1));
-            try expected.switched(P2.ident(1), self.actual.p2.get(1));
+            try expected.switched(.{ P1.ident(1), self.actual.p1.get(1) });
+            try expected.switched(.{ P2.ident(1), self.actual.p2.get(1) });
             try expected.turn(.{1});
 
             var options =
