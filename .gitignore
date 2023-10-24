@@ -24,6 +24,6 @@ dist/
 
 # Project
 .cache
-src/examples/c/example
+examples/c/example
 logs/
 release/
