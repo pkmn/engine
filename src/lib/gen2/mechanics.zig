@@ -508,7 +508,7 @@ fn beforeMove(battle: anytype, player: Player, move: Move, options: anytype) !bo
             volatiles.Confusion = false;
             try log.end(.{ ident, .Confusion });
         } else {
-            try log.activate(ident, .Confusion);
+            try log.activate(.{ ident, .Confusion });
 
             if (try Rolls.confused(battle, player, options)) {
                 volatiles.BeatUp = false;
@@ -523,7 +523,7 @@ fn beforeMove(battle: anytype, player: Player, move: Move, options: anytype) !bo
     }
 
     if (volatiles.Attract) {
-        try log.activate(ident, .Attract);
+        try log.activate(.{ ident, .Attract });
 
         if (try Rolls.attract(battle, player, options)) {
             resetCant(volatiles);
@@ -1027,20 +1027,21 @@ fn betweenTurns(battle: anytype, mslot: u4, options: anytype) !?Result {
     inline for (players) |player| {
         var side = battle.side(player);
         var volatiles = &side.active.volatiles;
+        const ident = battle.active(player);
 
         if (volatiles.bind.duration > 0 and !volatiles.Substitute) {
             volatiles.bind.duration -= 1;
             if (volatiles.bind.duration == 0) {
                 const reason = @intFromEnum(End.Bind) + volatiles.bind.reason - 1;
-                try options.log.end(.{ battle.active(player), @as(End, @enumFromInt(reason)) });
+                try options.log.end(.{ ident, @as(End, @enumFromInt(reason)) });
             } else {
                 var reason = @intFromEnum(Activate.Bind) + volatiles.bind.reason - 1;
-                try options.log.activate(battle.active(player), @enumFromInt(reason));
+                try options.log.activate(.{ ident, @as(Activate, @enumFromInt(reason)) });
 
                 reason = @intFromEnum(Damage.Bind) + volatiles.bind.reason - 1;
                 side.stored().hp -|= @max(side.stored().stats.hp / 16, 1);
                 try options.log.damage(.{
-                    battle.active(player),
+                    ident,
                     side.stored(),
                     @as(Damage, @enumFromInt(reason)),
                 });
@@ -1250,7 +1251,7 @@ pub fn buildRage(battle: anytype, player: Player, state: *State, options: anytyp
             }
         } else {
             foe.active.volatiles.rage +|= 1;
-            try options.log.activate(battle.active(player), .Rage);
+            try options.log.activate(.{ battle.active(player), .Rage });
         }
     }
 }
@@ -1273,7 +1274,7 @@ pub fn destinyBond(battle: anytype, player: Player, _: *State, options: anytype)
 
     if (foe.active.volatiles.DestinyBond) {
         battle.side(player).stored().hp = 0;
-        try options.log.activate(battle.active(player.foe()), .DestinyBond);
+        try options.log.activate(.{ battle.active(player.foe()), .DestinyBond });
     }
     return true;
 }
@@ -1332,7 +1333,7 @@ pub const Effects = struct {
             // }
             try options.chance.attacking(player, volatiles.attacks);
 
-            if (volatiles.attacks != 0) return options.log.activate(ident, .Bide);
+            if (volatiles.attacks != 0) return options.log.activate(.{ ident, .Bide });
 
             volatiles.Bide = false;
             try options.log.end(.{ ident, .Bide });
@@ -1466,7 +1467,7 @@ pub const Effects = struct {
                 try options.log.lastmiss(.{});
                 return options.log.miss(.{battle.active(player)});
             } else if (foe.active.volatiles.Substitute) {
-                return options.log.activateMove(foe_ident, .SubstituteBlock, state.move);
+                return options.log.activate(.{ foe_ident, .SubstituteBlock, state.move });
             } else if (foe.active.volatiles.Curse) {
                 return options.log.fail(.{ foe_ident, .None });
             }
@@ -1835,20 +1836,20 @@ pub const Effects = struct {
         const foe_ident = battle.active(player.foe());
 
         if (foe.active.volatiles.Substitute) {
-            return options.log.activateMove(foe_ident, .SubstituteBlock, state.move);
+            return options.log.activate(.{ foe_ident, .SubstituteBlock, state.move });
         } else if (state.miss) {
             return options.log.fail(.{ foe_ident, .None });
         }
 
         foe.active.volatiles.LockOn = true;
-        try options.log.activate(battle.active(player), .LockOn);
+        try options.log.activate(.{ battle.active(player), .LockOn });
     }
 
     const MAGNITUDE_POWER = [_]u8{ 10, 30, 50, 70, 90, 110, 150 };
 
     pub fn magnitude(battle: anytype, player: Player, state: *State, options: anytype) !void {
         const num = try Rolls.magnitude(battle, player, options);
-        try options.log.magnitude(battle.active(player), num);
+        try options.log.activate(.{ battle.active(player), .Magnitude, num });
         state.bp = MAGNITUDE_POWER[num - 4];
     }
 
@@ -1957,7 +1958,7 @@ pub const Effects = struct {
             try options.log.lastmiss(.{});
             return options.log.miss(.{battle.active(player)});
         } else if (foe_volatiles.Substitute) {
-            return options.log.activateMove(foe_ident, .SubstituteBlock, state.move);
+            return options.log.activate(.{ foe_ident, .SubstituteBlock, state.move });
         } else if (!Status.is(foe.stored().status, .SLP) or foe_volatiles.Nightmare) {
             return options.log.fail(.{ foe_ident, .None });
         }
@@ -2007,7 +2008,7 @@ pub const Effects = struct {
 
         if (state.miss) return options.log.fail(.{ foe_ident, .None });
         if (foe.active.volatiles.Substitute) {
-            return options.log.activateMove(foe_ident, .SubstituteBlock, state.move);
+            return options.log.activate(.{ foe_ident, .SubstituteBlock, state.move });
         }
 
         const avg = @max((foe.stored().hp + side.stored().hp) / 2, 1);
@@ -2031,7 +2032,7 @@ pub const Effects = struct {
             try options.log.lastmiss(.{});
             return options.log.miss(.{battle.active(player)});
         } else if (foe.active.volatiles.Substitute) {
-            return options.log.activateMove(foe_ident, .SubstituteBlock, state.move);
+            return options.log.activate(.{ foe_ident, .SubstituteBlock, state.move });
         }
 
         foe.stored().status = Status.init(.PAR);
@@ -2103,7 +2104,7 @@ pub const Effects = struct {
             else
                 Fail.None });
         } else if (foe.active.volatiles.Substitute) {
-            return options.log.activateMove(foe_ident, .SubstituteBlock, state.move);
+            return options.log.activate(.{ foe_ident, .SubstituteBlock, state.move });
         } else if (state.miss) {
             try options.log.lastmiss(.{});
             return options.log.miss(.{battle.active(player)});
@@ -2330,7 +2331,7 @@ pub const Effects = struct {
 
         if (showdown) {
             // yes, actually "Splash". '|nothing' gets blindly mapped to  '|-activate||move:Splash'
-            try options.log.activate(battle.active(player), .Splash);
+            try options.log.activate(.{ battle.active(player), .Splash });
         } else {
             try options.log.fail(.{ battle.active(player), .None });
         }
@@ -2349,7 +2350,7 @@ pub const Effects = struct {
         }
 
         if (foe.active.volatiles.Substitute) {
-            return options.log.activateMove(foe_ident, .SubstituteBlock, state.move);
+            return options.log.activate(.{ foe_ident, .SubstituteBlock, state.move });
         }
 
         // Sleep Clause Mod
@@ -2410,7 +2411,7 @@ pub const Effects = struct {
     }
 
     pub fn splash(battle: anytype, player: Player, _: *State, options: anytype) !void {
-        try options.log.activate(battle.active(player), .Splash);
+        try options.log.activate(.{ battle.active(player), .Splash });
     }
 
     pub fn substitute(battle: anytype, player: Player, _: *State, options: anytype) !void {
@@ -2627,7 +2628,7 @@ pub const Effects = struct {
         const foe_ident = battle.active(player.foe());
 
         if (foe.active.volatiles.Mist) {
-            try log.activate(foe_ident, .Mist);
+            try log.activate(.{ foe_ident, .Mist });
             return log.fail(.{ foe_ident, .None });
         }
 

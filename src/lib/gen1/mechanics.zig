@@ -568,7 +568,7 @@ fn beforeMove(
             volatiles.Confusion = false;
             try log.end(.{ ident, .Confusion });
         } else {
-            try log.activate(ident, .Confusion);
+            try log.activate(.{ ident, .Confusion });
 
             if (try Rolls.confused(battle, player, options)) {
                 assert(!volatiles.MultiHit);
@@ -645,7 +645,7 @@ fn beforeMove(
         try options.chance.attacking(player, volatiles.attacks);
 
         if (volatiles.attacks != 0) {
-            try log.activate(ident, .Bide);
+            try log.activate(.{ ident, .Bide });
             return .done;
         }
 
@@ -934,7 +934,7 @@ fn doMove(
         } else if (immune and !invulnerable and (!showdown or move.effect != .Binding)) {
             try log.immune(.{ foe_ident, .None });
         } else if (mist) {
-            if (!foe.active.volatiles.Substitute) try log.activate(foe_ident, .Mist);
+            if (!foe.active.volatiles.Substitute) try log.activate(.{ foe_ident, .Mist });
             try log.fail(.{ foe_ident, .None });
         } else {
             if (showdown or !zero) try options.chance.commit(player, .miss);
@@ -1010,7 +1010,7 @@ fn doMove(
                 assert(foe.stored().hp > 0);
                 // Pokémon Showdown logs |-damage| here instead of |-immune| because logic...
                 if (sub) {
-                    try log.activate(battle.active(player.foe()), .Substitute);
+                    try log.activate(.{ battle.active(player.foe()), .Substitute });
                 } else {
                     try log.damage(.{ battle.active(player.foe()), foe.stored(), .None });
                     try buildRage(battle, player.foe(), options);
@@ -1277,7 +1277,7 @@ fn applyDamage(
         } else {
             // Safe to truncate since less than subbed.volatiles.substitute which is a u8
             subbed.active.volatiles.substitute -= @intCast(battle.last_damage);
-            try options.log.activate(battle.active(sub_player), .Substitute);
+            try options.log.activate(.{ battle.active(sub_player), .Substitute });
             return false;
         }
     }
@@ -1345,7 +1345,7 @@ fn checkHit(battle: anytype, player: Player, move: Move.Data, options: anytype) 
     if (mist) {
         assert(!showdown);
         const foe_ident = battle.active(player.foe());
-        try options.log.activate(foe_ident, .Mist);
+        try options.log.activate(.{ foe_ident, .Mist });
         try options.log.fail(.{ foe_ident, .None });
     } else {
         try options.chance.commit(player, .miss);
@@ -1983,7 +1983,7 @@ pub const Effects = struct {
         side.active.stats = side_stored.stats;
         foe.active.stats = foe_stored.stats;
 
-        try log.activate(player_ident, .Haze);
+        try log.activate(.{ player_ident, .Haze });
         try log.clearallboost(.{});
 
         // Pokémon Showdown clears P1 then P2 instead of status -> side -> foe
@@ -2316,7 +2316,7 @@ pub const Effects = struct {
     }
 
     fn splash(battle: anytype, player: Player, options: anytype) !void {
-        try options.log.activate(battle.active(player), .Splash);
+        try options.log.activate(.{ battle.active(player), .Splash });
     }
 
     fn substitute(battle: anytype, player: Player, residual: *bool, options: anytype) !void {

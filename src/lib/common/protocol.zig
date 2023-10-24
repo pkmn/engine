@@ -533,38 +533,24 @@ pub fn Log(comptime Writer: type) type {
             });
         }
 
-        pub fn activate(self: Self, ident: ID, reason: Activate) Error!void {
+        // ident: ID, reason: Activate, (m: anytype | num: u8)?
+        pub fn activate(self: Self, args: anytype) Error!void {
             if (!enabled) return;
 
-            assert(reason != .SubstituteBlock); // TODO
+            const reason: Activate = args[1];
             try self.writer.writeAll(&.{
                 @intFromEnum(ArgType.Activate),
-                @as(u8, @bitCast(ident)),
+                @as(u8, @bitCast(args[0])),
                 @intFromEnum(reason),
             });
-        }
-
-        pub fn activateMove(self: Self, ident: ID, reason: Activate, m: anytype) Error!void {
-            if (!enabled) return;
-
-            assert(reason == .SubstituteBlock); // TODO
-            try self.writer.writeAll(&.{
-                @intFromEnum(ArgType.Activate),
-                @as(u8, @bitCast(ident)),
-                @intFromEnum(reason),
-                @intFromEnum(m),
-            });
-        }
-
-        pub fn magnitude(self: Self, ident: ID, num: u8) Error!void {
-            if (!enabled) return;
-
-            try self.writer.writeAll(&.{
-                @intFromEnum(ArgType.Activate),
-                @as(u8, @bitCast(ident)),
-                @intFromEnum(Activate.Magnitude),
-                num,
-            });
+            if (args.len == 3) {
+                if (reason == .SubstituteBlock) {
+                    try self.writer.writeByte(@intFromEnum(args[2]));
+                } else {
+                    assert(reason == .Magnitude);
+                    try self.writer.writeByte(args[2]);
+                }
+            }
         }
 
         // -
@@ -1082,7 +1068,13 @@ pub fn format(
             .Activate => {
                 const id = ID.from(@intCast(a[i]));
                 printc(" {s}({d})", .{ @tagName(id.player), id.id }, a, b, &i, 1, color);
-                printc(" {s}", .{@tagName(@as(Activate, @enumFromInt(a[i])))}, a, b, &i, 1, color);
+                const reason: Activate = @enumFromInt(a[i]);
+                printc(" {s}", .{@tagName(reason)}, a, b, &i, 1, color);
+                if (reason == .SubstituteBlock) {
+                    printc(" {s}", .{formatter(gen, .Move, a[i])}, a, b, &i, 1, color);
+                } else if (reason == .Magnitude) {
+                    printc(" {d}", .{a[i]}, a, b, &i, 1, color);
+                }
             },
             .Start => {
                 const id = ID.from(@intCast(a[i]));
@@ -1603,25 +1595,32 @@ test "|-mustrecharge|" {
 }
 
 test "|-activate|" {
-    try log.activate(p1.ident(2), .Struggle);
+    try log.activate(.{ p1.ident(2), .Struggle });
     try expectLog1(&.{ N(ArgType.Activate), 0b0010, N(Activate.Struggle) }, buf[0..3]);
     stream.reset();
 
-    try log.activate(p2.ident(4), .Mist);
+    try log.activate(.{ p2.ident(4), .Mist });
     try expectLog1(&.{ N(ArgType.Activate), 0b1100, N(Activate.Mist) }, buf[0..3]);
     stream.reset();
 
-    try log.activate(p2.ident(6), .Substitute);
+    try log.activate(.{ p2.ident(6), .Substitute });
     try expectLog1(&.{ N(ArgType.Activate), 0b1110, N(Activate.Substitute) }, buf[0..3]);
     stream.reset();
 
-    try log.activate(p1.ident(2), .Splash);
+    try log.activate(.{ p1.ident(2), .Splash });
     try expectLog1(&.{ N(ArgType.Activate), 0b0010, N(Activate.Splash) }, buf[0..3]);
     stream.reset();
 
-    // TODO activateMove
+    try log.activate(.{ p1.ident(4), .SubstituteBlock, M2.Spite });
+    try expectLog1(&.{
+        N(ArgType.Activate),
+        0b0100,
+        N(Activate.SubstituteBlock),
+        N(M2.Spite),
+    }, buf[0..4]);
+    stream.reset();
 
-    try log.magnitude(p1.ident(3), 5);
+    try log.activate(.{ p1.ident(3), .Magnitude, 5 });
     try expectLog1(&.{ N(ArgType.Activate), 0b0011, N(Activate.Magnitude), 5 }, buf[0..4]);
     stream.reset();
 }
