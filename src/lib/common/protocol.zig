@@ -104,6 +104,7 @@ pub const ArgType = enum(u8) {
     // Gen 8
     CanDynamax,
     SwapSideConditions,
+    UpdatePoke,
 
     // Gen 9
     Terastallize,
