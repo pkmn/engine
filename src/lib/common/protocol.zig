@@ -369,7 +369,7 @@ pub fn Log(comptime Writer: type) type {
             try self.writer.writeAll(&.{
                 @intFromEnum(ArgType.Cant),
                 @as(u8, @bitCast(args[0])),
-                @intFromEnum(args[1]),
+                @intFromEnum(@as(Cant, args[1])),
             });
             if (args.len == 3) try self.writer.writeByte(@intFromEnum(args[2]));
         }
@@ -397,7 +397,7 @@ pub fn Log(comptime Writer: type) type {
 
             try self.writer.writeAll(&.{
                 @intFromEnum(ArgType.Win),
-                @intFromEnum(args[0]),
+                @intFromEnum(@as(Player, args[0])),
                 @intFromEnum(ArgType.None),
             });
         }
@@ -413,14 +413,15 @@ pub fn Log(comptime Writer: type) type {
         pub fn damage(self: Self, args: anytype) Error!void {
             if (!enabled) return;
 
-            assert(@intFromEnum(args[2]) <= @intFromEnum(Damage.LeechSeed) or args.len == 4);
+            const reason: Damage = args[2];
+            assert(@intFromEnum(reason) <= @intFromEnum(Damage.LeechSeed) or args.len == 4);
             try self.writer.writeAll(&.{
                 @intFromEnum(ArgType.Damage),
                 @as(u8, @bitCast(args[0])),
             });
             try self.writer.writeIntNative(u16, args[1].hp);
             try self.writer.writeIntNative(u16, args[1].stats.hp);
-            try self.writer.writeAll(&.{ args[1].status, @intFromEnum(args[2]) });
+            try self.writer.writeAll(&.{ args[1].status, @intFromEnum(reason) });
             if (args.len == 4) try self.writer.writeByte(@as(u8, @bitCast(args[3])));
         }
 
@@ -432,7 +433,7 @@ pub fn Log(comptime Writer: type) type {
             try self.writer.writeAll(&.{ @intFromEnum(ArgType.Heal), @as(u8, @bitCast(args[0])) });
             try self.writer.writeIntNative(u16, args[1].hp);
             try self.writer.writeIntNative(u16, args[1].stats.hp);
-            try self.writer.writeAll(&.{ args[1].status, @intFromEnum(args[2]) });
+            try self.writer.writeAll(&.{ args[1].status, @intFromEnum(@as(Heal, args[2])) });
             if (args.len == 4) try self.writer.writeByte(@as(u8, @bitCast(args[3])));
         }
 
@@ -445,7 +446,7 @@ pub fn Log(comptime Writer: type) type {
                 @intFromEnum(ArgType.Status),
                 @as(u8, @bitCast(args[0])),
                 args[1],
-                @intFromEnum(args[2]),
+                @intFromEnum(@as(Status, args[2])),
             });
             if (args.len == 4) try self.writer.writeByte(@intFromEnum(args[3]));
         }
@@ -458,7 +459,7 @@ pub fn Log(comptime Writer: type) type {
                 @intFromEnum(ArgType.CureStatus),
                 @as(u8, @bitCast(args[0])),
                 args[1],
-                @intFromEnum(args[2]),
+                @intFromEnum(@as(CureStatus, args[2])),
             });
         }
 
@@ -470,7 +471,7 @@ pub fn Log(comptime Writer: type) type {
             try self.writer.writeAll(&.{
                 @intFromEnum(ArgType.Boost),
                 @as(u8, @bitCast(args[0])),
-                @intFromEnum(args[1]),
+                @intFromEnum(@as(Boost, args[1])),
                 @as(u8, @intCast(@as(i8, args[2]) + 6)),
             });
         }
@@ -489,7 +490,7 @@ pub fn Log(comptime Writer: type) type {
             try self.writer.writeAll(&.{
                 @intFromEnum(ArgType.Fail),
                 @as(u8, @bitCast(args[0])),
-                @intFromEnum(args[1]),
+                @intFromEnum(@as(Fail, args[1])),
             });
         }
 
@@ -608,14 +609,14 @@ pub fn Log(comptime Writer: type) type {
             });
         }
 
-        // ident: ID, reason: End)
+        // ident: ID, reason: End
         pub fn end(self: Self, args: anytype) Error!void {
             if (!enabled) return;
 
             try self.writer.writeAll(&.{
                 @intFromEnum(ArgType.End),
                 @as(u8, @bitCast(args[0])),
-                @intFromEnum(args[1]),
+                @intFromEnum(@as(End, args[1])),
             });
         }
 
@@ -660,7 +661,7 @@ pub fn Log(comptime Writer: type) type {
             try self.writer.writeAll(&.{
                 @intFromEnum(ArgType.Immune),
                 @as(u8, @bitCast(args[0])),
-                @intFromEnum(args[1]),
+                @intFromEnum(@as(Immune, args[1])),
             });
         }
 
@@ -700,7 +701,7 @@ pub fn Log(comptime Writer: type) type {
                 @intFromEnum(ArgType.EndItem),
                 @as(u8, @bitCast(args[0])),
                 @intFromEnum(args[1]),
-                @intFromEnum(args[2]),
+                @intFromEnum(@as(EndItem, args[2])),
             });
         }
 
@@ -722,7 +723,7 @@ pub fn Log(comptime Writer: type) type {
             try self.writer.writeIntNative(u16, args[1].hp);
             try self.writer.writeIntNative(u16, args[1].stats.hp);
             try self.writer.writeAll(&.{args[1].status});
-            try self.writer.writeByte(@intFromEnum(args[2]));
+            try self.writer.writeByte(@intFromEnum(@as(SetHP, args[2])));
         }
 
         // ident: ID, num: i8
@@ -753,8 +754,8 @@ pub fn Log(comptime Writer: type) type {
 
             try self.writer.writeAll(&.{
                 @intFromEnum(ArgType.SideStart),
-                @intFromEnum(args[0]),
-                @intFromEnum(args[1]),
+                @intFromEnum(@as(Player, args[0])),
+                @intFromEnum(@as(Side, args[1])),
             });
         }
 
@@ -762,11 +763,11 @@ pub fn Log(comptime Writer: type) type {
         pub fn sideend(self: Self, args: anytype) Error!void {
             if (!enabled) return;
 
-            assert(@intFromEnum(args[1]) != @intFromEnum(Side.Spikes) or args.len == 3);
+            assert(args[1] != .Spikes or args.len == 3);
             try self.writer.writeAll(&.{
                 @intFromEnum(ArgType.SideEnd),
-                @intFromEnum(args[0]),
-                @intFromEnum(args[1]),
+                @intFromEnum(@as(Player, args[0])),
+                @intFromEnum(@as(Side, args[1])),
             });
             if (args.len == 3) try self.writer.writeByte(@as(u8, @bitCast(args[2])));
         }
@@ -800,7 +801,7 @@ pub fn Log(comptime Writer: type) type {
             try self.writer.writeAll(&.{
                 @intFromEnum(ArgType.Weather),
                 @intFromEnum(args[0]),
-                @intFromEnum(args[1]),
+                @intFromEnum(@as(Weather, args[1])),
             });
         }
 
@@ -1402,11 +1403,11 @@ test "|switch|" {
 }
 
 test "|cant|" {
-    try log.cant(.{ p2.ident(6), Cant.Bound });
+    try log.cant(.{ p2.ident(6), .Bound });
     try expectLog1(&.{ N(ArgType.Cant), 0b1110, N(Cant.Bound) }, buf[0..3]);
     stream.reset();
 
-    try log.cant(.{ p1.ident(2), Cant.Disable, M1.Earthquake });
+    try log.cant(.{ p1.ident(2), .Disable, M1.Earthquake });
     try expectLog1(&.{ N(ArgType.Cant), 2, N(Cant.Disable), N(M1.Earthquake) }, buf[0..4]);
     stream.reset();
 }
@@ -1432,7 +1433,7 @@ test "|turn|" {
 }
 
 test "|win|" {
-    try log.win(.{Player.P2});
+    try log.win(.{.P2});
     try expectLog1(&.{ N(ArgType.Win), 1, N(ArgType.None) }, buf[0..3]);
     stream.reset();
 }
@@ -1447,7 +1448,7 @@ test "|-damage|" {
     var chansey = gen1.helpers.Pokemon.init(.{ .species = .Chansey, .moves = &.{.Splash} });
     chansey.hp = 612;
     chansey.status = gen1.Status.slp(1);
-    try log.damage(.{ p2.ident(2), &chansey, Damage.None });
+    try log.damage(.{ p2.ident(2), &chansey, .None });
     var expected: []const u8 = switch (endian) {
         .Big => &.{ N(ArgType.Damage), 0b1010, 2, 100, 2, 191, 1, N(Damage.None) },
         .Little => &.{ N(ArgType.Damage), 0b1010, 100, 2, 191, 2, 1, N(Damage.None) },
@@ -1458,7 +1459,7 @@ test "|-damage|" {
     chansey.hp = 100;
     chansey.stats.hp = 256;
     chansey.status = 0;
-    try log.damage(.{ p2.ident(2), &chansey, Damage.Confusion });
+    try log.damage(.{ p2.ident(2), &chansey, .Confusion });
     expected = switch (endian) {
         .Big => &.{ N(ArgType.Damage), 0b1010, 0, 100, 1, 0, 0, N(Damage.Confusion) },
         .Little => &.{ N(ArgType.Damage), 0b1010, 100, 0, 0, 1, 0, N(Damage.Confusion) },
@@ -1467,7 +1468,7 @@ test "|-damage|" {
     stream.reset();
 
     chansey.status = gen1.Status.init(.PSN);
-    try log.damage(.{ p2.ident(2), &chansey, Damage.RecoilOf, p1.ident(1) });
+    try log.damage(.{ p2.ident(2), &chansey, .RecoilOf, p1.ident(1) });
     expected = switch (endian) {
         .Big => &.{ N(ArgType.Damage), 0b1010, 0, 100, 1, 0, 0b1000, N(Damage.RecoilOf), 1 },
         .Little => &.{ N(ArgType.Damage), 0b1010, 100, 0, 0, 1, 0b1000, N(Damage.RecoilOf), 1 },
@@ -1480,7 +1481,7 @@ test "|-heal|" {
     var chansey = gen1.helpers.Pokemon.init(.{ .species = .Chansey, .moves = &.{.Splash} });
     chansey.hp = 612;
     chansey.status = gen1.Status.slp(1);
-    try log.heal(.{ p2.ident(2), &chansey, Heal.None });
+    try log.heal(.{ p2.ident(2), &chansey, .None });
     var expected: []const u8 = switch (endian) {
         .Big => &.{ N(ArgType.Heal), 0b1010, 2, 100, 2, 191, 1, N(Heal.None) },
         .Little => &.{ N(ArgType.Heal), 0b1010, 100, 2, 191, 2, 1, N(Heal.None) },
@@ -1491,7 +1492,7 @@ test "|-heal|" {
     chansey.hp = 100;
     chansey.stats.hp = 256;
     chansey.status = 0;
-    try log.heal(.{ p2.ident(2), &chansey, Heal.Silent });
+    try log.heal(.{ p2.ident(2), &chansey, .Silent });
     expected = switch (endian) {
         .Big => &.{ N(ArgType.Heal), 0b1010, 0, 100, 1, 0, 0, N(Heal.Silent) },
         .Little => &.{ N(ArgType.Heal), 0b1010, 100, 0, 0, 1, 0, N(Heal.Silent) },
@@ -1499,7 +1500,7 @@ test "|-heal|" {
     try expectLog1(expected, buf[0..8]);
     stream.reset();
 
-    try log.heal(.{ p2.ident(2), &chansey, Heal.Drain, p1.ident(1) });
+    try log.heal(.{ p2.ident(2), &chansey, .Drain, p1.ident(1) });
     expected = switch (endian) {
         .Big => &.{ N(ArgType.Heal), 0b1010, 0, 100, 1, 0, 0, N(Heal.Drain), 1 },
         .Little => &.{ N(ArgType.Heal), 0b1010, 100, 0, 0, 1, 0, N(Heal.Drain), 1 },
@@ -1509,15 +1510,15 @@ test "|-heal|" {
 }
 
 test "|-status|" {
-    try log.status(.{ p2.ident(6), gen1.Status.init(.BRN), Status.None });
+    try log.status(.{ p2.ident(6), gen1.Status.init(.BRN), .None });
     try expectLog1(&.{ N(ArgType.Status), 0b1110, 0b10000, N(Status.None) }, buf[0..4]);
     stream.reset();
 
-    try log.status(.{ p2.ident(2), gen1.Status.init(.PSN), Status.Silent });
+    try log.status(.{ p2.ident(2), gen1.Status.init(.PSN), .Silent });
     try expectLog1(&.{ N(ArgType.Status), 0b1010, 0b1000, N(Status.Silent) }, buf[0..4]);
     stream.reset();
 
-    try log.status(.{ p1.ident(1), gen1.Status.init(.PAR), Status.From, M1.BodySlam });
+    try log.status(.{ p1.ident(1), gen1.Status.init(.PAR), .From, M1.BodySlam });
     try expectLog1(
         &.{ N(ArgType.Status), 0b0001, 0b1000000, N(Status.From), N(M1.BodySlam) },
         buf[0..5],
@@ -1526,11 +1527,11 @@ test "|-status|" {
 }
 
 test "|-curestatus|" {
-    try log.curestatus(.{ p2.ident(6), gen1.Status.slp(7), CureStatus.Message });
+    try log.curestatus(.{ p2.ident(6), gen1.Status.slp(7), .Message });
     try expectLog1(&.{ N(ArgType.CureStatus), 0b1110, 0b111, N(CureStatus.Message) }, buf[0..4]);
     stream.reset();
 
-    try log.curestatus(.{ p1.ident(2), gen1.Status.TOX, CureStatus.Silent });
+    try log.curestatus(.{ p1.ident(2), gen1.Status.TOX, .Silent });
     try expectLog1(&.{
         N(ArgType.CureStatus),
         0b0010,
@@ -1541,15 +1542,15 @@ test "|-curestatus|" {
 }
 
 test "|-boost|" {
-    try log.boost(.{ p2.ident(6), Boost.Speed, 2 });
+    try log.boost(.{ p2.ident(6), .Speed, 2 });
     try expectLog1(&.{ N(ArgType.Boost), 0b1110, N(Boost.Speed), 8 }, buf[0..4]);
     stream.reset();
 
-    try log.boost(.{ p1.ident(2), Boost.Rage, 1 });
+    try log.boost(.{ p1.ident(2), .Rage, 1 });
     try expectLog1(&.{ N(ArgType.Boost), 0b0010, N(Boost.Rage), 7 }, buf[0..4]);
     stream.reset();
 
-    try log.boost(.{ p2.ident(3), Boost.Defense, -2 });
+    try log.boost(.{ p2.ident(3), .Defense, -2 });
     try expectLog1(&.{ N(ArgType.Boost), 0b1011, N(Boost.Defense), 4 }, buf[0..4]);
     stream.reset();
 }
@@ -1561,19 +1562,19 @@ test "|-clearallboost|" {
 }
 
 test "|-fail|" {
-    try log.fail(.{ p2.ident(6), Fail.None });
+    try log.fail(.{ p2.ident(6), .None });
     try expectLog1(&.{ N(ArgType.Fail), 0b1110, N(Fail.None) }, buf[0..3]);
     stream.reset();
 
-    try log.fail(.{ p2.ident(6), Fail.Sleep });
+    try log.fail(.{ p2.ident(6), .Sleep });
     try expectLog1(&.{ N(ArgType.Fail), 0b1110, N(Fail.Sleep) }, buf[0..3]);
     stream.reset();
 
-    try log.fail(.{ p2.ident(6), Fail.Substitute });
+    try log.fail(.{ p2.ident(6), .Substitute });
     try expectLog1(&.{ N(ArgType.Fail), 0b1110, N(Fail.Substitute) }, buf[0..3]);
     stream.reset();
 
-    try log.fail(.{ p2.ident(6), Fail.Weak });
+    try log.fail(.{ p2.ident(6), .Weak });
     try expectLog1(&.{ N(ArgType.Fail), 0b1110, N(Fail.Weak) }, buf[0..3]);
     stream.reset();
 }
@@ -1664,11 +1665,11 @@ test "|-start|" {
 }
 
 test "|-end|" {
-    try log.end(.{ p2.ident(6), End.Bide });
+    try log.end(.{ p2.ident(6), .Bide });
     try expectLog1(&.{ N(ArgType.End), 0b1110, N(End.Bide) }, buf[0..3]);
     stream.reset();
 
-    try log.end(.{ p1.ident(2), End.ConfusionSilent });
+    try log.end(.{ p1.ident(2), .ConfusionSilent });
     try expectLog1(&.{ N(ArgType.End), 0b0010, N(End.ConfusionSilent) }, buf[0..3]);
     stream.reset();
 }
@@ -1698,11 +1699,11 @@ test "|-resisted|" {
 }
 
 test "|-immune|" {
-    try log.immune(.{ p1.ident(3), Immune.None });
+    try log.immune(.{ p1.ident(3), .None });
     try expectLog1(&.{ N(ArgType.Immune), 0b0011, N(Immune.None) }, buf[0..3]);
     stream.reset();
 
-    try log.immune(.{ p2.ident(2), Immune.OHKO });
+    try log.immune(.{ p2.ident(2), .OHKO });
     try expectLog1(&.{ N(ArgType.Immune), 0b1010, N(Immune.OHKO) }, buf[0..3]);
     stream.reset();
 }
@@ -1742,11 +1743,11 @@ test "|-item|" {
 }
 
 test "|-enditem|" {
-    try log.enditem(.{ p1.ident(1), I2.BerserkGene, EndItem.None });
+    try log.enditem(.{ p1.ident(1), I2.BerserkGene, .None });
     try expectLog2(&.{ N(ArgType.EndItem), 0b0001, N(I2.BerserkGene), N(EndItem.None) }, buf[0..4]);
     stream.reset();
 
-    try log.enditem(.{ p2.ident(4), I2.PRZCureBerry, EndItem.Eat });
+    try log.enditem(.{ p2.ident(4), I2.PRZCureBerry, .Eat });
     try expectLog2(&.{ N(ArgType.EndItem), 0b1100, N(I2.PRZCureBerry), N(EndItem.Eat) }, buf[0..4]);
     stream.reset();
 }
@@ -1760,7 +1761,7 @@ test "|-cureteam|" {
 test "|-sethp|" {
     var blissey = gen2.helpers.Pokemon.init(.{ .species = .Blissey, .moves = &.{.PainSplit} });
     blissey.hp = 612;
-    try log.sethp(.{ p2.ident(2), &blissey, SetHP.Silent });
+    try log.sethp(.{ p2.ident(2), &blissey, .Silent });
     var expected: []const u8 = switch (endian) {
         .Big => &.{ N(ArgType.SetHP), 0b1010, 2, 100, 2, 201, 0, N(SetHP.Silent) },
         .Little => &.{ N(ArgType.SetHP), 0b1010, 100, 2, 201, 2, 0, N(SetHP.Silent) },
@@ -1786,17 +1787,17 @@ test "|-copyboost|" {
 }
 
 test "|-sidestart|" {
-    try log.sidestart(.{ Player.P2, Side.Reflect });
+    try log.sidestart(.{ .P2, .Reflect });
     try expectLog2(&.{ N(ArgType.SideStart), 1, N(Side.Reflect) }, buf[0..3]);
     stream.reset();
 }
 
 test "|-sideend|" {
-    try log.sideend(.{ Player.P2, Side.LightScreen });
+    try log.sideend(.{ .P2, .LightScreen });
     try expectLog2(&.{ N(ArgType.SideEnd), 1, N(Side.LightScreen) }, buf[0..3]);
     stream.reset();
 
-    try log.sideend(.{ Player.P1, Side.Spikes, p1.ident(3) });
+    try log.sideend(.{ .P1, .Spikes, p1.ident(3) });
     try expectLog2(&.{
         N(ArgType.SideEnd),
         0,
@@ -1819,11 +1820,11 @@ test "|-singleturn|" {
 }
 
 test "|-weather|" {
-    try log.weather(.{ W2.Rain, Weather.Upkeep });
+    try log.weather(.{ W2.Rain, .Upkeep });
     try expectLog2(&.{ N(ArgType.Weather), N(W2.Rain), N(Weather.Upkeep) }, buf[0..3]);
     stream.reset();
 
-    try log.weather(.{ W2.None, Weather.None });
+    try log.weather(.{ W2.None, .None });
     try expectLog2(&.{ N(ArgType.Weather), N(W2.None), N(Weather.None) }, buf[0..3]);
     stream.reset();
 }
