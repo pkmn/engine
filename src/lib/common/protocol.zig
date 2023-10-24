@@ -450,26 +450,28 @@ pub fn Log(comptime Writer: type) type {
             if (args.len == 4) try self.writer.writeByte(@intFromEnum(args[3]));
         }
 
-        pub fn curestatus(self: Self, ident: ID, value: u8, reason: CureStatus) Error!void {
+        // ident: ID, value: u8, reason: CureStatus
+        pub fn curestatus(self: Self, args: anytype) Error!void {
             if (!enabled) return;
 
             try self.writer.writeAll(&.{
                 @intFromEnum(ArgType.CureStatus),
-                @as(u8, @bitCast(ident)),
-                value,
-                @intFromEnum(reason),
+                @as(u8, @bitCast(args[0])),
+                args[1],
+                @intFromEnum(args[2]),
             });
         }
 
-        pub fn boost(self: Self, ident: ID, reason: Boost, num: i8) Error!void {
+        // ident: ID, reason: Boost, num: i8
+        pub fn boost(self: Self, args: anytype) Error!void {
             if (!enabled) return;
 
-            assert(num != 0 and (reason != .Rage or num > 0));
+            assert(args[2] != 0 and (args[1] != .Rage or args[2] > 0));
             try self.writer.writeAll(&.{
                 @intFromEnum(ArgType.Boost),
-                @as(u8, @bitCast(ident)),
-                @intFromEnum(reason),
-                @as(u8, @intCast(num + 6)),
+                @as(u8, @bitCast(args[0])),
+                @intFromEnum(args[1]),
+                @as(u8, @intCast(@as(i8, args[2]) + 6)),
             });
         }
 
@@ -480,13 +482,14 @@ pub fn Log(comptime Writer: type) type {
             try self.writer.writeAll(&.{@intFromEnum(ArgType.ClearAllBoost)});
         }
 
-        pub fn fail(self: Self, ident: ID, reason: Fail) Error!void {
+        // ident: ID, reason: Fail
+        pub fn fail(self: Self, args: anytype) Error!void {
             if (!enabled) return;
 
             try self.writer.writeAll(&.{
                 @intFromEnum(ArgType.Fail),
-                @as(u8, @bitCast(ident)),
-                @intFromEnum(reason),
+                @as(u8, @bitCast(args[0])),
+                @intFromEnum(args[1]),
             });
         }
 
@@ -605,13 +608,14 @@ pub fn Log(comptime Writer: type) type {
             });
         }
 
-        pub fn end(self: Self, ident: ID, reason: End) Error!void {
+        // ident: ID, reason: End)
+        pub fn end(self: Self, args: anytype) Error!void {
             if (!enabled) return;
 
             try self.writer.writeAll(&.{
                 @intFromEnum(ArgType.End),
-                @as(u8, @bitCast(ident)),
-                @intFromEnum(reason),
+                @as(u8, @bitCast(args[0])),
+                @intFromEnum(args[1]),
             });
         }
 
@@ -649,13 +653,14 @@ pub fn Log(comptime Writer: type) type {
             });
         }
 
-        pub fn immune(self: Self, ident: ID, reason: Immune) Error!void {
+        // ident: ID, reason: Immune
+        pub fn immune(self: Self, args: anytype) Error!void {
             if (!enabled) return;
 
             try self.writer.writeAll(&.{
                 @intFromEnum(ArgType.Immune),
-                @as(u8, @bitCast(ident)),
-                @intFromEnum(reason),
+                @as(u8, @bitCast(args[0])),
+                @intFromEnum(args[1]),
             });
         }
 
@@ -1521,11 +1526,11 @@ test "|-status|" {
 }
 
 test "|-curestatus|" {
-    try log.curestatus(p2.ident(6), gen1.Status.slp(7), .Message);
+    try log.curestatus(.{ p2.ident(6), gen1.Status.slp(7), CureStatus.Message });
     try expectLog1(&.{ N(ArgType.CureStatus), 0b1110, 0b111, N(CureStatus.Message) }, buf[0..4]);
     stream.reset();
 
-    try log.curestatus(p1.ident(2), gen1.Status.TOX, .Silent);
+    try log.curestatus(.{ p1.ident(2), gen1.Status.TOX, CureStatus.Silent });
     try expectLog1(&.{
         N(ArgType.CureStatus),
         0b0010,
@@ -1536,15 +1541,15 @@ test "|-curestatus|" {
 }
 
 test "|-boost|" {
-    try log.boost(p2.ident(6), .Speed, 2);
+    try log.boost(.{ p2.ident(6), Boost.Speed, 2 });
     try expectLog1(&.{ N(ArgType.Boost), 0b1110, N(Boost.Speed), 8 }, buf[0..4]);
     stream.reset();
 
-    try log.boost(p1.ident(2), .Rage, 1);
+    try log.boost(.{ p1.ident(2), Boost.Rage, 1 });
     try expectLog1(&.{ N(ArgType.Boost), 0b0010, N(Boost.Rage), 7 }, buf[0..4]);
     stream.reset();
 
-    try log.boost(p2.ident(3), .Defense, -2);
+    try log.boost(.{ p2.ident(3), Boost.Defense, -2 });
     try expectLog1(&.{ N(ArgType.Boost), 0b1011, N(Boost.Defense), 4 }, buf[0..4]);
     stream.reset();
 }
@@ -1556,19 +1561,19 @@ test "|-clearallboost|" {
 }
 
 test "|-fail|" {
-    try log.fail(p2.ident(6), .None);
+    try log.fail(.{ p2.ident(6), Fail.None });
     try expectLog1(&.{ N(ArgType.Fail), 0b1110, N(Fail.None) }, buf[0..3]);
     stream.reset();
 
-    try log.fail(p2.ident(6), .Sleep);
+    try log.fail(.{ p2.ident(6), Fail.Sleep });
     try expectLog1(&.{ N(ArgType.Fail), 0b1110, N(Fail.Sleep) }, buf[0..3]);
     stream.reset();
 
-    try log.fail(p2.ident(6), .Substitute);
+    try log.fail(.{ p2.ident(6), Fail.Substitute });
     try expectLog1(&.{ N(ArgType.Fail), 0b1110, N(Fail.Substitute) }, buf[0..3]);
     stream.reset();
 
-    try log.fail(p2.ident(6), .Weak);
+    try log.fail(.{ p2.ident(6), Fail.Weak });
     try expectLog1(&.{ N(ArgType.Fail), 0b1110, N(Fail.Weak) }, buf[0..3]);
     stream.reset();
 }
@@ -1659,11 +1664,11 @@ test "|-start|" {
 }
 
 test "|-end|" {
-    try log.end(p2.ident(6), .Bide);
+    try log.end(.{ p2.ident(6), End.Bide });
     try expectLog1(&.{ N(ArgType.End), 0b1110, N(End.Bide) }, buf[0..3]);
     stream.reset();
 
-    try log.end(p1.ident(2), .ConfusionSilent);
+    try log.end(.{ p1.ident(2), End.ConfusionSilent });
     try expectLog1(&.{ N(ArgType.End), 0b0010, N(End.ConfusionSilent) }, buf[0..3]);
     stream.reset();
 }
@@ -1693,11 +1698,11 @@ test "|-resisted|" {
 }
 
 test "|-immune|" {
-    try log.immune(p1.ident(3), .None);
+    try log.immune(.{ p1.ident(3), Immune.None });
     try expectLog1(&.{ N(ArgType.Immune), 0b0011, N(Immune.None) }, buf[0..3]);
     stream.reset();
 
-    try log.immune(p2.ident(2), .OHKO);
+    try log.immune(.{ p2.ident(2), Immune.OHKO });
     try expectLog1(&.{ N(ArgType.Immune), 0b1010, N(Immune.OHKO) }, buf[0..3]);
     stream.reset();
 }
