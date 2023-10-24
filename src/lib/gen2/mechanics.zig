@@ -1061,7 +1061,7 @@ fn betweenTurns(battle: anytype, mslot: u4, options: anytype) !?Result {
 
             assert(volatiles.perish_song < 3);
             const reason = @intFromEnum(Start.PerishSong0) + volatiles.perish_song;
-            try options.log.start(battle.active(player), @enumFromInt(reason));
+            try options.log.start(.{ battle.active(player), @as(Start, @enumFromInt(reason)) });
 
             if (volatiles.perish_song == 0) {
                 volatiles.PerishSong = false;
@@ -1294,7 +1294,7 @@ pub const Effects = struct {
         }
 
         foe.active.volatiles.Attract = true;
-        try options.log.start(battle.active(player.foe()), .Attract);
+        try options.log.start(.{ battle.active(player.foe()), .Attract });
     }
 
     pub fn batonPass(battle: anytype, player: Player, state: *State, options: anytype) !void {
@@ -1473,7 +1473,7 @@ pub const Effects = struct {
             }
 
             foe.active.volatiles.Curse = true;
-            try options.log.start(foe_ident, .Curse);
+            try options.log.start(.{ foe_ident, .Curse });
 
             side.stored().hp -= @max(side.stored().stats.hp / 2, 1);
             try options.log.damage(.{ ident, side.stored(), .Curse });
@@ -1541,7 +1541,7 @@ pub const Effects = struct {
         volatiles.disable.move = slot;
         volatiles.disable.duration = Rolls.disableDuration(battle, player, options);
 
-        try options.log.startEffect(foe_ident, .Disable, move.id);
+        try options.log.start(.{ foe_ident, .Disable, move.id });
     }
 
     pub const double = struct {
@@ -1596,7 +1596,7 @@ pub const Effects = struct {
         // TODO ???
         _ = state;
 
-        try options.log.startEffect(foe_ident, .Encore, move.id);
+        try options.log.start(.{ foe_ident, .Encore, move.id });
     }
 
     pub fn explode(battle: anytype, player: Player, state: *State, options: anytype) !void {
@@ -1654,7 +1654,7 @@ pub const Effects = struct {
         }
 
         side.active.volatiles.FocusEnergy = true;
-        try options.log.start(battle.active(player), .FocusEnergy);
+        try options.log.start(.{ battle.active(player), .FocusEnergy });
     }
 
     var SLOTS: [5]u4 = .{ 0, 0, 0, 0, 0 };
@@ -1695,7 +1695,7 @@ pub const Effects = struct {
         }
 
         foe.active.volatiles.Foresight = true;
-        try options.log.start(battle.active(player.foe()), .FocusEnergy);
+        try options.log.start(.{ battle.active(player.foe()), .FocusEnergy });
     }
 
     pub fn freezeChance(battle: anytype, player: Player, state: *State, options: anytype) !void {
@@ -1828,7 +1828,7 @@ pub const Effects = struct {
 
         foe.active.volatiles.LeechSeed = true;
 
-        try options.log.start(battle.active(player.foe()), .LeechSeed);
+        try options.log.start(.{ battle.active(player.foe()), .LeechSeed });
     }
 
     pub fn lockOn(battle: anytype, player: Player, state: *State, options: anytype) !void {
@@ -1926,7 +1926,7 @@ pub const Effects = struct {
         if (side.active.volatiles.Mist) return options.log.fail(.{ battle.active(player), .None });
         side.active.volatiles.Mist = true;
 
-        try options.log.start(battle.active(player), .Mist);
+        try options.log.start(.{ battle.active(player), .Mist });
     }
 
     pub fn weatherHeal(battle: anytype, player: Player, _: *State, options: anytype) !void {
@@ -1964,7 +1964,7 @@ pub const Effects = struct {
         }
 
         foe_volatiles.Nightmare = true;
-        try options.log.start(battle.active(player.foe()), .Nightmare);
+        try options.log.start(.{ battle.active(player.foe()), .Nightmare });
     }
 
     pub const ohko = struct {
@@ -2074,11 +2074,11 @@ pub const Effects = struct {
         } else if (!side.active.volatiles.PerishSong) {
             side.active.volatiles.PerishSong = true;
             side.active.volatiles.perish_song = 4;
-            try options.log.start(battle.active(player), .PerishSong3Silent);
+            try options.log.start(.{ battle.active(player), .PerishSong3Silent });
         }
         foe.active.volatiles.PerishSong = true;
         foe.active.volatiles.perish_song = 4;
-        try options.log.start(battle.active(player.foe()), .PerishSong3Silent);
+        try options.log.start(.{ battle.active(player.foe()), .PerishSong3Silent });
 
         try options.log.fieldactivate(.{}); // FIXME .PerishSong
     }
@@ -2431,7 +2431,7 @@ pub const Effects = struct {
         side.active.volatiles.substitute = hp;
         side.active.volatiles.Substitute = true;
         side.active.volatiles.bind = .{};
-        try options.log.start(battle.active(player), .Substitute);
+        try options.log.start(.{ battle.active(player), .Substitute });
         try options.log.damage(.{ battle.active(player), side.stored(), .None });
     }
 

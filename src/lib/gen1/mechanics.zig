@@ -686,7 +686,7 @@ fn beforeMove(
         try options.chance.attacking(player, volatiles.attacks);
 
         if (!showdown and handleThrashing(battle, active, player, options)) {
-            try log.start(battle.active(player), .ConfusionSilent);
+            try log.start(.{ battle.active(player), .ConfusionSilent });
         }
         try log.move(.{ ident, side.last_selected_move, battle.active(player.foe()) });
         if (showdown) {
@@ -694,7 +694,7 @@ fn beforeMove(
             // used in useMove and doesn't have the notion of skipping canMove semantics
             side.last_used_move = side.last_selected_move;
             if (handleThrashing(battle, active, player, options)) {
-                try log.start(battle.active(player), .ConfusionSilent);
+                try log.start(.{ battle.active(player), .ConfusionSilent });
             }
         }
         return .skip_can;
@@ -1763,7 +1763,7 @@ pub const Effects = struct {
         side.active.volatiles.state = 0;
         side.active.volatiles.attacks = Rolls.attackingDuration(battle, player, options);
 
-        try options.log.start(battle.active(player), .Bide);
+        try options.log.start(.{ battle.active(player), .Bide });
     }
 
     fn burnChance(battle: anytype, player: Player, move: Move.Data, options: anytype) !void {
@@ -1830,7 +1830,7 @@ pub const Effects = struct {
         foe.active.volatiles.Confusion = true;
         foe.active.volatiles.confusion = Rolls.confusionDuration(battle, player, false, options);
 
-        try options.log.start(battle.active(player.foe()), .Confusion);
+        try options.log.start(.{ battle.active(player.foe()), .Confusion });
     }
 
     fn conversion(battle: anytype, player: Player, options: anytype) !void {
@@ -1842,11 +1842,12 @@ pub const Effects = struct {
         }
 
         battle.side(player).active.types = foe.active.types;
-        return options.log.typechange(
+        return options.log.start(.{
             battle.active(player),
+            .TypeChange,
             foe.active.types,
             battle.active(player.foe()),
-        );
+        });
     }
 
     fn disable(battle: anytype, player: Player, move: Move.Data, options: anytype) !?Result {
@@ -1890,7 +1891,7 @@ pub const Effects = struct {
         volatiles.disable_duration = Rolls.disableDuration(battle, player, options);
 
         const id = foe.active.move(volatiles.disable_move).id;
-        try options.log.startEffect(foe_ident, .Disable, id);
+        try options.log.start(.{ foe_ident, .Disable, id });
         return null;
     }
 
@@ -1941,7 +1942,7 @@ pub const Effects = struct {
         if (side.active.volatiles.FocusEnergy) return;
         side.active.volatiles.FocusEnergy = true;
 
-        try options.log.start(battle.active(player), .FocusEnergy);
+        try options.log.start(.{ battle.active(player), .FocusEnergy });
     }
 
     fn freezeChance(battle: anytype, player: Player, move: Move.Data, options: anytype) !void {
@@ -2063,7 +2064,7 @@ pub const Effects = struct {
         try options.chance.commit(player, .hit);
         foe.active.volatiles.LeechSeed = true;
 
-        try options.log.start(battle.active(player.foe()), .LeechSeed);
+        try options.log.start(.{ battle.active(player.foe()), .LeechSeed });
     }
 
     fn lightScreen(battle: anytype, player: Player, options: anytype) !void {
@@ -2073,7 +2074,7 @@ pub const Effects = struct {
         if (side.active.volatiles.LightScreen) return options.log.fail(.{ ident, .None });
         side.active.volatiles.LightScreen = true;
 
-        try options.log.start(ident, .LightScreen);
+        try options.log.start(.{ ident, .LightScreen });
     }
 
     fn mimic(battle: anytype, player: Player, move: Move.Data, mslot: u8, options: anytype) !void {
@@ -2111,7 +2112,7 @@ pub const Effects = struct {
         const rslot = try Rolls.moveSlot(battle, player, &foe.active.moves, 0, options);
         side.active.move(oslot).id = foe.active.move(rslot).id;
 
-        try options.log.startEffect(battle.active(player), .Mimic, side.active.move(oslot).id);
+        try options.log.start(.{ battle.active(player), .Mimic, side.active.move(oslot).id });
     }
 
     fn mist(battle: anytype, player: Player, options: anytype) !void {
@@ -2120,7 +2121,7 @@ pub const Effects = struct {
         if (side.active.volatiles.Mist) return;
         side.active.volatiles.Mist = true;
 
-        try options.log.start(battle.active(player), .Mist);
+        try options.log.start(.{ battle.active(player), .Mist });
     }
 
     fn multiHit(battle: anytype, player: Player, move: Move.Data, options: anytype) !void {
@@ -2278,7 +2279,7 @@ pub const Effects = struct {
         if (side.active.volatiles.Reflect) return options.log.fail(.{ ident, .None });
         side.active.volatiles.Reflect = true;
 
-        try options.log.start(ident, .Reflect);
+        try options.log.start(.{ ident, .Reflect });
     }
 
     fn sleep(battle: anytype, player: Player, move: Move.Data, options: anytype) !void {
@@ -2341,7 +2342,7 @@ pub const Effects = struct {
         side.stored().hp -= hp;
         side.active.volatiles.substitute = hp + 1;
         side.active.volatiles.Substitute = true;
-        try options.log.start(battle.active(player), .Substitute);
+        try options.log.start(.{ battle.active(player), .Substitute });
         if (hp > 0) {
             try options.log.damage(.{ battle.active(player), side.stored(), .None });
             if (showdown and side.stored().hp == 0) residual.* = false;

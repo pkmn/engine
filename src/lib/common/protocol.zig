@@ -320,7 +320,7 @@ pub fn Log(comptime Writer: type) type {
 
         pub const Error = Writer.Error;
 
-        // source: ID, m: anytype, target: ID, from?: anytype
+        // source: ID, move: <Move>, target: ID, from?: <Move>
         pub fn move(self: Self, args: anytype) Error!void {
             if (!enabled) return;
 
@@ -337,12 +337,12 @@ pub fn Log(comptime Writer: type) type {
                 &.{ @intFromEnum(Move.From), @intFromEnum(args[3]) });
         }
 
-        // ident: ID, pokemon: anytype
+        // ident: ID, pokemon: <Pokemon>
         pub fn switched(self: Self, args: anytype) Error!void {
             return switchDrag(self, .Switch, args);
         }
 
-        // ident: ID, pokemon: anytype
+        // ident: ID, pokemon: <Pokemon>
         fn switchDrag(self: Self, arg: ArgType, args: anytype) Error!void {
             if (!enabled) return;
 
@@ -361,7 +361,8 @@ pub fn Log(comptime Writer: type) type {
             try self.writer.writeAll(&.{args[1].status});
         }
 
-        // ident: ID, reason: Cant, m?: anytype
+        // ident: ID, reason: Cant
+        // ident: ID, reason: .Disable, move: <Move>
         pub fn cant(self: Self, args: anytype) Error!void {
             if (!enabled) return;
 
@@ -409,23 +410,24 @@ pub fn Log(comptime Writer: type) type {
             try self.writer.writeAll(&.{ @intFromEnum(ArgType.Tie), @intFromEnum(ArgType.None) });
         }
 
-        // ident: ID, pokemon: anytype, reason: Damage, source?: ID
+        // ident: ID, pokemon: <Pokemon>, reason: Damage
+        // ident: ID, pokemon: <Pokemon>, reason: .RecoilOf, source: ID
         pub fn damage(self: Self, args: anytype) Error!void {
             if (!enabled) return;
 
-            const reason: Damage = args[2];
-            assert(@intFromEnum(reason) <= @intFromEnum(Damage.LeechSeed) or args.len == 4);
+            assert(args[2] != .RecoilOf or args.len == 4);
             try self.writer.writeAll(&.{
                 @intFromEnum(ArgType.Damage),
                 @as(u8, @bitCast(args[0])),
             });
             try self.writer.writeIntNative(u16, args[1].hp);
             try self.writer.writeIntNative(u16, args[1].stats.hp);
-            try self.writer.writeAll(&.{ args[1].status, @intFromEnum(reason) });
+            try self.writer.writeAll(&.{ args[1].status, @intFromEnum(@as(Damage, args[2])) });
             if (args.len == 4) try self.writer.writeByte(@as(u8, @bitCast(args[3])));
         }
 
-        // ident: ID, pokemon: anytype, reason: Heal, target?: ID)
+        // ident: ID, pokemon: <Pokemon>, reason: Heal
+        // ident: ID, pokemon: <Pokemon>, reason: .Drain, target: ID
         pub fn heal(self: Self, args: anytype) Error!void {
             if (!enabled) return;
 
@@ -437,7 +439,8 @@ pub fn Log(comptime Writer: type) type {
             if (args.len == 4) try self.writer.writeByte(@as(u8, @bitCast(args[3])));
         }
 
-        // ident: ID, value: u8, reason: Status, m?: anytype)
+        // ident: ID, value: u8, reason: Status
+        // ident: ID, value: u8, reason: .From, m: <Move>
         pub fn status(self: Self, args: anytype) Error!void {
             if (!enabled) return;
 
@@ -512,7 +515,7 @@ pub fn Log(comptime Writer: type) type {
             });
         }
 
-        // source: ID, m: anytype
+        // source: ID, m: <Move>
         pub fn prepare(self: Self, args: anytype) Error!void {
             if (!enabled) return;
 
@@ -533,10 +536,13 @@ pub fn Log(comptime Writer: type) type {
             });
         }
 
-        // ident: ID, reason: Activate, (m: anytype | num: u8)?
+        // ident: ID, reason: Activate
+        // ident: ID, reason: .SubstituteBlock, m: <Move>
+        // ident: ID, reason: .Magnitude, num: u8
         pub fn activate(self: Self, args: anytype) Error!void {
             if (!enabled) return;
 
+            assert(args.len <= 4);
             const reason: Activate = args[1];
             try self.writer.writeAll(&.{
                 @intFromEnum(ArgType.Activate),
@@ -560,39 +566,30 @@ pub fn Log(comptime Writer: type) type {
             try self.writer.writeAll(&.{@intFromEnum(ArgType.FieldActivate)});
         }
 
-        pub fn start(self: Self, ident: ID, reason: Start) Error!void {
+        // ident: ID, reason: Start
+        // ident: ID, reason: .Disable | .Mimic | .Encore, m: <Move>
+        // ident: ID, reason: .TypeChange, types: <Types>, target: ID
+        pub fn start(self: Self, args: anytype) Error!void {
             if (!enabled) return;
 
-            assert(@intFromEnum(reason) < @intFromEnum(Start.TypeChange));
+            assert(args.len <= 4);
+            const reason: Start = args[1];
             try self.writer.writeAll(&.{
                 @intFromEnum(ArgType.Start),
-                @as(u8, @bitCast(ident)),
+                @as(u8, @bitCast(args[0])),
                 @intFromEnum(reason),
             });
-        }
-
-        pub fn typechange(self: Self, source: ID, types: anytype, target: ID) Error!void {
-            if (!enabled) return;
-
-            try self.writer.writeAll(&.{
-                @intFromEnum(ArgType.Start),
-                @as(u8, @bitCast(source)),
-                @intFromEnum(Start.TypeChange),
-                @as(u8, @bitCast(types)),
-                @as(u8, @bitCast(target)),
-            });
-        }
-
-        pub fn startEffect(self: Self, ident: ID, reason: Start, m: anytype) Error!void {
-            if (!enabled) return;
-
-            assert(@intFromEnum(reason) > @intFromEnum(Start.TypeChange));
-            try self.writer.writeAll(&.{
-                @intFromEnum(ArgType.Start),
-                @as(u8, @bitCast(ident)),
-                @intFromEnum(reason),
-                @intFromEnum(m),
-            });
+            if (args.len == 3) {
+                assert(reason == .Disable or reason == .Mimic or reason == .Encore);
+                try self.writer.writeByte(@intFromEnum(args[2]));
+            } else if (args.len == 4) {
+                assert(reason == .TypeChange);
+                // FIXME: u16 types in Generation II
+                try self.writer.writeAll(&.{
+                    @as(u8, @bitCast(args[2])),
+                    @as(u8, @bitCast(args[3])),
+                });
+            }
         }
 
         // ident: ID, reason: End
@@ -662,12 +659,12 @@ pub fn Log(comptime Writer: type) type {
             });
         }
 
-        // ident: ID, pokemon: anytype
+        // ident: ID, pokemon: <Pokemon>
         pub fn drag(self: Self, args: anytype) Error!void {
             return switchDrag(self, .Drag, args);
         }
 
-        // target: ID, i: anytype, source: ID
+        // target: ID, item: <Item>, source: ID
         pub fn item(self: Self, args: anytype) Error!void {
             if (!enabled) return;
 
@@ -679,7 +676,7 @@ pub fn Log(comptime Writer: type) type {
             });
         }
 
-        // ident: ID, i: anytype, reason: EndItem
+        // ident: ID, item: <Item>, reason: EndItem
         pub fn enditem(self: Self, args: anytype) Error!void {
             if (!enabled) return;
 
@@ -701,7 +698,7 @@ pub fn Log(comptime Writer: type) type {
             });
         }
 
-        // ident: ID, pokemon: anytype, reason: SetHP
+        // ident: ID, pokemon: <Pokemon>, reason: SetHP
         pub fn sethp(self: Self, args: anytype) Error!void {
             if (!enabled) return;
 
@@ -745,7 +742,8 @@ pub fn Log(comptime Writer: type) type {
             });
         }
 
-        // player: Player, reason: Side, source?: ID
+        // player: Player, reason: Side
+        // player: Player, reason: .Spikes, source: ID
         pub fn sideend(self: Self, args: anytype) Error!void {
             if (!enabled) return;
 
@@ -758,17 +756,17 @@ pub fn Log(comptime Writer: type) type {
             if (args.len == 3) try self.writer.writeByte(@as(u8, @bitCast(args[2])));
         }
 
-        // ident: ID, move: anytype
+        // ident: ID, move: <Move>
         pub fn singlemove(self: Self, args: anytype) Error!void {
             return single(self, .SingleMove, args);
         }
 
-        // ident: ID, m: anytype
+        // ident: ID, move: <Move>
         pub fn singleturn(self: Self, args: anytype) Error!void {
             return single(self, .SingleTurn, args);
         }
 
-        // ident: ID, move: anytype
+        // ident: ID, move: <Move>
         fn single(self: Self, arg: ArgType, args: anytype) Error!void {
             if (!enabled) return;
 
@@ -779,7 +777,7 @@ pub fn Log(comptime Writer: type) type {
             });
         }
 
-        // w: anytype, reason: Weather
+        // weather: <Weather>, reason: Weather
         pub fn weather(self: Self, args: anytype) Error!void {
             if (!enabled) return;
 
@@ -1632,33 +1630,43 @@ test "|-fieldactivate|" {
 }
 
 test "|-start|" {
-    try log.start(p2.ident(6), .Bide);
+    try log.start(.{ p2.ident(6), .Bide });
     try expectLog1(&.{ N(ArgType.Start), 0b1110, N(Start.Bide) }, buf[0..3]);
     stream.reset();
 
-    try log.start(p1.ident(2), .ConfusionSilent);
+    try log.start(.{ p1.ident(2), .ConfusionSilent });
     try expectLog1(&.{ N(ArgType.Start), 0b0010, N(Start.ConfusionSilent) }, buf[0..3]);
     stream.reset();
 
-    try log.typechange(p2.ident(6), gen1.Types{ .type1 = .Fire, .type2 = .Fire }, p2.ident(5));
+    try log.start(.{
+        p2.ident(6),
+        .TypeChange,
+        gen1.Types{ .type1 = .Fire, .type2 = .Fire },
+        p2.ident(5),
+    });
     try expectLog1(
         &.{ N(ArgType.Start), 0b1110, N(Start.TypeChange), 0b1000_1000, 0b1101 },
         buf[0..5],
     );
     stream.reset();
 
-    try log.typechange(p1.ident(2), gen1.Types{ .type1 = .Bug, .type2 = .Poison }, p2.ident(4));
+    try log.start(.{
+        p1.ident(2),
+        .TypeChange,
+        gen1.Types{ .type1 = .Bug, .type2 = .Poison },
+        p2.ident(4),
+    });
     try expectLog1(
         &.{ N(ArgType.Start), 0b0010, N(Start.TypeChange), 0b0011_0110, 0b1100 },
         buf[0..5],
     );
     stream.reset();
 
-    try log.startEffect(p1.ident(2), .Disable, M1.Surf);
+    try log.start(.{ p1.ident(2), .Disable, M1.Surf });
     try expectLog1(&.{ N(ArgType.Start), 0b0010, N(Start.Disable), N(M1.Surf) }, buf[0..4]);
     stream.reset();
 
-    try log.startEffect(p1.ident(2), .Mimic, M1.Surf);
+    try log.start(.{ p1.ident(2), .Mimic, M1.Surf });
     try expectLog1(&.{ N(ArgType.Start), 0b0010, N(Start.Mimic), N(M1.Surf) }, buf[0..4]);
     stream.reset();
 }
