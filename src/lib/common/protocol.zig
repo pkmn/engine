@@ -1,6 +1,8 @@
 const std = @import("std");
 const builtin = @import("builtin");
 
+const pkmn = @import("../pkmn.zig");
+
 const data = @import("./data.zig");
 const options = @import("./options.zig");
 
@@ -1080,7 +1082,7 @@ pub fn format(
                 const reason = a[i];
                 printc(" {s}", .{@tagName(@as(Start, @enumFromInt(reason)))}, a, b, &i, 1, color);
                 if (@as(Start, @enumFromInt(reason)) == .TypeChange) {
-                    const types = @as(gen1.Types, @bitCast(a[i]));
+                    const types = @as(gen.Types, @bitCast(a[i]));
                     const args = .{
                         formatter(gen, .Type, @intFromEnum(types.type1)),
                         formatter(gen, .Type, @intFromEnum(types.type2)),
@@ -1254,7 +1256,7 @@ const gen2 = struct {
     pub const helpers = @import("../gen2/helpers.zig");
 };
 
-var buf: [gen1.LOGS_SIZE]u8 = undefined;
+var buf: [pkmn.LOGS_SIZE]u8 = undefined;
 var stream: ByteStream = .{ .buffer = &buf };
 var log: FixedLog = .{ .writer = stream.writer() };
 
