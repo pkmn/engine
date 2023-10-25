@@ -185,7 +185,7 @@ fs.writeFileSync(path.join(tmp, 'notes'), notes);
 const args = ['release', 'create'];
 if (!argv.prod) {
   args.push('nightly', '--prerelease', '--title', 'Nightly');
-  // sh('gh', ['release', 'delete', 'nightly', '--yes'], {stdio: 'ignore'});
+  sh('gh', ['release', 'delete', 'nightly', '--yes'], {stdio: 'ignore'});
   sh('git', ['push', 'origin', ':nightly']);
 } else {
   args.push(version, '--title', version, '--verify-tag');
