@@ -302,7 +302,7 @@ DECODERS[ArgType.Status] = function (offset, data) {
   const status = decodeStatus(data.getUint8(offset++));
   const reason = data.getUint8(offset++);
   const kwArgs = {} as Writeable<Protocol.BattleArgsKWArgs['|-status|']>;
-  if (reason === PROTOCOL.CureStatus.Silent) {
+  if (reason === PROTOCOL.Status.Silent) {
     kwArgs.silent = true;
   } else if (reason === PROTOCOL.Status.From) {
     const move = this.gen.moves.get(this.lookup.moveByNum(data.getUint8(offset++)))!.name;
