@@ -1083,7 +1083,8 @@ pub fn format(
                 const reason = a[i];
                 printc(" {s}", .{@tagName(@as(Start, @enumFromInt(reason)))}, a, b, &i, 1, color);
                 if (@as(Start, @enumFromInt(reason)) == .TypeChange) {
-                    const types = @as(gen.Types, @bitCast(a[i]));
+                    // FIXME
+                    const types = @as(gen1.Types, @bitCast(a[i]));
                     const args = .{
                         formatter(gen, .Type, @intFromEnum(types.type1)),
                         formatter(gen, .Type, @intFromEnum(types.type2)),
