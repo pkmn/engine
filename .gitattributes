@@ -3,8 +3,9 @@
 *.zig text=auto eol=lf
 
 # GitHub
-src/data/* linguist-generated
-src/lib/gen1/data/* linguist-generated
-src/lib/gen2/data/* linguist-generated
-src/lib/gen2/generated.zig linguist-generated
-src/pkg/data/* linguist-generated
+src/data/* linguist-generated=true
+src/lib/gen1/data/* linguist-generated=true
+src/lib/gen2/data/* linguist-generated=true
+src/lib/gen2/generated.zig linguist-generated=true
+src/pkg/data/* linguist-generated=true
+src/pkg/data/mapping.json linguist-generated=false

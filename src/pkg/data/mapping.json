@@ -1,0 +1,101 @@
+{
+  "base": {
+    "Cant": [
+      "slp",
+      "frz",
+      "par",
+      "partiallytrapped",
+      "flinch",
+      "recharge",
+      "nopp",
+      "Attract"
+    ],
+    "Damage": [
+      "",
+      "psn",
+      "brn",
+      "confusion",
+      "Leech Seed",
+      "Recoil"
+    ],
+    "Boosts": [
+      "atk",
+      "atk",
+      "def",
+      "spe",
+      "spa",
+      "spd",
+      "accuracy",
+      "evasion"
+    ],
+    "Fail": [
+      "",
+      "slp",
+      "psn",
+      "brn",
+      "frz",
+      "par",
+      "tox",
+      "move: Substitute",
+      "move: Substitute"
+    ],
+    "Activate": [
+      "Bide",
+      "confusion",
+      "move: Haze",
+      "move: Mist",
+      "move: Struggle",
+      "move: Substitute",
+      "move: Splash"
+    ],
+    "Start": [
+      "Bide",
+      "confusion",
+      "confusion",
+      "move: Focus Energy",
+      "move: Leech Seed",
+      "Light Screen",
+      "Mist",
+      "Reflect",
+      "Substitute",
+      "typechange",
+      "Disable",
+      "Mimic"
+    ],
+    "End": [
+      "Disable",
+      "confusion",
+      "Bide",
+      "Substitute",
+      "Disable",
+      "confusion",
+      "Mist",
+      "move: Focus Energy",
+      "move: Leech Seed",
+      "Toxic counter",
+      "Light Screen",
+      "Reflect",
+      "move: Bide"
+    ],
+    "Side": [
+      "Safeguard",
+      "Reflect",
+      "move: Light Screen",
+      "Spikes"
+    ]
+  },
+  "diffs": [
+    {
+      "Activate": [
+        [0, "move: Bide"]
+      ],
+      "Start": [
+        [0, "move: Bide"]
+      ],
+      "End": [
+        [0, "move: Disable"],
+        [2, "move: Bide"]
+      ]
+    }
+  ]
+}
