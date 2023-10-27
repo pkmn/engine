@@ -417,9 +417,17 @@ cset shield --exec -- nice -n -19 node build/test/benchmark
 In addition to being used to compare the pkmn engine to Pokémon Showdown, the [benchmark
 tool](../src/test/benchmark.ts) has an alternative mode that allows it to better detect regressions
 in the engine's performance. When the `--iterations` flag is used the tool instead runs multiple
-iterations of battle playouts from the same seed against the engine and output JSON to be used for
-comparison against prior runs. In order to minimize noise, the mean of all the iterations is
-reported, after outliers have been removed.
+iterations of battle playouts from the same seed against the engine and outputs a TSV with the
+results. These results can then be fed back into the script to determine how performance changed:
+
+```sh
+npm --silent run benchmark -- --iterations=50 > logs/before.tsv
+# <make changes>
+npm --silent run benchmark -- --iterations=50 logs/before.tsv
+```
+
+Alternatively, a text or JSON `--summary` can be produced - in order to minimize noise, the mean of
+all the iterations is reported after outliers have been removed.
 
 ## Fuzz
 

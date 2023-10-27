@@ -1,6 +1,7 @@
 import 'source-map-support/register';
 
 import {execFileSync} from 'child_process';
+import * as fs from 'fs';
 import * as path from 'path';
 
 import {Generation, Generations, ID, PokemonSet, StatsTable} from '@pkmn/data';
@@ -308,14 +309,8 @@ const clean = (samples: number[], n = 3) => {
   return [cleaned, outliers];
 };
 
-export function iterations(
-  gens: Generations,
-  num: number,
-  battles: number,
-  seed: number[],
-  text?: boolean,
-) {
-  const entries = [];
+export function iterations(gens: Generations, num: number, battles: number, seed: number[]) {
+  const data: {[name: string]: number[]} = {};
 
   for (const showdown of [true, false]) {
     sh('zig', ['build', '-j1', `-Dshowdown=${showdown.toString()}`, 'tools', '-p', 'build']);
@@ -334,24 +329,30 @@ export function iterations(
         compare(name, control, turns, final);
       }
 
-      const [cleaned, outliers] = clean(samples);
-      const stats = Stats.compute(cleaned);
-      let extra = `[${stats.min} .. ${stats.max}]`;
-      if (outliers.length) {
-        extra += text ? ` (${outliers.length})` : ` (dropped: ${outliers.sort().join(', ')})`;
-      }
-
-      entries.push({
-        name,
-        unit: 'battles/sec',
-        value: Math.round(stats.avg),
-        range: isNaN(stats.rme) ? 'N/A' : `±${stats.rme.toFixed(2)}%`,
-        extra,
-      });
+      data[name] = samples;
     }
   }
 
-  return entries;
+  return data;
+}
+
+function summarize(name: string, samples: number[], summary: 'text' | 'json',) {
+  const [cleaned, outliers] = clean(samples);
+  const stats = Stats.compute(cleaned);
+  let extra = `[${stats.min} .. ${stats.max}]`;
+  if (outliers.length) {
+    extra += summary === 'text'
+      ? ` (${outliers.length})`
+      : ` (dropped: ${outliers.sort().join(', ')})`;
+  }
+
+  return {
+    name,
+    unit: 'battles/sec',
+    value: Math.round(stats.avg),
+    range: isNaN(stats.rme) ? 'N/A' : `±${stats.rme.toFixed(2)}%`,
+    extra,
+  };
 }
 
 export async function comparison(gens: Generations, battles: number, seed: number[]) {
@@ -390,6 +391,14 @@ export async function comparison(gens: Generations, battles: number, seed: numbe
   return stats;
 }
 
+function regression(before: {[name: string]: number[]}, after: {[name: string]: number[]}) {
+  console.debug('TODO');
+  for (const name in before) {
+    console.debug('before', name, before[name]);
+    console.debug('after', name, after[name]);
+  }
+}
+
 function pretty(ns: bigint) {
   if (ns < 1000) return `${dec(Number(ns))} ns`;
   if (ns < 1_000_000n) return `${dec(Number(ns) / 1e3)} μs`;
@@ -404,21 +413,58 @@ function dec(n: number, c = 100) {
   return n.toFixed();
 }
 
+function parse(file: string) {
+  const data: {[name: string]: number[]} = {};
+  const lines = fs.readFileSync(file, 'utf8').trim().split('\n');
+  for (const line of lines) {
+    const [name, s] = line.split('\t');
+    data[name] = s.split(',').map(Number);
+  }
+  return data;
+}
+
 if (require.main === module) {
   (async () => {
     const gens = new Generations(Dex as any);
     const argv = minimist(process.argv.slice(2), {default: {battles: 10000}});
     const seed = argv.seed ? argv.seed.split(',').map((s: string) => Number(s)) : [1, 2, 3, 4];
-    if (argv.iterations) {
-      const entries = iterations(gens, argv.iterations, argv.battles, seed, argv.text);
-      if (argv.text) {
-        for (const {name, unit, value, range, extra} of entries) {
+    const previous = argv._.length ? parse(argv._[0]) : undefined;
+
+    if (argv._.length > 1) {
+      throw new Error(`Expected at most one file argument, got: ${argv._.join(' ')}`);
+    } else if (argv.summary && !['text', 'json'].includes(argv.summary)) {
+      throw new Error(`Expected 'text' or 'json' summary format, not '${argv.summary}'`);
+    } else if (argv.iterations && argv.summary && previous) {
+      throw new Error('Combination of ---iterations, --summary, and a file is illegal');
+    } else if (previous && !(argv.iterations || argv.summary)) {
+      throw new Error('Expected either --iterations or --summary with a file');
+    }
+
+    const summary = (data: {[name: string]: number[]}) => {
+      const summaries = Object.entries(data).map(([k, v]) => summarize(k, v, argv.summary));
+      if (argv.summary === 'json') {
+        console.log(JSON.stringify(summaries, null, 2));
+      } else {
+        for (const {name, unit, value, range, extra} of summaries) {
           const r = range.startsWith('±') ? ` ± ${range.slice(1)}` : '';
           console.log(`${name}: ${value}${r} ${unit} ${extra}`);
         }
-      } else {
-        console.log(JSON.stringify(entries, null, 2));
       }
+    };
+
+    if (argv.iterations) {
+      const data = iterations(gens, argv.iterations, argv.battles, seed);
+      if (argv.summary) {
+        summary(data);
+      } else if (previous) {
+        regression(previous, data);
+      } else {
+        for (const [name, samples] of Object.entries(data)) {
+          console.log(`${name}\t${samples.join(',')}`);
+        }
+      }
+    } else if (previous) {
+      summary(previous);
     } else {
       const stats = await comparison(gens, argv.battles, seed);
 
