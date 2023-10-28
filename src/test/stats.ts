@@ -173,14 +173,8 @@ const bootstrap = (
 
 const GFM = {
   border: {
-    bodyLeft: '|',
-    bodyRight: '|',
-    bodyJoin: '|',
-
-    joinBody: '-',
-    joinLeft: '|',
-    joinRight: '|',
-    joinJoin: '|',
+    bodyLeft: '|', bodyRight: '|', bodyJoin: '|',
+    joinBody: '-', joinLeft: '|', joinRight: '|', joinJoin: '|',
   },
   drawHorizontalLine: (index: number) => index === 1,
 };
@@ -192,8 +186,8 @@ const toTable = (header: string[], data: string[][], md?: boolean, maxWidth = 20
   const combined: string[][] = [header, ...data];
   for (const row of combined) {
     for (let i = 0; i < row.length; i++) {
-      // const len = Stats.max(row[i].split(' ').map(c => c.length));
-      const len = unescape(row[i]).length;
+      const s = unescape(row[i]);
+      const len = s.length > maxWidth ? Stats.max(s.split(' ').map(c => c.length)) : s.length;
       if (len > maxes[i]) maxes[i] = len;
     }
   }
@@ -233,7 +227,6 @@ const RESET = '\x1b[0m';
 const color = (num: number, ci: number, md?: boolean) => {
   const red = (s: string) => md ? s : `${RED}${s}${RESET}`;
   const green = (s: string) => md ? s : `${GREEN}${s}${RESET}`;
-  // const gray = (s: string) => md ? `*${s}*` : `${DIM}${s}${RESET}`;
   const none = (s: string) => s;
   return ((num - ci < 0 && num + ci < 0)
     ? green
