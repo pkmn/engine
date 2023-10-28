@@ -245,10 +245,9 @@ export const regression = (
   const print = (when: string, result: -1 | 0 | 1, summary: ReturnType<typeof summarize>) => {
     const {range, value, unit, extra} = summary;
     const r = range.startsWith('±') ? ` ± ${range.slice(1)}` : '';
-    const w = when === 'After';
-    const [b, e] =
-      result === 0 ? ['', ''] : [result < 0 ? (w ? RED : GREEN) : (w ? GREEN : RED), RESET];
-    console.log(`${BOLD}${when}${RESET}: ${b}${value}${r} ${unit}${e} ${extra}`);
+    const [begin, end] =
+      (result === 0 || when[0] !== 'A') ? ['', ''] : [result < 0 ? RED : GREEN, RESET];
+    console.log(`${BOLD}${when}${RESET} ${begin}${value}${r} ${unit}${end} ${extra}`);
   };
 
   const display = (control: number[], test: number[]) => {
@@ -277,8 +276,8 @@ export const regression = (
 
     console.log(`${BOLD}${name}\n${'-'.repeat(name.length)}${RESET}\n`);
     const result = utest(before[name], after[name]);
-    print('Before', result, summarize(name, before[name], 'text'));
-    print('After', result, summarize(name, after[name], 'text'));
+    print('Before:', result, summarize(name, before[name], 'text'));
+    print('After: ', result, summarize(name, after[name], 'text'));
 
     console.log();
     display(before[name], after[name]);
