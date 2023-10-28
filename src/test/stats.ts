@@ -179,6 +179,15 @@ const GFM = {
   drawHorizontalLine: (index: number) => index === 1,
 };
 
+const THIN = {
+  border: {
+    topBody: '─', topJoin: '┬', topLeft: '╭', topRight: '╮',
+    bottomBody: '─', bottomJoin: '┴', bottomLeft: '╰', bottomRight: '╯',
+    bodyLeft: '│', bodyRight: '│', bodyJoin: '│',
+    joinBody: '─', joinLeft: '├', joinRight: '┤', joinJoin: '┼',
+  },
+};
+
 const toTable = (header: string[], data: string[][], md?: boolean, maxWidth = 20) => {
   if (md) return table([header.map(s => `${BOLD}${s}${RESET}`), ...data], GFM);
 
@@ -193,6 +202,7 @@ const toTable = (header: string[], data: string[][], md?: boolean, maxWidth = 20
   }
 
   return table([header.map(s => `${BOLD}${s}${RESET}`), ...data], {
+    ...THIN,
     columns: maxes.map(max => ({
       wrapWord: true,
       width: Math.min(max, maxWidth),
@@ -245,8 +255,8 @@ export const regression = (
   const print = (when: string, result: -1 | 0 | 1, summary: ReturnType<typeof summarize>) => {
     const {range, value, unit, extra} = summary;
     const r = range.startsWith('±') ? ` ± ${range.slice(1)}` : '';
-    const [begin, end] =
-      (result === 0 || when[0] !== 'A') ? ['', ''] : [result < 0 ? RED : GREEN, RESET];
+    const fmt = when.trim()[0] === 'A';
+    const [begin, end] = (result === 0 || !fmt) ? ['', ''] : [result < 0 ? RED : GREEN, RESET];
     console.log(`${BOLD}${when}${RESET} ${begin}${value}${r} ${unit}${end} ${extra}`);
   };
 
@@ -274,10 +284,10 @@ export const regression = (
     // // TODO: consider outlier removal before testing for signficance?
     // const cleaned = {before: clean(before[name])[0], after: clean(after[name])[0]};
 
-    console.log(`${BOLD}${name}\n${'-'.repeat(name.length)}${RESET}\n`);
+    console.log(` ${BOLD}${name}\n ${'─'.repeat(name.length)}${RESET}\n`);
     const result = utest(before[name], after[name]);
-    print('Before:', result, summarize(name, before[name], 'text'));
-    print('After: ', result, summarize(name, after[name], 'text'));
+    print(' Before:', result, summarize(name, before[name], 'text'));
+    print(' After: ', result, summarize(name, after[name], 'text'));
 
     console.log();
     display(before[name], after[name]);
