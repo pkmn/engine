@@ -93,6 +93,7 @@
     "minimist": "^1.2.8",
     "mustache": "^4.2.0",
     "source-map-support": "^0.5.21",
+    "table": "^6.8.1",
     "trakr": "^0.2.0",
     "typescript": "^5.2.2",
     "vitest": "^0.34.6"
