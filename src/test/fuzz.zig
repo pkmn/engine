@@ -177,11 +177,12 @@ fn dump() !void {
     if (out.isTty() or builtin.mode != .Debug) {
         try w.print("0x{X}\n", .{last});
     } else {
-        try w.writeIntNative(u64, last);
+        const endian = builtin.cpu.arch.endian();
+        try w.writeInt(u64, last, endian);
 
         try w.writeByte(@intFromBool(showdown));
         try w.writeByte(gen);
-        try w.writeIntNative(u16, 0);
+        try w.writeInt(u16, 0, endian);
         try w.writeAll(initial);
 
         if (frames) |frame| {
