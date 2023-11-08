@@ -93,7 +93,7 @@ pub fn build(b: *std.Build) !void {
         // rename the file ourself in install-pkmn-engine
         b.installArtifact(lib);
     } else if (wasm) {
-        const lib = b.addSharedLibrary(.{
+        const exe = b.addExecutable(.{
             .name = name,
             .main_pkg_path = .{ .path = "." },
             .root_source_file = .{ .path = "src/lib/binding/wasm.zig" },
@@ -103,21 +103,32 @@ pub fn build(b: *std.Build) !void {
             },
             .target = .{ .cpu_arch = .wasm32, .os_tag = .freestanding },
         });
-        lib.addOptions("build_options", options);
-        lib.stack_size = wasm_stack_size;
-        lib.rdynamic = true;
-        lib.strip = strip;
-        if (pic) lib.force_pic = pic;
+        exe.addOptions("build_options", options);
+        exe.export_symbol_names = &[_][]const u8{
+            "SHOWDOWN",
+            "LOG",
+            "CHANCE",
+            "CALC",
+            "GEN1_CHOICES_SIZE",
+            "GEN1_LOGS_SIZE",
+        };
+        exe.entry = .disabled;
+        exe.stack_size = wasm_stack_size;
+        exe.strip = strip;
+        if (pic) exe.force_pic = pic;
         const opt = b.findProgram(&.{"wasm-opt"}, &.{"./node_modules/.bin"}) catch null;
         if (optimize != .Debug and opt != null) {
             const out = b.fmt("build/lib/{s}.wasm", .{name});
             const sh = b.addSystemCommand(&.{ opt.?, "-O4" });
-            sh.addArtifactArg(lib);
+            sh.addArtifactArg(exe);
             sh.addArg("-o");
             sh.addFileSourceArg(.{ .path = out });
             b.getInstallStep().dependOn(&sh.step);
+        } else {
+            b.getInstallStep().dependOn(&b.addInstallArtifact(exe, .{
+                .dest_dir = .{ .override = std.Build.InstallDir{ .lib = {} } },
+            }).step);
         }
-        b.installArtifact(lib);
     } else if (dynamic) {
         const lib = b.addSharedLibrary(.{
             .name = name,
