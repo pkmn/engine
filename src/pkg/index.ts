@@ -455,5 +455,6 @@ export class Result {
   }
 }
 
-export {ParsedLine, Info, SideInfo, PokemonInfo, Log} from './protocol';
+export type {ParsedLine, PokemonInfo} from './protocol';
+export {Info, SideInfo, Log} from './protocol';
 export {Lookup} from './data';
