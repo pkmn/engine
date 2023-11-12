@@ -73,7 +73,7 @@ pub const ArgType = enum(u8) {
     EndAbility,
     ClearNegativeBoost,
     FormeChange,
-    NoTarget,
+    LastNoTarget, // FIXME
 
     // Gen 4
     SwapBoost,
