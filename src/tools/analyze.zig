@@ -31,8 +31,8 @@ pub fn main() !void {
         usageAndExit(args[0]);
     }
 
-    var line_buffer = try allocator.alloc(u8, 1024 * 1024);
-    var function_buf = try allocator.alloc(u8, 4096);
+    const line_buffer = try allocator.alloc(u8, 1024 * 1024);
+    const function_buf = try allocator.alloc(u8, 4096);
 
     const stdin = std.io.getStdIn();
     var reader = std.io.bufferedReader(stdin.reader());

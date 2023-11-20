@@ -25,7 +25,7 @@ pub fn main() !void {
         if (warmup.? == 0) errorAndExit("warmup", args[2], args[0]);
         arg = arg[(i + 1)..arg.len];
     }
-    var battles = std.fmt.parseUnsigned(usize, arg, 10) catch
+    const battles = std.fmt.parseUnsigned(usize, arg, 10) catch
         errorAndExit("battles", args[2], args[0]);
     if (battles == 0) errorAndExit("battles", args[2], args[0]);
 
@@ -51,7 +51,7 @@ pub fn benchmark(gen: u8, seed: u64, battles: usize, warmup: ?usize) !void {
     var turns: usize = 0;
 
     var i: usize = 0;
-    var w = warmup orelse 0;
+    const w = warmup orelse 0;
     const num = battles + w;
     while (i < num) : (i += 1) {
         if (warmup != null and i == w) random = pkmn.PSRNG.init(seed);

@@ -41,7 +41,7 @@ pub fn main() !void {
         'd' => std.time.s_per_day,
         else => errorAndExit("duration", args[2], args[0]),
     };
-    var duration = mod * (std.fmt.parseUnsigned(usize, args[2][0..end], 10) catch
+    const duration = mod * (std.fmt.parseUnsigned(usize, args[2][0..end], 10) catch
         errorAndExit("duration", args[2], args[0])) * std.time.ns_per_s;
 
     const seed = if (args.len > 3) std.fmt.parseUnsigned(u64, args[3], 0) catch
@@ -72,7 +72,7 @@ pub fn fuzz(allocator: std.mem.Allocator, seed: u64, duration: usize) !void {
             1 => pkmn.gen1.helpers.Battle.random(&random, opt),
             else => unreachable,
         };
-        var max = switch (gen) {
+        const max = switch (gen) {
             1 => pkmn.gen1.MAX_LOGS,
             else => unreachable,
         };

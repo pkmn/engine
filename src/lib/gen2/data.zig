@@ -239,7 +239,7 @@ pub const DVs = packed struct(u16) {
         };
         const p: u6 = @intCast(1 + ((5 * @as(u8, (dvs.atk & 0b1000) | ((dvs.def & 0b1000)) >> 1 |
             ((dvs.spe & 0b1000)) >> 2 | ((dvs.spc & 0b1000)) >> 3) + (dvs.spc & 0b0011)) >> 1));
-        var t = @as(u8, dvs.def & 0b0011) + (@as(u8, dvs.atk & 0b0011) << 2);
+        const t = @as(u8, dvs.def & 0b0011) + (@as(u8, dvs.atk & 0b0011) << 2);
         return .{ .gender = g, .pow = p, .type = Type.hiddenPower(t) };
     }
 };

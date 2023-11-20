@@ -71,8 +71,8 @@ pub fn update(battle: anytype, c1: Choice, c2: Choice, options: anytype) !Result
     var p1 = battle.side(.P1);
     var p2 = battle.side(.P2);
 
-    var r1 = showdown and p1.active.volatiles.Binding and c2.type == .Switch;
-    var r2 = showdown and p2.active.volatiles.Binding and c1.type == .Switch;
+    const r1 = showdown and p1.active.volatiles.Binding and c2.type == .Switch;
+    const r2 = showdown and p2.active.volatiles.Binding and c1.type == .Switch;
 
     if (try turnOrder(battle, c1, c2, options) == .P1) {
         if (try doTurn(battle, .P1, c1, r1, s1, .P2, c2, r2, s2, options)) |r| return r;
@@ -90,11 +90,11 @@ fn start(battle: anytype, options: anytype) !Result {
     const p1 = battle.side(.P1);
     const p2 = battle.side(.P2);
 
-    var p1_slot = findFirstAlive(p1);
+    const p1_slot = findFirstAlive(p1);
     assert(!showdown or p1_slot == 1);
     if (p1_slot == 0) return if (findFirstAlive(p2) == 0) Result.Tie else Result.Lose;
 
-    var p2_slot = findFirstAlive(p2);
+    const p2_slot = findFirstAlive(p2);
     assert(!showdown or p2_slot == 1);
     if (p2_slot == 0) return Result.Win;
 
@@ -738,7 +738,6 @@ fn canMove(
     const player_ident = battle.active(player);
     const move = Move.get(side.last_selected_move);
 
-    var skip = skip_pp;
     if (side.active.volatiles.Charging) {
         side.active.volatiles.Charging = false;
         side.active.volatiles.Invulnerable = false;
@@ -750,7 +749,7 @@ fn canMove(
     }
 
     side.last_used_move = side.last_selected_move;
-    if (!skip) decrementPP(side, mslot, auto);
+    if (!skip_pp) decrementPP(side, mslot, auto);
 
     const target = if (move.target == .Self) player else player.foe();
     try options.log.move(.{ player_ident, side.last_selected_move, battle.active(target), from });
@@ -902,7 +901,7 @@ fn doMove(
         }
     }
 
-    var zero = battle.last_damage == 0;
+    const zero = battle.last_damage == 0;
     miss = if (showdown or skip)
         miss
     else
@@ -1972,7 +1971,7 @@ pub const Effects = struct {
         var side = battle.side(player);
         var foe = battle.foe(player);
 
-        var side_stored = side.stored();
+        const side_stored = side.stored();
         var foe_stored = foe.stored();
 
         const player_ident = battle.active(player);
@@ -2441,7 +2440,7 @@ pub const Effects = struct {
                     }
                     return log.fail(.{ ident, .None });
                 }
-                var mod = BOOSTS[@as(u4, @intCast(@as(i8, boosts.atk) + 6))];
+                const mod = BOOSTS[@as(u4, @intCast(@as(i8, boosts.atk) + 6))];
                 const stat = unmodifiedStats(battle, side).atk;
                 stats.atk = @min(MAX_STAT_VALUE, stat * mod[0] / mod[1]);
                 try log.boost(.{ ident, reason, n });
@@ -2461,7 +2460,7 @@ pub const Effects = struct {
                     }
                     return log.fail(.{ ident, .None });
                 }
-                var mod = BOOSTS[@as(u4, @intCast(@as(i8, boosts.def) + 6))];
+                const mod = BOOSTS[@as(u4, @intCast(@as(i8, boosts.def) + 6))];
                 const stat = unmodifiedStats(battle, side).def;
                 stats.def = @min(MAX_STAT_VALUE, stat * mod[0] / mod[1]);
                 try log.boost(.{ ident, .Defense, n });
@@ -2478,7 +2477,7 @@ pub const Effects = struct {
                     }
                     return log.fail(.{ ident, .None });
                 }
-                var mod = BOOSTS[@as(u4, @intCast(@as(i8, boosts.spe) + 6))];
+                const mod = BOOSTS[@as(u4, @intCast(@as(i8, boosts.spe) + 6))];
                 const stat = unmodifiedStats(battle, side).spe;
                 stats.spe = @min(MAX_STAT_VALUE, stat * mod[0] / mod[1]);
                 try log.boost(.{ ident, .Speed, 2 });
@@ -2498,7 +2497,7 @@ pub const Effects = struct {
                     }
                     return log.fail(.{ ident, .None });
                 }
-                var mod = BOOSTS[@as(u4, @intCast(@as(i8, boosts.spc) + 6))];
+                const mod = BOOSTS[@as(u4, @intCast(@as(i8, boosts.spc) + 6))];
                 const stat = unmodifiedStats(battle, side).spc;
                 stats.spc = @min(MAX_STAT_VALUE, stat * mod[0] / mod[1]);
                 try log.boost(.{ ident, .SpecialAttack, n });
@@ -2551,7 +2550,7 @@ pub const Effects = struct {
                     }
                     return log.fail(.{ foe_ident, .None });
                 }
-                var mod = BOOSTS[@as(u4, @intCast(@as(i8, boosts.atk) + 6))];
+                const mod = BOOSTS[@as(u4, @intCast(@as(i8, boosts.atk) + 6))];
                 const stat = unmodifiedStats(battle, foe).atk;
                 stats.atk = @max(1, stat * mod[0] / mod[1]);
                 try log.boost(.{ foe_ident, .Attack, -1 });
@@ -2569,7 +2568,7 @@ pub const Effects = struct {
                     }
                     return log.fail(.{ foe_ident, .None });
                 }
-                var mod = BOOSTS[@as(u4, @intCast(@as(i8, boosts.def) + 6))];
+                const mod = BOOSTS[@as(u4, @intCast(@as(i8, boosts.def) + 6))];
                 const stat = unmodifiedStats(battle, foe).def;
                 stats.def = @max(1, stat * mod[0] / mod[1]);
                 try log.boost(.{ foe_ident, .Defense, -@as(i8, n) });
@@ -2586,7 +2585,7 @@ pub const Effects = struct {
                     }
                     return log.fail(.{ foe_ident, .None });
                 }
-                var mod = BOOSTS[@as(u4, @intCast(@as(i8, boosts.spe) + 6))];
+                const mod = BOOSTS[@as(u4, @intCast(@as(i8, boosts.spe) + 6))];
                 const stat = unmodifiedStats(battle, foe).spe;
                 stats.spe = @max(1, stat * mod[0] / mod[1]);
                 try log.boost(.{ foe_ident, .Speed, -1 });
@@ -2606,7 +2605,7 @@ pub const Effects = struct {
                     }
                     return log.fail(.{ foe_ident, .None });
                 }
-                var mod = BOOSTS[@as(u4, @intCast(@as(i8, boosts.spc) + 6))];
+                const mod = BOOSTS[@as(u4, @intCast(@as(i8, boosts.spc) + 6))];
                 const stat = unmodifiedStats(battle, foe).spc;
                 stats.spc = @max(1, stat * mod[0] / mod[1]);
                 try log.boost(.{ foe_ident, .SpecialAttack, -1 });
@@ -3038,7 +3037,7 @@ pub fn choices(battle: anytype, player: Player, request: Choice.Type, out: []Cho
             const side = battle.side(player);
             const foe = battle.foe(player);
 
-            var active = &side.active;
+            const active = &side.active;
             const stored = side.stored();
 
             // While players are not given any input options on the cartridge in these cases,

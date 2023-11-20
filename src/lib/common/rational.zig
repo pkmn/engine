@@ -192,9 +192,9 @@ pub fn Rational(comptime T: type) type {
 
         fn addition(r: *Self, p: anytype, q: anytype) !void {
             // (a/b) + (c/d) = (ad+bc)/(bd)
-            var d = try std.math.mul(T, r.q, q);
-            var n1 = try std.math.mul(T, r.p, q);
-            var n2 = try std.math.mul(T, r.q, p);
+            const d = try std.math.mul(T, r.q, q);
+            const n1 = try std.math.mul(T, r.p, q);
+            const n2 = try std.math.mul(T, r.q, p);
 
             r.p = try std.math.add(T, n1, n2);
             r.q = d;
@@ -234,6 +234,8 @@ test Rational {
         var r: Rational(t) = .{};
 
         var c: t = 128;
+        _ = &c;
+
         try r.update(c, 256);
         try doTurn(&r);
 
@@ -320,6 +322,8 @@ test BigRational {
     try r.reset();
 
     var c: u8 = 128;
+    _ = &c;
+
     try r.update(c, 256);
     try doTurn(&r);
 

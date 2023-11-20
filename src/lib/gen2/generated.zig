@@ -42,7 +42,7 @@ pub fn runMove(battle: anytype, player: Player, state: *State, options: anytype)
     var log = options.log;
 
     var side = battle.side(player);
-    var volatiles = &side.active.volatiles;
+    const volatiles = &side.active.volatiles;
 
     const ident = battle.active(player);
     const foe_ident = battle.active(player.foe());

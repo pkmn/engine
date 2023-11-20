@@ -571,7 +571,7 @@ const moveFns = async (
   indent++;
   write('var log = options.log;\n');
   write('var side = battle.side(player);');
-  write('var volatiles = &side.active.volatiles;\n');
+  write('const volatiles = &side.active.volatiles;\n');
   write('const ident = battle.active(player);');
   write('const foe_ident = battle.active(player.foe());\n');
   write('const move = Move.get(state.move);');

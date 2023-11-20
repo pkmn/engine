@@ -169,8 +169,8 @@ test "switching (order)" {
     var expected_stream: ByteStream = .{ .buffer = &expected_buf };
     var actual_stream: ByteStream = .{ .buffer = &actual_buf };
 
-    var expected: FixedLog = .{ .writer = expected_stream.writer() };
-    var actual: FixedLog = .{ .writer = actual_stream.writer() };
+    const expected: FixedLog = .{ .writer = expected_stream.writer() };
+    const actual: FixedLog = .{ .writer = actual_stream.writer() };
 
     try expected.switched(.{ P1.ident(3), &p1.pokemon[2] });
     try expected.switched(.{ P2.ident(2), &p2.pokemon[1] });
@@ -984,7 +984,7 @@ test "end turn (turn limit)" {
     );
     defer t.deinit();
 
-    var max: u16 = if (showdown) 1000 else 65535;
+    const max: u16 = if (showdown) 1000 else 65535;
     for (0..(max - 1)) |_| {
         try expectEqual(Result.Default, try t.battle.actual.update(swtch(2), swtch(2), &NULL));
     }
@@ -997,8 +997,8 @@ test "end turn (turn limit)" {
     var expected_stream: ByteStream = .{ .buffer = &expected_buf };
     var actual_stream: ByteStream = .{ .buffer = &actual_buf };
 
-    var expected: FixedLog = .{ .writer = expected_stream.writer() };
-    var actual: FixedLog = .{ .writer = actual_stream.writer() };
+    const expected: FixedLog = .{ .writer = expected_stream.writer() };
+    const actual: FixedLog = .{ .writer = actual_stream.writer() };
 
     const slot = if (showdown) 2 else 1;
     try expected.switched(.{ P1.ident(slot), t.expected.p1.get(slot) });
@@ -1756,7 +1756,7 @@ test "FreezeChance effect" {
     try t.expectProbability(1, 1);
 
     // ...Pokémon Showdown still lets you choose whatever
-    var n = t.battle.actual.choices(.P1, .Move, &choices);
+    const n = t.battle.actual.choices(.P1, .Move, &choices);
     if (showdown) {
         try expectEqualSlices(
             Choice,
@@ -6213,7 +6213,7 @@ test "Disable + Transform bug" {
         try expectEqual(Result.Default, try t.update(move(1), move(1)));
         try t.expectProbability(245, 2048); // (140/256) * (1/4) * (7/8)
 
-        var n = t.battle.actual.choices(.P2, .Move, &choices);
+        const n = t.battle.actual.choices(.P2, .Move, &choices);
         // BUG: Pokémon Showdown saves move identity instead of slot
         // if (showdown) {
         // try expectEqualSlices(Choice, &[_]Choice{move(1), move(2)}, choices[0..n]);
@@ -6242,7 +6242,7 @@ test "Disable + Transform bug" {
         try expectEqual(Result.Default, try t.update(move(1), move(1)));
         try t.expectProbability(245, 2048); // (140/256) * (1/4) * (7/8)
 
-        var n = t.battle.actual.choices(.P2, .Move, &choices);
+        const n = t.battle.actual.choices(.P2, .Move, &choices);
         // BUG: Pokémon Showdown saves move identity instead of slot
         // if (showdown) {
         // try expectEqualSlices(Choice, &[_]Choice{move(1), move(2)}, choices[0..n]);
@@ -7168,7 +7168,7 @@ test "Thrashing + Substitute bugs" {
         try t.expectProbability(9095, 425984); // (255/256) * (214/256) * (1/39)
         try expectEqual(@as(u8, subhp), t.actual.p2.active.volatiles.substitute);
 
-        var n = t.battle.actual.choices(.P1, .Move, &choices);
+        const n = t.battle.actual.choices(.P1, .Move, &choices);
         try expectEqualSlices(Choice, &[_]Choice{forced}, choices[0..n]);
 
         try t.log.expected.move(.{ P2.ident(1), Move.Splash, P2.ident(1) });
@@ -7207,7 +7207,7 @@ test "Thrashing + Substitute bugs" {
         try expectEqual(Result.Default, try t.update(move(1), move(1)));
         try t.expectProbability(9095, 425984); // (255/256) * (214/256) * (1/39)
 
-        var n = t.battle.actual.choices(.P1, .Move, &choices);
+        const n = t.battle.actual.choices(.P1, .Move, &choices);
         try expectEqualSlices(Choice, &[_]Choice{forced}, choices[0..n]);
 
         try t.log.expected.move(.{ P2.ident(1), Move.Splash, P2.ident(1) });
@@ -10015,8 +10015,8 @@ test "MAX_LOGS" {
     var expected_stream: ByteStream = .{ .buffer = &expected_buf };
     var actual_stream: ByteStream = .{ .buffer = &actual_buf };
 
-    var expected: FixedLog = .{ .writer = expected_stream.writer() };
-    var actual: FixedLog = .{ .writer = actual_stream.writer() };
+    const expected: FixedLog = .{ .writer = expected_stream.writer() };
+    const actual: FixedLog = .{ .writer = actual_stream.writer() };
 
     try expected.activate(.{ P1.ident(1), .Confusion });
     try expected.move(.{ P1.ident(1), Move.Metronome, P1.ident(1) });
@@ -10162,8 +10162,8 @@ fn Test(comptime rolls: anytype) type {
             var expected_stream: ByteStream = .{ .buffer = &expected_buf };
             var actual_stream: ByteStream = .{ .buffer = &actual_buf };
 
-            var expected: FixedLog = .{ .writer = expected_stream.writer() };
-            var actual: FixedLog = .{ .writer = actual_stream.writer() };
+            const expected: FixedLog = .{ .writer = expected_stream.writer() };
+            const actual: FixedLog = .{ .writer = actual_stream.writer() };
 
             try expected.switched(.{ P1.ident(1), self.actual.p1.get(1) });
             try expected.switched(.{ P2.ident(1), self.actual.p2.get(1) });
@@ -10184,7 +10184,7 @@ fn Test(comptime rolls: anytype) type {
             self.options.chance.reset();
             const result = if (pkmn.options.chance and pkmn.options.calc) result: {
                 var copy = self.battle.actual;
-                var actions = self.options.chance.actions;
+                const actions = self.options.chance.actions;
 
                 // Perfom the actual update
                 const actual = self.battle.actual.update(c1, c2, &self.options);

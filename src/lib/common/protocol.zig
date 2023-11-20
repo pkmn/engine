@@ -945,7 +945,7 @@ pub fn format(
                     if (a[i] == N(gen.Gender.Unknown)) {
                         i += 1;
                     } else {
-                        var gender = if (a[i] == N(gen.Gender.Male)) "M" else "F";
+                        const gender = if (a[i] == N(gen.Gender.Male)) "M" else "F";
                         printc(", {s}", .{gender}, a, b, &i, 1, color);
                     }
                 }
@@ -1418,7 +1418,7 @@ test "|faint|" {
 
 test "|turn|" {
     try log.turn(.{42});
-    var expected = switch (endian) {
+    const expected = switch (endian) {
         .big => &.{ N(ArgType.Turn), 0, 42, N(ArgType.None) },
         .little => &.{ N(ArgType.Turn), 42, 0, N(ArgType.None) },
     };
@@ -1773,7 +1773,7 @@ test "|-sethp|" {
     var blissey = gen2.helpers.Pokemon.init(.{ .species = .Blissey, .moves = &.{.PainSplit} });
     blissey.hp = 612;
     try log.sethp(.{ p2.ident(2), &blissey, .Silent });
-    var expected: []const u8 = switch (endian) {
+    const expected: []const u8 = switch (endian) {
         .big => &.{ N(ArgType.SetHP), 0b1010, 2, 100, 2, 201, 0, N(SetHP.Silent) },
         .little => &.{ N(ArgType.SetHP), 0b1010, 100, 2, 201, 2, 0, N(SetHP.Silent) },
     };

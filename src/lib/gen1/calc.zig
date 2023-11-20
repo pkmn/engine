@@ -211,8 +211,8 @@ pub fn transitions(
 ) !?Stats {
     var stats: Stats = .{};
 
-    var actions = options.actions;
-    var cap = options.cap;
+    const actions = options.actions;
+    const cap = options.cap;
 
     var seen = std.AutoHashMap(Actions, void).init(allocator);
     defer seen.deinit();
@@ -232,8 +232,8 @@ pub fn transitions(
     _ = try b.update(c1, c2, &opts);
     stats.updates += 1;
 
-    var p1 = b.side(.P1);
-    var p2 = b.side(.P2);
+    const p1 = b.side(.P1);
+    const p2 = b.side(.P2);
 
     var p: Rational(u128) = .{ .p = 0, .q = 1 };
     try frontier.append(opts.chance.actions);
@@ -247,7 +247,7 @@ pub fn transitions(
     var i: usize = 0;
     assert(frontier.items.len == 1);
     while (i < frontier.items.len) : (i += 1) {
-        var template = frontier.items[i];
+        const template = frontier.items[i];
         opts.calc.overrides.durations = .{
             .p1 = template.p1.durations,
             .p2 = template.p2.durations,

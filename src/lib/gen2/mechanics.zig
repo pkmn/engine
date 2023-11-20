@@ -140,11 +140,11 @@ fn start(battle: anytype, options: anytype) !Result {
     const p1 = battle.side(.P1);
     const p2 = battle.side(.P2);
 
-    var p1_slot = findFirstAlive(p1);
+    const p1_slot = findFirstAlive(p1);
     assert(!showdown or p1_slot == 1);
     if (p1_slot == 0) return if (findFirstAlive(p2) == 0) Result.Tie else Result.Lose;
 
-    var p2_slot = findFirstAlive(p2);
+    const p2_slot = findFirstAlive(p2);
     assert(!showdown or p2_slot == 1);
     if (p2_slot == 0) return Result.Win;
 
@@ -403,7 +403,9 @@ fn executeMove(
 
     assert(choice.type == .Move);
     var mslot: u4 = @intCast(choice.data);
+    _ = &mslot;
     var move = Move.Pound; // TODO
+    _ = &move;
 
     if (!try beforeMove(battle, player, move, options)) return null;
 
@@ -565,7 +567,7 @@ fn resetCant(volatiles: *align(8) Volatiles) void {
 
 pub fn canMove(battle: anytype, player: Player, state: *State, options: anytype) !bool {
     var side = battle.side(player);
-    var volatiles = &side.active.volatiles;
+    const volatiles = &side.active.volatiles;
 
     // FIXME: pass in target to avoid lookup?
     const target = if (Move.get(state.move).target == .Self) player else player.foe();
@@ -1086,7 +1088,7 @@ fn betweenTurns(battle: anytype, mslot: u4, options: anytype) !?Result {
 
     // Mystery Berry
     inline for (players) |player| {
-        var stored = battle.side(player).stored();
+        const stored = battle.side(player).stored();
 
         if (stored.item == .MysteryBerry) {
             // TODO stored and active moves, transform, etc
@@ -1478,8 +1480,8 @@ pub const Effects = struct {
             side.stored().hp -= @max(side.stored().stats.hp / 2, 1);
             try options.log.damage(.{ ident, side.stored(), .Curse });
         } else {
-            var stats = &side.active.stats;
-            var boosts = &side.active.boosts;
+            const stats = &side.active.stats;
+            const boosts = &side.active.boosts;
 
             const max_atk = boosts.atk == 6 or stats.atk == MAX_STAT_VALUE;
             const max_def = boosts.def == 6 or stats.def == MAX_STAT_VALUE;
@@ -2185,11 +2187,10 @@ pub const Effects = struct {
         }
 
         pub fn damage(battle: anytype, player: Player, state: *State, _: anytype) !void {
-            var side = battle.side(player);
-            var volatiles = &side.active.volatiles;
+            const side = battle.side(player);
 
-            assert(volatiles.Rage);
-            state.damage *|= (volatiles.rage +| 1);
+            assert(side.active.volatiles.Rage);
+            state.damage *|= (side.active.volatiles.rage +| 1);
         }
     };
 
@@ -2541,8 +2542,8 @@ pub const Effects = struct {
     pub fn allStatUpChance(battle: anytype, player: Player, state: *State, options: anytype) !void {
         var side = battle.side(player);
 
-        var stats = &side.active.stats;
-        var boosts = &side.active.boosts;
+        const stats = &side.active.stats;
+        const boosts = &side.active.boosts;
 
         if (!state.proc) return;
         inline for (STATS, STAT_UP_REASONS) |s, r| {
@@ -2563,7 +2564,7 @@ pub const Effects = struct {
 
         if (state.miss) return log.fail(.{ ident, .None });
 
-        var stats = &side.active.stats;
+        const stats = &side.active.stats;
         var boosts = &side.active.boosts;
 
         const move = Move.get(state.move);
@@ -2634,7 +2635,7 @@ pub const Effects = struct {
 
         const fail = foe.active.volatiles.Substitute or state.miss or !state.proc;
 
-        var stats = &foe.active.stats;
+        const stats = &foe.active.stats;
         var boosts = &foe.active.boosts;
 
         const move = Move.get(state.move);
@@ -2718,9 +2719,9 @@ fn unmodifiedStats(battle: anytype, side: *Side) *Stats(u16) {
 }
 
 fn recomputeStats(battle: anytype, side: *Side) void {
-    var stats = unmodifiedStats(battle, side);
+    const stats = unmodifiedStats(battle, side);
     inline for (STATS) |s| {
-        var mod = STAT_BOOSTS[@as(u4, @intCast(@as(i8, @field(side.active.boosts, s)) + 6))];
+        const mod = STAT_BOOSTS[@as(u4, @intCast(@as(i8, @field(side.active.boosts, s)) + 6))];
         const val = @field(stats, s) * mod[0] / mod[1];
         @field(side.active.stats, s) = @max(1, @min(MAX_STAT_VALUE, val));
     }
@@ -2743,7 +2744,7 @@ fn boostStat(
     n: u2,
 ) !void {
     @field(boosts, s) = @intCast(@min(6, @as(i8, @field(boosts, s)) + n));
-    var mod = STAT_BOOSTS[@as(u4, @intCast(@as(i8, @field(boosts, s)) + 6))];
+    const mod = STAT_BOOSTS[@as(u4, @intCast(@as(i8, @field(boosts, s)) + 6))];
     const stat = @field(unmodifiedStats(battle, side), s);
     @field(stats, s) = @min(MAX_STAT_VALUE, stat * mod[0] / mod[1]);
     if (comptime std.mem.eql(u8, s, "atk")) {
@@ -2766,7 +2767,7 @@ fn unboostStat(
     n: u2,
 ) !void {
     @field(boosts, s) = @intCast(@max(-6, @as(i8, @field(boosts, s)) - n));
-    var mod = STAT_BOOSTS[@as(u4, @intCast(@as(i8, @field(boosts, s)) + 6))];
+    const mod = STAT_BOOSTS[@as(u4, @intCast(@as(i8, @field(boosts, s)) + 6))];
     const stat = @field(unmodifiedStats(battle, side), s);
     @field(stats, s) = @max(1, stat * mod[0] / mod[1]);
     if (comptime std.mem.eql(u8, s, "atk")) {
@@ -3467,7 +3468,7 @@ pub fn choices(battle: anytype, player: Player, request: Choice.Type, out: []Cho
         .Move => {
             const side = battle.side(player);
 
-            var active = &side.active;
+            const active = &side.active;
             const stored = side.stored();
 
             // While players are not given any input options on the cartridge in these cases,

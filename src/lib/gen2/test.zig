@@ -169,8 +169,8 @@ test "switching (order)" {
     var expected_stream: ByteStream = .{ .buffer = &expected_buf };
     var actual_stream: ByteStream = .{ .buffer = &actual_buf };
 
-    var expected: FixedLog = .{ .writer = expected_stream.writer() };
-    var actual: FixedLog = .{ .writer = actual_stream.writer() };
+    const expected: FixedLog = .{ .writer = expected_stream.writer() };
+    const actual: FixedLog = .{ .writer = actual_stream.writer() };
 
     try expected.switched(.{ P1.ident(3), &p1.pokemon[2] });
     try expected.switched(.{ P2.ident(2), &p2.pokemon[1] });
@@ -1471,8 +1471,8 @@ fn Test(comptime rolls: anytype) type {
             var expected_stream: ByteStream = .{ .buffer = &expected_buf };
             var actual_stream: ByteStream = .{ .buffer = &actual_buf };
 
-            var expected: FixedLog = .{ .writer = expected_stream.writer() };
-            var actual: FixedLog = .{ .writer = actual_stream.writer() };
+            const expected: FixedLog = .{ .writer = expected_stream.writer() };
+            const actual: FixedLog = .{ .writer = actual_stream.writer() };
 
             try expected.switched(.{ P1.ident(1), self.actual.p1.get(1) });
             try expected.switched(.{ P2.ident(1), self.actual.p2.get(1) });

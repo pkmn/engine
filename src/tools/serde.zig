@@ -24,7 +24,7 @@ pub fn main() !void {
     var w = buf.writer();
 
     var prng = if (seed) |s| pkmn.PSRNG.init(s) else null;
-    var battle = switch (gen) {
+    const battle = switch (gen) {
         1 => if (prng) |*p| gen1.Battle.random(p, .{}) else GEN1,
         else => unreachable,
     };

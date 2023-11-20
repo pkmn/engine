@@ -19,7 +19,7 @@ export fn napi_register_module_v1(env: c.napi_env, exports: c.napi_value) c.napi
 }
 
 pub fn register(env: c.napi_env) c.napi_value {
-    var object = js.Object.init(env);
+    const object = js.Object.init(env);
     const properties = [_]c.napi_property_descriptor{
         js.Property.init("options", .{ .value = options(env) }),
         js.Property.init("bindings", .{ .value = bindings(env) }),
@@ -29,7 +29,7 @@ pub fn register(env: c.napi_env) c.napi_value {
 }
 
 fn options(env: c.napi_env) c.napi_value {
-    var object = js.Object.init(env);
+    const object = js.Object.init(env);
     const properties = [_]c.napi_property_descriptor{
         js.Property.init("showdown", .{ .value = js.Boolean.init(env, pkmn.options.showdown) }),
         js.Property.init("log", .{ .value = js.Boolean.init(env, pkmn.options.log) }),
@@ -41,7 +41,7 @@ fn options(env: c.napi_env) c.napi_value {
 }
 
 fn bindings(env: c.napi_env) c.napi_value {
-    var array = js.Array.init(env, .{ .length = 1 });
+    const array = js.Array.init(env, .{ .length = 1 });
     js.Array.set(env, array, 0, bind(env, pkmn.gen1));
     return array;
 }
@@ -49,7 +49,7 @@ fn bindings(env: c.napi_env) c.napi_value {
 fn bind(env: c.napi_env, gen: anytype) c.napi_value {
     const choices_size: u32 = @intCast(gen.CHOICES_SIZE);
     const logs_size: u32 = @intCast(gen.LOGS_SIZE);
-    var object = js.Object.init(env);
+    const object = js.Object.init(env);
     const properties = [_]c.napi_property_descriptor{
         js.Property.init("CHOICES_SIZE", .{ .value = js.Number.init(env, choices_size) }),
         js.Property.init("LOGS_SIZE", .{ .value = js.Number.init(env, logs_size) }),
@@ -87,7 +87,7 @@ fn update(gen: anytype) c.napi_callback {
                     assert(len == gen.LOGS_SIZE);
                     assert(data != null);
 
-                    var buf = @as([*]u8, @ptrCast(data.?))[0..gen.LOGS_SIZE];
+                    const buf = @as([*]u8, @ptrCast(data.?))[0..gen.LOGS_SIZE];
                     var stream: pkmn.protocol.ByteStream = .{ .buffer = buf };
                     // TODO: extract out
                     var opts = pkmn.battle.options(
@@ -126,7 +126,7 @@ fn choices(gen: anytype) c.napi_callback {
             assert(len == gen.CHOICES_SIZE);
             assert(data != null);
 
-            var out = @as([*]pkmn.Choice, @ptrCast(data.?))[0..gen.CHOICES_SIZE];
+            const out = @as([*]pkmn.Choice, @ptrCast(data.?))[0..gen.CHOICES_SIZE];
             const n = battle.choices(player, request, out);
             return js.Number.init(env, @as(u8, @bitCast(n)));
         }
