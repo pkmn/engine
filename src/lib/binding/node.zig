@@ -72,7 +72,6 @@ fn update(gen: anytype) c.napi_callback {
             var len: usize = 0;
             assert(c.napi_get_arraybuffer_info(env, argv[0], &data, &len) == c.napi_ok);
             assert(len == @sizeOf(gen.Battle(gen.PRNG)));
-            assert(data != null);
 
             var battle: *gen.Battle(gen.PRNG) = @alignCast(@ptrCast(data.?));
             const c1: pkmn.Choice = @bitCast(js.Number.get(env, argv[1], u8));
@@ -85,7 +84,6 @@ fn update(gen: anytype) c.napi_callback {
                 else => result: {
                     assert(c.napi_get_arraybuffer_info(env, argv[3], &data, &len) == c.napi_ok);
                     assert(len == gen.LOGS_SIZE);
-                    assert(data != null);
 
                     const buf = @as([*]u8, @ptrCast(data.?))[0..gen.LOGS_SIZE];
                     var stream: pkmn.protocol.ByteStream = .{ .buffer = buf };
@@ -116,7 +114,6 @@ fn choices(gen: anytype) c.napi_callback {
             var len: usize = 0;
             assert(c.napi_get_arraybuffer_info(env, argv[0], &data, &len) == c.napi_ok);
             assert(len == @sizeOf(gen.Battle(gen.PRNG)));
-            assert(data != null);
 
             var battle: *gen.Battle(gen.PRNG) = @alignCast(@ptrCast(data.?));
             const player: pkmn.Player = @enumFromInt(js.Number.get(env, argv[1], u8));
@@ -124,7 +121,6 @@ fn choices(gen: anytype) c.napi_callback {
 
             assert(c.napi_get_arraybuffer_info(env, argv[3], &data, &len) == c.napi_ok);
             assert(len == gen.CHOICES_SIZE);
-            assert(data != null);
 
             const out = @as([*]pkmn.Choice, @ptrCast(data.?))[0..gen.CHOICES_SIZE];
             const n = battle.choices(player, request, out);

@@ -7,8 +7,6 @@ const common = @import("../common/data.zig");
 const data = @import("data.zig");
 const mechanics = @import("mechanics.zig");
 
-const assert = std.debug.assert;
-
 const Player = common.Player;
 const Result = common.Result;
 

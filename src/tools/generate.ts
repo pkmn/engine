@@ -552,7 +552,6 @@ const moveFns = async (
   write('const common = @import("../common/data.zig");\n');
   write('const data = @import("data.zig");');
   write('const mechanics = @import("mechanics.zig");\n');
-  write('const assert = std.debug.assert;\n');
   write('const Player = common.Player;\nconst Result = common.Result;\n');
   write('const Effectiveness = data.Effectiveness;\nconst Move = data.Move;\n');
   write('const Effects = mechanics.Effects;\nconst State = mechanics.State;\n');

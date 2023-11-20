@@ -2,7 +2,6 @@
 // The full license can be found at https://github.com/tigerbeetle/tigerbeetle/blob/main/LICENSE
 
 const std = @import("std");
-const assert = std.debug.assert;
 
 const Tool = union(enum) { copies: usize, sizes };
 

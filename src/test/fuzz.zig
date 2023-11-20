@@ -159,7 +159,6 @@ fn usageAndExit(cmd: []const u8) noreturn {
 fn deinit(allocator: std.mem.Allocator) void {
     std.debug.assert(initial.len > 0);
     allocator.free(initial);
-    std.debug.assert(frames != null);
     for (frames.?.items) |frame| {
         allocator.free(frame.state);
         allocator.free(frame.log);

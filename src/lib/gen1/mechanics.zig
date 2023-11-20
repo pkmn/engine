@@ -635,8 +635,6 @@ fn beforeMove(
             volatiles.state +%= battle.last_damage;
         }
 
-        assert(volatiles.attacks > 0);
-
         if (options.calc.modify(player, .attacking)) |extend| {
             if (!extend) volatiles.attacks = 0;
         } else {
@@ -676,8 +674,6 @@ fn beforeMove(
     }
 
     if (volatiles.Thrashing) {
-        assert(volatiles.attacks > 0);
-
         if (options.calc.modify(player, .attacking)) |extend| {
             if (!extend) volatiles.attacks = 0;
         } else {
@@ -701,8 +697,6 @@ fn beforeMove(
     }
 
     if (volatiles.Binding) {
-        assert(volatiles.attacks > 0);
-
         if (options.calc.modify(player, .binding)) |extend| {
             if (!extend) volatiles.attacks = 0;
         } else {
@@ -1678,7 +1672,6 @@ fn onBegin(
     residual: *bool,
     options: anytype,
 ) !void {
-    assert(move.effect.onBegin());
     return switch (move.effect) {
         .Confusion => Effects.confusion(battle, player, move, options),
         .Conversion => Effects.conversion(battle, player, options),
@@ -1701,7 +1694,6 @@ fn onBegin(
 }
 
 fn onEnd(battle: anytype, player: Player, move: Move.Data, options: anytype) !void {
-    assert(move.effect.onEnd());
     return switch (move.effect) {
         .Bide => Effects.bide(battle, player, options),
         // zig fmt: off
@@ -1723,7 +1715,6 @@ fn alwaysHappens(
     residual: *bool,
     options: anytype,
 ) !void {
-    assert(move.effect.alwaysHappens());
     return switch (move.effect) {
         .DrainHP, .DreamEater => Effects.drainHP(battle, player, options),
         .Explode => Effects.explode(battle, player),

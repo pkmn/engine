@@ -999,7 +999,6 @@ fn betweenTurns(battle: anytype, mslot: u4, options: anytype) !?Result {
 
     // Weather
     if (battle.field.weather != .None) {
-        assert(battle.field.weather_duration > 0);
         battle.field.weather_duration -= 1;
 
         if (battle.field.weather_duration == 0) {
@@ -1058,7 +1057,6 @@ fn betweenTurns(battle: anytype, mslot: u4, options: anytype) !?Result {
         var volatiles = &side.active.volatiles;
 
         if (volatiles.PerishSong) {
-            assert(volatiles.perish_song > 0);
             volatiles.perish_song -= 1;
 
             assert(volatiles.perish_song < 3);
@@ -1195,7 +1193,6 @@ fn betweenTurns(battle: anytype, mslot: u4, options: anytype) !?Result {
         var volatiles = &side.active.volatiles;
 
         if (volatiles.Encore) {
-            assert(volatiles.encore > 0);
             volatiles.encore -= 1;
 
             if (volatiles.encore == 0 or side.active.move(mslot).pp == 0) {
@@ -1217,7 +1214,6 @@ fn updateSideCondition(
 ) !void {
     var side = battle.side(player);
     if (@field(side.conditions, key)) {
-        assert(@field(side.conditions, value) > 0);
         @field(side.conditions, value) -= 1;
 
         if (@field(side.conditions, value) == 0) {
@@ -1327,7 +1323,6 @@ pub const Effects = struct {
 
             if (!volatiles.Bide) return;
 
-            assert(volatiles.attacks > 0);
             // if (options.calc.modify(player, .attacking)) |extend| {
             //     if (!extend) volatiles.attacks = 0;
             // } else {
