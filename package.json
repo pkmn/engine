@@ -89,7 +89,7 @@
     "binaryen": "^116.0.0",
     "eslint": "^8.52.0",
     "html-minifier": "^4.0.0",
-    "json-stringify-pretty-compact": "4.0.0",
+    "json-stringify-pretty-compact": "3.0.0",
     "minimist": "^1.2.8",
     "mustache": "^4.2.0",
     "source-map-support": "^0.5.21",
