@@ -1,6 +1,7 @@
 .{
     .name = "pkmn",
     .version = "0.1.0-dev",
+    .minimum_zig_version = "0.12.0-dev.1396+f6de3ec96",
     .paths = .{
         "build.zig",
         "docs",

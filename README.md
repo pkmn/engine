@@ -87,14 +87,36 @@ directly or build the addons manually and place the artifacts in the expected pa
 
 ### `pkmn`
 
-Until the [Zig package manager](https://github.com/ziglang/zig/projects/4) is completed, the
-recommended way of using the `pkmn` package in Zig is by either copying this repository into your
-project or by using [git submodules](https://git-scm.com/book/en/v2/Git-Tools-Submodules) and then
-adding the following to your `build.zig`:
+To include `pkmn`, add it as a dependency in your project's
+[`build.zig.zon`](https://github.com/ziglang/zig/blob/master/doc/build.zig.zon.md):
+
+
+```zig
+.dependencies = .{
+    .pkmn = .{
+        .url = "https://github.com/pkmn/engine/archive/RELEASE.tar.gz",
+    },
+},
+```
+
+Replace `RELEASE` with the tag for the [release](https://github.com/pkmn/engine/releases) you wish
+to use (e.g. `0.1.0` or `nightly`), or the specific hash of any commit. Next, run `zig build`, and
+copy the expected hash from the error message into your `build.zig.zon` alongside the `.url`:
+
+```sh
+$ zig build
+error: dependency is missing hash field
+            .url = "https://github.com/pkmn/engine/archive/nightly.tar.gz",
+                   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+note: expected .hash = "122056b93b403033cb7d9bed96a02c2eb8cc1275515976167726ada6eb4207e8ef8a",
+```
+
+Note that this hash is **not** going to be the same as the commit hash. After adding the hash to your
+`build.zig.zon` you will be able to import the `pkmn` package's build helpers into your `build.zig`:
 
 ```zig
 const std = @import("std");
-const pkmn = @import("lib/pkmn/build.zig");
+const pkmn = @import("pkmn");
 
 pub fn build(b: *std.Build) void {
     ...
@@ -103,7 +125,7 @@ pub fn build(b: *std.Build) void {
 }
 ```
 
-The engine's `build.zig` exposes a `module` function that takes an options structure to allow for
+The `pkmn` package exposes a `module` function that takes an options structure to allow for
 configuring whether or not Pokémon Showdown compatibility mode or protocol message logging should be
 enabled. Alternatively, you may set options via a `pkmn_options` [root source file
 declaration](https://ziglang.org/documentation/master/#Root-Source-File). There are several

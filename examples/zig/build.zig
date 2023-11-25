@@ -1,5 +1,5 @@
 const std = @import("std");
-const pkmn = @import("lib/pkmn/build.zig");
+const pkmn = @import("pkmn");
 
 pub fn build(b: *std.Build) void {
     const target = b.standardTargetOptions(.{});
