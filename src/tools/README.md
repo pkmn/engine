@@ -13,9 +13,9 @@ This directory contains miscellaneous scripts and tools useful for working on th
   To print every function name (first column), number of times it was monomorphized (second column)
   and the total size of all monorphizations (third column):
 
-  $ zig build analyze -- sizes < zig-out/pkmn.ll \
-      | awk '{a[$1] += $2; b[$1] += 1} END {for (i in a) print i, b[i], a[i]}' \
-      | sort -n -k 3
+      $ zig build analyze -- sizes < zig-out/pkmn.ll \
+          | awk '{a[$1] += $2; b[$1] += 1} END {for (i in a) print i, b[i], a[i]}' \
+          | sort -n -k 3
 
 - [`debug.ts`](debug.ts): Reads a dump of [binary debug protocol](../../docs/PROTOCOL.md#debugging)
   from [standard input](https://en.wikipedia.org/wiki/Standard_streams) and outputs the standalone
