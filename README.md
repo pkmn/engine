@@ -100,7 +100,7 @@ To include `pkmn`, add it as a dependency in your project's
 ```
 
 Replace `RELEASE` with the tag for the [release](https://github.com/pkmn/engine/releases) you wish
-to use (e.g. `0.1.0` or `nightly`), or the specific hash of any commit. Next, run `zig build`, and
+to use (e.g. `0.1.0` or `nightly`) or the specific hash of any commit. Next, run `zig build` and
 copy the expected hash from the error message into your `build.zig.zon` alongside the `.url`:
 
 ```sh
@@ -111,8 +111,9 @@ error: dependency is missing hash field
 note: expected .hash = "122056b93b403033cb7d9bed96a02c2eb8cc1275515976167726ada6eb4207e8ef8a",
 ```
 
-Note that this hash is **not** going to be the same as the commit hash. After adding the hash to your
-`build.zig.zon` you will be able to import the `pkmn` package's build helpers into your `build.zig`:
+Note that this hash is **not** going to be the same as the commit hash. After adding the hash to
+your `build.zig.zon` you will be able to import the `pkmn` package's build helpers into your
+`build.zig`:
 
 ```zig
 const std = @import("std");
