@@ -368,22 +368,22 @@ function compare(chunk: string, actual: engine.ParsedLine[]) {
     const a = args.slice() as Writeable<Protocol.ArgType>;
     const kw = {...kwArgs} as Protocol.KWArgType;
     switch (args[0]) {
-    case 'move': {
-      const keys = kwArgs as Protocol.KWArgs['|move|'];
-      if (keys.from && !(actual[i].kwArgs as Protocol.KWArgs['|move|']).from &&
+      case 'move': {
+        const keys = kwArgs as Protocol.KWArgs['|move|'];
+        if (keys.from && !(actual[i].kwArgs as Protocol.KWArgs['|move|']).from &&
         !['Metronome', 'Mirror Move'].includes(args[2])) {
-        delete (kw as any).from;
+          delete (kw as any).from;
+        }
+        break;
       }
-      break;
-    }
-    case '-heal':
-    case '-damage': {
-      const keys = kwArgs as Protocol.KWArgs['|-heal|' | '|-damage|'];
-      if (keys.from && !['drain', 'Recoil'].includes(keys.from)) {
-        delete (kw as any).of;
+      case '-heal':
+      case '-damage': {
+        const keys = kwArgs as Protocol.KWArgs['|-heal|' | '|-damage|'];
+        if (keys.from && !['drain', 'Recoil'].includes(keys.from)) {
+          delete (kw as any).of;
+        }
+        break;
       }
-      break;
-    }
     }
     try {
       assert.deepEqual(actual[i], {args: a, kwArgs: kw});

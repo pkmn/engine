@@ -51,8 +51,8 @@ export function display(gens: Generations, data: Buffer, error?: string, seed?: 
     // We don't care about the native addon, we just need to load it so other checks don't fail
     void addon.supports(true);
     switch (gen.num) {
-    case 1: return new gen1.Battle(lookup, Data.view(buf), {showdown});
-    default: throw new Error(`Unsupported gen: ${gen.num}`);
+      case 1: return new gen1.Battle(lookup, Data.view(buf), {showdown});
+      default: throw new Error(`Unsupported gen: ${gen.num}`);
     }
   };
 

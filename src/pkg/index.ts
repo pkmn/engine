@@ -364,8 +364,8 @@ export const Battle = new class {
     addon.check(!!options.showdown);
     const lookup = Lookup.get(gen);
     switch (gen.num) {
-    case 1: return gen1.Battle.create(gen, lookup, options);
-    default: throw new Error(`Unsupported gen ${gen.num}`);
+      case 1: return gen1.Battle.create(gen, lookup, options);
+      default: throw new Error(`Unsupported gen ${gen.num}`);
     }
   }
 
@@ -377,8 +377,8 @@ export const Battle = new class {
     addon.check(!!options.showdown);
     const lookup = Lookup.get(gen);
     switch (gen.num) {
-    case 1: return gen1.Battle.restore(gen, lookup, battle, options);
-    default: throw new Error(`Unsupported gen ${gen.num}`);
+      case 1: return gen1.Battle.restore(gen, lookup, battle, options);
+      default: throw new Error(`Unsupported gen ${gen.num}`);
     }
   }
 };

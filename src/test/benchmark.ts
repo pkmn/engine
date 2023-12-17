@@ -33,9 +33,9 @@ export const Options = new class {
 
   player(gen: Generation, prng: PRNG): Omit<engine.PlayerOptions, 'name'> {
     switch (gen.num) {
-    case 1: return Options.gen1(gen, prng);
-    case 2: return Options.gen2(gen, prng);
-    default: throw new Error(`Unsupported gen ${gen.num}`);
+      case 1: return Options.gen1(gen, prng);
+      case 2: return Options.gen2(gen, prng);
+      default: throw new Error(`Unsupported gen ${gen.num}`);
     }
   }
 

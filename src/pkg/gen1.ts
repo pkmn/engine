@@ -783,11 +783,11 @@ function encodeStatus(pokemon: Gen1.Pokemon, showdown: boolean): number {
     return (pokemon.statusData.self ? 0x80 : 0) | pokemon.statusData.sleep;
   }
   switch (pokemon.status) {
-  case 'tox': return showdown ? 0b10001000 : 1 << 3;
-  case 'psn': return 1 << 3;
-  case 'brn': return 1 << 4;
-  case 'frz': return 1 << 5;
-  case 'par': return 1 << 6;
+    case 'tox': return showdown ? 0b10001000 : 1 << 3;
+    case 'psn': return 1 << 3;
+    case 'brn': return 1 << 4;
+    case 'frz': return 1 << 5;
+    case 'par': return 1 << 6;
   }
   return 0;
 }

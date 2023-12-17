@@ -283,19 +283,19 @@ const downloadImportLib = async () => {
   let error = false;
   for (let i = 2; i < process.argv.length; i++) {
     switch (process.argv[i]) {
-    case "--silent": {
-      SILENT = true;
-      break;
-    }
-    case "--zig": {
-      if (options || only) error = true;
-      only = true;
-      break;
-    }
-    default: {
-      if (options || only || !process.argv[i].startsWith('--options=')) error = true;
-      options = process.argv[i].slice(10).split(' ');
-    }
+      case "--silent": {
+        SILENT = true;
+        break;
+      }
+      case "--zig": {
+        if (options || only) error = true;
+        only = true;
+        break;
+      }
+      default: {
+        if (options || only || !process.argv[i].startsWith('--options=')) error = true;
+        options = process.argv[i].slice(10).split(' ');
+      }
     }
   }
   if (error) {

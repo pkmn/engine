@@ -23,12 +23,12 @@ const IDS: IDs =
   types: [
     'Normal', 'Fighting', 'Flying', 'Poison', 'Ground', 'Rock', 'Bug', 'Ghost',
     'Fire', 'Water', 'Grass', 'Electric', 'Psychic', 'Ice', 'Dragon',
-  ] as Exclude<TypeName, 'Dark' | 'Steel' | 'Fairy'>[],
+  ] as Exclude<TypeName, 'Dark' | 'Steel' | 'Fairy' | 'Stellar'>[],
 }, {
   types: [
     'Ground', 'Rock', 'Steel', 'Normal', 'Fighting', 'Flying', 'Poison', 'Bug', 'Ghost',
     '???', 'Fire', 'Water', 'Grass', 'Electric', 'Psychic', 'Ice', 'Dragon', 'Dark',
-  ] as Exclude<TypeName, 'Fairy'>[],
+  ] as Exclude<TypeName, 'Fairy' | 'Stellar'>[],
   items: [],
 }];
 const DATA: [{
@@ -248,14 +248,14 @@ const getTypeChart = (gen: Generation, types: TypeName[]) => {
 const convertGenderRatio = (species: Specie) => {
   if (species.gender === 'N') return '0xFF, // N';
   switch (species.genderRatio.F) {
-  case 0: return '0x00, // 0.00% F';
-  case 0.125: return '0x1F, // 12.5% F';
-  case 0.25: return '0x3F, // 25.0% F';
-  case 0.5: return '0x7F, // 50.0% F';
-  case 0.75: return '0xBF, // 75.0% F';
-  case 1: return '0xFE, // 100% F';
-  default:
-    throw new Error(`Invalid gender ratio for ${species.name}`);
+    case 0: return '0x00, // 0.00% F';
+    case 0.125: return '0x1F, // 12.5% F';
+    case 0.25: return '0x3F, // 25.0% F';
+    case 0.5: return '0x7F, // 50.0% F';
+    case 0.75: return '0xBF, // 75.0% F';
+    case 1: return '0xFE, // 100% F';
+    default:
+      throw new Error(`Invalid gender ratio for ${species.name}`);
   }
 };
 

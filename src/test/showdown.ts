@@ -39,7 +39,7 @@ export const ROLLS = {
     return (move: string, skip: string[] = []) => {
       const moves = all.filter(m => !skip.includes(m));
       const value = ranged(moves.indexOf(move) + 1, moves.length) - 1;
-      return {key: 'data/moves.ts:11972:23', value};
+      return {key: 'data/moves.ts:12171:23', value};
     };
   },
 };
@@ -234,9 +234,9 @@ export const patch = {
 export const Choices = new class {
   get(this: void, gen: Generation): (battle: Battle, id: SideID, struggle?: string) => string[] {
     switch (gen.num) {
-    case 1: return Choices.gen1;
-    case 2: return Choices.gen2;
-    default: throw new Error(`Unsupported gen ${gen.num}`);
+      case 1: return Choices.gen1;
+      case 2: return Choices.gen2;
+      default: throw new Error(`Unsupported gen ${gen.num}`);
     }
   }
 
