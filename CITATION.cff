@@ -1,0 +1,18 @@
+cff-version: 1.2.0
+title: libpkmn
+type: software
+authors:
+  - given-names: Kirk
+    family-names: Scheibelhut
+    email: pre@pkmn.cc
+license: MIT
+url: 'https://pkmn.cc/engine'
+repository-code: 'https://github.com/pkmn/engine'
+repository-artifact: 'https://github.com/pkmn/engine/releases/'
+abstract: >-
+  libpkmn is minimal, complete, Pokémon battle simulation engine optimized for
+  performance and designed for tooling, embedded systems, and artificial
+  intelligence use cases. This engine aims to be a frame-accurate and
+  bug-for-bug compatible implementation of both Pokémon battles as defined by
+  the original game code and the Pokémon Showdown1 simulator which represents
+  Pokémon battling as practically interpreted online.
