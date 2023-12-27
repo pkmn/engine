@@ -270,7 +270,7 @@ pkmn_result pkmn_gen1_battle_update(
  * PKMN_CHOICES.showdown is true.
  */
 uint8_t pkmn_gen1_battle_choices(
-  pkmn_gen1_battle *battle,
+  const pkmn_gen1_battle *battle,
   pkmn_player player,
   pkmn_choice_kind request,
   pkmn_choice out[],

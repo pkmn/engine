@@ -169,7 +169,7 @@ export fn pkmn_gen1_battle_update(
 }
 
 export fn pkmn_gen1_battle_choices(
-    battle: *pkmn.gen1.Battle(pkmn.gen1.PRNG),
+    battle: *const pkmn.gen1.Battle(pkmn.gen1.PRNG),
     player: u8,
     request: u8,
     out: [*]u8,

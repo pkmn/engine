@@ -112,7 +112,7 @@ pub fn Battle(comptime RNG: anytype) type {
         /// make (i.e. on the cartridge a soft-lock occurs).
         ///
         /// This function will always return choices > 0 if `pkmn.options.showdown` is true.
-        pub fn choices(self: *Self, player: Player, request: Choice.Type, out: []Choice) u8 {
+        pub fn choices(self: *const Self, player: Player, request: Choice.Type, out: []Choice) u8 {
             return mechanics.choices(self, player, request, out);
         }
     };
