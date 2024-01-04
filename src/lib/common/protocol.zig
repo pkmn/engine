@@ -1248,19 +1248,12 @@ fn N(e: anytype) u8 {
 const p1 = Player.P1;
 const p2 = Player.P2;
 
-const gen1 = struct {
-    pub usingnamespace @import("../gen1/data.zig");
-    pub const helpers = @import("../gen1/helpers.zig");
-};
-
-const gen2 = struct {
-    pub usingnamespace @import("../gen2/data.zig");
-    pub const helpers = @import("../gen2/helpers.zig");
-};
-
 var buf: [pkmn.LOGS_SIZE]u8 = undefined;
 var stream: ByteStream = .{ .buffer = &buf };
 var log: FixedLog = .{ .writer = stream.writer() };
+
+const gen1 = pkmn.gen1;
+const gen2 = pkmn.gen2;
 
 const M1 = gen1.Move;
 const S1 = gen1.Species;

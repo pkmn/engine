@@ -91,7 +91,7 @@ pub const gen1 = struct {
         /// battle `update`.
         pub const Summaries = @import("gen1/calc.zig").Summaries;
         /// Information relevant to damage calculation that occured during a Generation I
-        ///  battle `update` for a single player.
+        /// battle `update` for a single player.
         pub const Summary = @import("gen1/calc.zig").Summary;
         /// Null object pattern implementation of Generation I `Calc` which does nothing,
         /// though damage calculator support should additionally be turned off
@@ -100,6 +100,29 @@ pub const gen1 = struct {
     };
     /// Provides helpers for initializing Generation I Pokémon battles.
     pub const helpers = @import("gen1/helpers.zig");
+};
+
+/// TODO
+pub const gen2 = struct {
+    pub usingnamespace @import("gen2/data.zig");
+    pub const Chance = @import("gen2/chance.zig").Chance;
+    pub const chance = struct {
+        pub const Actions = @import("gen2/chance.zig").Actions;
+        pub const Action = @import("gen2/chance.zig").Action;
+        pub const Durations = @import("gen2/chance.zig").Durations;
+        pub const Duration = @import("gen2/chance.zig").Duration;
+        pub const NULL = @import("gen2/chance.zig").NULL;
+    };
+    pub const Calc = @import("gen2/calc.zig").Calc;
+    pub const calc = if (options.internal) struct {
+        pub usingnamespace @import("gen2/calc.zig");
+    } else struct {
+        pub const Overrides = @import("gen2/calc.zig").Overrides;
+        pub const Summaries = @import("gen2/calc.zig").Summaries;
+        pub const Summary = @import("gen2/calc.zig").Summary;
+        pub const NULL = @import("gen2/calc.zig").NULL;
+    };
+    pub const helpers = @import("gen2/helpers.zig");
 };
 
 // Internal APIs used by other pkmn libraries, not actually part of the public API.
