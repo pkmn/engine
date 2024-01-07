@@ -296,7 +296,7 @@ export const iterations = (gens: Generations, num: number, battles: number, seed
   const data: {[name: string]: number[]} = {};
 
   for (const showdown of [true, false]) {
-    sh('zig', ['build', '-j1', `-Dshowdown=${showdown.toString()}`, 'tools', '-p', 'build']);
+    sh('zig', ['build', `-Dshowdown=${showdown.toString()}`, 'tools', '-p', 'build']);
     for (const gen of gens) {
       if (gen.num > 1) break;
       patch.generation(gen);
@@ -331,7 +331,7 @@ const parse = (file: string) => {
 
 export const comparison = async (gens: Generations, battles: number, seed: number[]) => {
   const results: {[format: string]: {[config: string]: bigint}} = {};
-  sh('zig', ['build', '-j1', '-Dshowdown=true', 'tools', '-p', 'build']);
+  sh('zig', ['build', '-Dshowdown=true', 'tools', '-p', 'build']);
 
   for (const gen of gens) {
     if (gen.num > 1) break;
