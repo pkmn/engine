@@ -1,6 +1,7 @@
 # Windows
 * text=auto
 *.zig text=auto eol=lf
+*.zon text=auto eol=lf
 
 # GitHub
 src/data/* linguist-generated=true
