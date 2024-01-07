@@ -14,7 +14,7 @@ const util = @import("../common/util.zig");
 const Player = @import("../common/data.zig").Player;
 const Optional = @import("../common/optional.zig").Optional;
 
-const data = @import("./data.zig");
+const data = @import("data.zig");
 
 const enabled = options.chance;
 const showdown = options.showdown;

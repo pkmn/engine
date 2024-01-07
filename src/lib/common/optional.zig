@@ -46,7 +46,7 @@ test Optional {
     try expect(b != .true);
     try expect(b != .false);
 
-    const Player = @import("./data.zig").Player;
+    const Player = @import("data.zig").Player;
     try expect(@bitSizeOf(Optional(Player)) == 2);
 
     const p: Optional(Player) = .P2;

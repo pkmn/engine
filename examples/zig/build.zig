@@ -14,7 +14,10 @@ pub fn build(b: *std.Build) void {
         .optimize = optimize,
         .target = target,
     });
-    exe.addModule("pkmn", pkmn.module(b, .{ .showdown = showdown, .log = log }));
+    exe.root_module.addImport("pkmn", pkmn.module(b, .{
+        .showdown = showdown,
+        .log = log,
+    }));
     b.installArtifact(exe);
 
     const run_cmd = b.addRunArtifact(exe);

@@ -32,8 +32,6 @@
     "build/tools/debug.js.map",
     "build/tools/debug.js",
     "src/bin/install-pkmn-engine",
-    "src/lib/binding/node.zig",
-    "src/lib/binding/wasm.zig",
     "src/lib/common/battle.zig",
     "src/lib/common/data.zig",
     "src/lib/common/debug.zig",
@@ -62,7 +60,9 @@
     "src/lib/gen2/generated.zig",
     "src/lib/gen2/helpers.zig",
     "src/lib/gen2/mechanics.zig",
+    "src/lib/node.zig",
     "src/lib/pkmn.zig",
+    "src/lib/wasm.zig",
     "src/test/display/pkmn.html.tmpl"
   ],
   "engines": {"node": ">=16.0.0"},

@@ -131,6 +131,6 @@ pub const js = if (options.internal) struct {
     pub usingnamespace @import("common/js.zig");
 } else struct {};
 pub const bindings = if (options.internal) struct {
-    pub const node = @import("binding/node.zig");
-    pub const wasm = @import("binding/wasm.zig");
+    pub const node = @import("node.zig");
+    pub const wasm = @import("wasm.zig");
 } else struct {};

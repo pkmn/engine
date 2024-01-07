@@ -1,7 +1,8 @@
 const std = @import("std");
-const pkmn = @import("../pkmn.zig");
 
-const js = @import("../common/js.zig");
+const pkmn = @import("pkmn.zig");
+
+const js = @import("common/js.zig");
 
 const assert = std.debug.assert;
 

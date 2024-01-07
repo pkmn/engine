@@ -93,7 +93,8 @@ though contains all of the information required to produce identical logs to eit
 - [`examples`](../examples): examples of using the engine across all supported targets
 - [`lib`](../src/lib): the Zig code for the `libpkmn` engine
   - [`pkmn.zig`](../src/lib/pkmn.zig): the main entry point for the Zig library
-  - [`bindings`](..src/lib/bindings): code which exposes the `libpkmn` API for non-Zig uses
+  - [`c.zig`](..src/lib/c.zig)/[`node.zig`](..src/lib/node.zig)/[`wasm.zig`](..src/lib/wasm.zig):
+    code which exposes the `libpkmn` API for non-Zig uses
   - [`common`](..src/lib/common): code shared by all generations (common data
     structures/RNG/protocol logic)
   - `gen*`: the code for the respective Pokémon generations implemented by the engine

@@ -3,8 +3,8 @@ const builtin = @import("builtin");
 
 const pkmn = @import("../pkmn.zig");
 
-const data = @import("./data.zig");
-const options = @import("./options.zig");
+const data = @import("data.zig");
+const options = @import("options.zig");
 
 const assert = std.debug.assert;
 const print = std.debug.print;

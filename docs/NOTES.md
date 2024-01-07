@@ -33,7 +33,8 @@
      [`data.json`](../src/data/data.json)
 12. Implement **driver serialization/deserialization** and writes tests
 13. **Expose API** for new generation
-    - update [`pkmn.zig`](../src/lib/pkmn.zig) and [bindings](../src/lib/bindings)
+    - update [`pkmn.zig`](../src/lib/pkmn.zig) and bindings in
+      [`c.zig`](..src/lib/c.zig)/[`node.zig`](..src/lib/node.zig)/[`wasm.zig`](..src/lib/wasm.zig)
     - update [`pkmn.h`](../src/include/pkmn.h)
     - update [`index.ts`](../src/pkg/index.ts)
 14. Write **`helper.zig`** and implement **`choices`** method
