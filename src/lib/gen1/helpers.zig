@@ -478,12 +478,12 @@ test "Rolls.damage" {
 test "Rolls.coalesce" {
     var summaries =
         calc.Summaries{ .p1 = .{ .damage = .{ .base = 74, .final = 69, .capped = true } } };
-    try expectEqual(@as(u8, 0), try Rolls.coalesce(.P2, 0, &summaries, false));
-    try expectEqual(@as(u8, 241), try Rolls.coalesce(.P2, 238, &summaries, false));
-    try expectEqual(@as(u8, 255), try Rolls.coalesce(.P2, 238, &summaries, true));
+    try expectEqual(0, try Rolls.coalesce(.P2, 0, &summaries, false));
+    try expectEqual(241, try Rolls.coalesce(.P2, 238, &summaries, false));
+    try expectEqual(255, try Rolls.coalesce(.P2, 238, &summaries, true));
     summaries.p1.damage.final = 74;
-    try expectEqual(@as(u8, 217), try Rolls.coalesce(.P2, 217, &summaries, false));
-    try expectEqual(@as(u8, 255), try Rolls.coalesce(.P2, 217, &summaries, true));
+    try expectEqual(217, try Rolls.coalesce(.P2, 217, &summaries, false));
+    try expectEqual(255, try Rolls.coalesce(.P2, 217, &summaries, true));
 }
 
 test "Rolls.hit" {
@@ -771,9 +771,9 @@ test "Rolls.psywave" {
 
     try expectEqualSlices(u8, &.{0}, Rolls.psywave(actions.p1, &side, .None));
     var rolls = Rolls.psywave(actions.p2, &side, .None);
-    try expectEqual(@as(u8, 150), rolls[rolls.len - 1]);
+    try expectEqual(150, rolls[rolls.len - 1]);
     side.stored().level = 81;
     rolls = Rolls.psywave(actions.p2, &side, .None);
-    try expectEqual(@as(u8, 121), rolls[rolls.len - 1]);
+    try expectEqual(121, rolls[rolls.len - 1]);
     try expectEqualSlices(u8, &.{0}, Rolls.psywave(actions.p2, &side, .false));
 }

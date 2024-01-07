@@ -70,7 +70,7 @@ pub const PSRNG = extern struct {
 
 test PSRNG {
     var psrng: PSRNG = .{ .src = .{ .seed = 0x0001000200030004 } };
-    try expectEqual(@as(u8, 121), psrng.range(u8, 0, 256));
+    try expectEqual(121, psrng.range(u8, 0, 256));
     try expectEqual(false, psrng.chance(u8, 128, 256)); // 226 < 128
 }
 
@@ -107,9 +107,9 @@ test Gen12 {
         try expectEqual(e, rng.next());
     }
 
-    try expectEqual(@as(u8, 16), Gen12.percent(6) + 1);
-    try expectEqual(@as(u8, 16), Gen12.percent(7) - 1);
-    try expectEqual(@as(u8, 128), Gen12.percent(50) + 1);
+    try expectEqual(16, Gen12.percent(6) + 1);
+    try expectEqual(16, Gen12.percent(7) - 1);
+    try expectEqual(128, Gen12.percent(50) + 1);
 }
 
 // https://pkmn.cc/pokeemerald/src/random.c

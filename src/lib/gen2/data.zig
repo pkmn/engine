@@ -248,12 +248,12 @@ test DVs {
     var dvs = DVs.from(.Mewtwo, .{ .def = 13 });
     try expectEqual(Gender.Unknown, dvs.gender);
     try expectEqual(Type.Ice, dvs.type);
-    try expectEqual(@as(u8, 70), dvs.power());
+    try expectEqual(70, dvs.power());
 
     dvs = DVs.from(.Pikachu, .{ .spc = 14 });
     try expectEqual(Gender.Male, dvs.gender);
     try expectEqual(Type.Dark, dvs.type);
-    try expectEqual(@as(u8, 69), dvs.power());
+    try expectEqual(69, dvs.power());
 
     dvs = DVs.from(.Cyndaquil, .{ .atk = 1, .def = 3, .spe = 10, .spc = 9 });
     try expectEqual(Gender.Female, dvs.gender);
@@ -380,9 +380,9 @@ test Stats {
     try expectEqual(0, stats.def);
 
     var base = Species.get(.Gyarados).stats;
-    try expectEqual(@as(u16, 127), Stats(u16).calc("hp", base.hp, 0, 5120, 38));
+    try expectEqual(127, Stats(u16).calc("hp", base.hp, 0, 5120, 38));
     base = Species.get(.Pidgeot).stats;
-    try expectEqual(@as(u16, 279), Stats(u16).calc("spe", base.spe, 15, 63001, 100));
+    try expectEqual(279, Stats(u16).calc("spe", base.spe, 15, 63001, 100));
 }
 
 pub const Boosts = packed struct(u32) {
@@ -428,8 +428,8 @@ test Move {
     try expectEqual(Move.Effect.ConfusionChance, move.effect);
     try expectEqual(rng.Gen12.percent(50), move.accuracy);
     try expectEqual(rng.Gen12.percent(100), move.chance);
-    try expectEqual(@as(u8, 5), Move.pp(.DynamicPunch));
-    try expectEqual(@as(i8, -1), Move.get(.Counter).priority);
+    try expectEqual(5, Move.pp(.DynamicPunch));
+    try expectEqual(-1, Move.get(.Counter).priority);
     try expect(!move.effect.isHighCritical());
     try expect(Move.get(.KarateChop).effect.isHighCritical());
     try expect(Move.get(.RazorWind).effect.isHighCritical());
@@ -439,7 +439,7 @@ pub const Species = species.Species;
 
 test Species {
     try expectEqual(152, @intFromEnum(Species.Chikorita));
-    try expectEqual(@as(u8, 100), Species.get(.Celebi).stats.spd);
+    try expectEqual(100, Species.get(.Celebi).stats.spd);
 }
 
 pub const Type = types.Type;
@@ -452,7 +452,7 @@ test Types {
     try expect(!Type.Steel.special());
     try expect(Type.Dark.special());
 
-    try expectEqual(@as(u8, 3), Type.Water.precedence());
+    try expectEqual(3, Type.Water.precedence());
     try expect(Type.Bug.precedence() > Type.Poison.precedence());
 
     try expectEqual(Effectiveness.Super, Type.effectiveness(.Ghost, .Psychic));

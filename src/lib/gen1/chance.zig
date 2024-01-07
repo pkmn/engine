@@ -706,19 +706,19 @@ test "Chance.damage" {
 
     try chance.damage(.P1, 217);
     if (showdown) {
-        try expectValue(@as(u8, 217), chance.actions.p1.damage);
+        try expectValue(217, chance.actions.p1.damage);
         try expectProbability(&chance.probability, 1, 39);
     } else {
         try expectProbability(&chance.probability, 1, 1);
-        try expectValue(@as(u8, 0), chance.actions.p1.damage);
+        try expectValue(0, chance.actions.p1.damage);
 
         try chance.commit(.P1, .miss);
         try expectProbability(&chance.probability, 1, 1);
-        try expectValue(@as(u8, 0), chance.actions.p1.damage);
+        try expectValue(0, chance.actions.p1.damage);
 
         try chance.commit(.P1, .hit);
         try expectProbability(&chance.probability, 1, 39);
-        try expectValue(@as(u8, 217), chance.actions.p1.damage);
+        try expectValue(217, chance.actions.p1.damage);
     }
 }
 
@@ -770,13 +770,13 @@ test "Chance.moveSlot" {
 
     try chance.moveSlot(.P2, 2, &ms, 2);
     try expectProbability(&chance.probability, 1, 2);
-    try expectValue(@as(u4, 2), chance.actions.p2.move_slot);
+    try expectValue(2, chance.actions.p2.move_slot);
 
     chance.reset();
 
     try chance.moveSlot(.P1, 1, &ms, 0);
     try expectProbability(&chance.probability, 1, 3);
-    try expectValue(@as(u4, 1), chance.actions.p1.move_slot);
+    try expectValue(1, chance.actions.p1.move_slot);
 }
 
 test "Chance.multiHit" {
@@ -784,32 +784,32 @@ test "Chance.multiHit" {
 
     try chance.multiHit(.P1, 3);
     try expectProbability(&chance.probability, 3, 8);
-    try expectValue(@as(u4, 3), chance.actions.p1.multi_hit);
+    try expectValue(3, chance.actions.p1.multi_hit);
 
     chance.reset();
 
     try chance.multiHit(.P2, 5);
     try expectProbability(&chance.probability, 1, 8);
-    try expectValue(@as(u4, 5), chance.actions.p2.multi_hit);
+    try expectValue(5, chance.actions.p2.multi_hit);
 }
 
 test "Chance.duration" {
     var chance: Chance(rational.Rational(u64)) = .{ .probability = .{} };
 
     chance.duration(.sleep, .P1, .P2, 2);
-    try expectValue(@as(u4, 2), chance.actions.p1.duration);
-    try expectValue(@as(u3, 1), chance.actions.p2.durations.sleep);
+    try expectValue(2, chance.actions.p1.duration);
+    try expectValue(1, chance.actions.p2.durations.sleep);
 
     chance.reset();
 
     chance.duration(.binding, .P2, .P2, 4);
     if (!showdown) {
-        try expectValue(@as(u4, 0), chance.actions.p2.duration);
-        try expectValue(@as(u3, 0), chance.actions.p2.durations.binding);
+        try expectValue(0, chance.actions.p2.duration);
+        try expectValue(0, chance.actions.p2.durations.binding);
         try chance.commit(.P2, .hit);
     }
-    try expectValue(@as(u4, 4), chance.actions.p2.duration);
-    try expectValue(@as(u3, 1), chance.actions.p2.durations.binding);
+    try expectValue(4, chance.actions.p2.duration);
+    try expectValue(1, chance.actions.p2.durations.binding);
 }
 
 test "Chance.sleep" {
@@ -819,7 +819,7 @@ test "Chance.sleep" {
         chance.actions.p1.durations.sleep = @intCast(i);
         try chance.sleep(.P1, 0);
         try expectProbability(&chance.probability, 1, d);
-        try expectValue(@as(u3, 0), chance.actions.p1.durations.sleep);
+        try expectValue(0, chance.actions.p1.durations.sleep);
 
         chance.reset();
 
@@ -842,7 +842,7 @@ test "Chance.confusion" {
             chance.actions.p2.durations.confusion = @intCast(i);
             try chance.confusion(.P2, 0);
             try expectProbability(&chance.probability, 1, d);
-            try expectValue(@as(u3, 0), chance.actions.p2.durations.confusion);
+            try expectValue(0, chance.actions.p2.durations.confusion);
 
             chance.reset();
         }
@@ -865,7 +865,7 @@ test "Chance.disable" {
         chance.actions.p1.durations.disable = @intCast(i);
         try chance.disable(.P1, 0);
         try expectProbability(&chance.probability, 1, d);
-        try expectValue(@as(u4, 0), chance.actions.p1.durations.disable);
+        try expectValue(0, chance.actions.p1.durations.disable);
 
         chance.reset();
 
@@ -888,7 +888,7 @@ test "Chance.attacking" {
             chance.actions.p2.durations.attacking = @intCast(i);
             try chance.attacking(.P2, 0);
             try expectProbability(&chance.probability, 1, d);
-            try expectValue(@as(u3, 0), chance.actions.p2.durations.attacking);
+            try expectValue(0, chance.actions.p2.durations.attacking);
 
             chance.reset();
         }
@@ -914,7 +914,7 @@ test "Chance.binding" {
         chance.actions.p1.durations.binding = @intCast(i);
         try chance.binding(.P1, 0);
         try expectProbability(&chance.probability, p, q);
-        try expectValue(@as(u3, 0), chance.actions.p1.durations.binding);
+        try expectValue(0, chance.actions.p1.durations.binding);
 
         chance.reset();
 
@@ -934,7 +934,7 @@ test "Chance.psywave" {
 
     try chance.psywave(.P2, 100, 150);
     try expectProbability(&chance.probability, 1, 150);
-    try expectValue(@as(u8, 101), chance.actions.p2.psywave);
+    try expectValue(101, chance.actions.p2.psywave);
 }
 
 test "Chance.metronome" {

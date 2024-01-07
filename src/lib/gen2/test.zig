@@ -217,7 +217,7 @@ test "switching (reset)" {
 
     // try expectEqual(data.Volatiles{}, p2.volatiles);
     // try expectEqual(data.Boosts{}, p2.boosts);
-    // try expectEqual(@as(u8, 0), t.actual.p2.get(1).status);
+    // try expectEqual(0, t.actual.p2.get(1).status);
     // try expectEqual(Status.init(.PAR), t.actual.p2.get(2).status);
 
     // try expectEqual(Move.Teleport, t.actual.p1.last_counter_move);

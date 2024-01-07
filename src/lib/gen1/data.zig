@@ -316,12 +316,12 @@ test Status {
     try expect(Status.is(Status.slp(5), .SLP));
     try expect(!Status.is(Status.slp(5), .EXT));
     try expect(!Status.is(Status.slp(7), .PSN));
-    try expectEqual(@as(u3, 5), Status.duration(Status.slp(5)));
+    try expectEqual(5, Status.duration(Status.slp(5)));
     try expect(Status.is(Status.slf(2), .SLP));
     try expect(Status.is(Status.slf(2), .EXT));
     try expect(Status.is(Status.TOX, .PSN));
     try expect(Status.is(Status.TOX, .EXT));
-    try expectEqual(@as(u3, 1), Status.duration(Status.slp(1)));
+    try expectEqual(1, Status.duration(Status.slp(1)));
 }
 
 /// Bitfield representation of volatile statuses and associated data in Generation I.
@@ -405,13 +405,13 @@ test Volatiles {
     try expect(!volatiles.Transform);
     try expect(!volatiles.MultiHit);
 
-    try expectEqual(@as(u16, 235), volatiles.state);
-    try expectEqual(@as(u8, 42), volatiles.substitute);
-    try expectEqual(@as(u4, 2), volatiles.disable_move);
-    try expectEqual(@as(u4, 4), volatiles.disable_duration);
-    try expectEqual(@as(u4, 2), volatiles.confusion);
-    try expectEqual(@as(u5, 4), volatiles.toxic);
-    try expectEqual(@as(u4, 3), volatiles.attacks);
+    try expectEqual(235, volatiles.state);
+    try expectEqual(42, volatiles.substitute);
+    try expectEqual(2, volatiles.disable_move);
+    try expectEqual(4, volatiles.disable_duration);
+    try expectEqual(2, volatiles.confusion);
+    try expectEqual(4, volatiles.toxic);
+    try expectEqual(3, volatiles.attacks);
 }
 
 /// Representaiton of a Pokémon's stats in Generation I.
@@ -442,9 +442,9 @@ test Stats {
     try expectEqual(0, stats.def);
 
     var base = Species.get(.Gyarados).stats;
-    try expectEqual(@as(u16, 127), Stats(u16).calc("hp", base.hp, 0, 5120, 38));
+    try expectEqual(127, Stats(u16).calc("hp", base.hp, 0, 5120, 38));
     base = Species.get(.Pidgeot).stats;
-    try expectEqual(@as(u16, 279), Stats(u16).calc("spe", base.spe, 15, 63001, 100));
+    try expectEqual(279, Stats(u16).calc("spe", base.spe, 15, 63001, 100));
 }
 
 /// Representation of a Pokémon's boosts in Generation I.
@@ -537,7 +537,7 @@ pub const Species = species.Species;
 
 test Species {
     try expectEqual(2, @intFromEnum(Species.Ivysaur));
-    try expectEqual(@as(u8, 100), Species.get(.Mew).stats.def);
+    try expectEqual(100, Species.get(.Mew).stats.def);
 }
 
 /// Representation of a Generation I type in Pokémon.
@@ -576,8 +576,8 @@ test Types {
     try expectEqual(Effectiveness.Resisted, Type.effectiveness(.Fire, .Water));
     try expectEqual(Effectiveness.Neutral, Type.effectiveness(.Normal, .Grass));
 
-    try expectEqual(@as(u8, 3), Type.precedence(.Water, .Water));
-    try expectEqual(@as(u8, 26), Type.precedence(.Bug, .Ghost));
+    try expectEqual(3, Type.precedence(.Water, .Water));
+    try expectEqual(26, Type.precedence(.Bug, .Ghost));
     try expect(Type.precedence(.Poison, .Bug) > Type.precedence(.Poison, .Poison));
 
     const t: Types = .{ .type1 = .Rock, .type2 = .Ground };
@@ -617,18 +617,18 @@ pub const DVs = struct {
 
 test DVs {
     var dvs: DVs = .{ .spc = 15, .spe = 15 };
-    try expectEqual(@as(u4, 15), dvs.hp());
+    try expectEqual(15, dvs.hp());
     dvs = .{
         .atk = 5,
         .def = 15,
         .spe = 13,
         .spc = 13,
     };
-    try expectEqual(@as(u4, 15), dvs.hp());
+    try expectEqual(15, dvs.hp());
     dvs = .{
         .def = 3,
         .spe = 10,
         .spc = 11,
     };
-    try expectEqual(@as(u4, 13), dvs.hp());
+    try expectEqual(13, dvs.hp());
 }

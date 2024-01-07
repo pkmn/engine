@@ -1053,7 +1053,7 @@ fn checkCriticalHit(battle: anytype, player: Player, move: Move.Data, options: a
     const side = battle.side(player);
 
     // Base speed is used for the critical hit calculation, even when Transform-ed
-    var rate = @as(u16, Species.chance(side.stored().species));
+    var rate: u16 = Species.chance(side.stored().species);
     // GLITCH: Focus Energy reduces critical hit rate instead of increasing it
     rate = if (side.active.volatiles.FocusEnergy) rate / 2 else @min(rate * 2, 255);
     rate = if (move.effect == .HighCritical) @min(rate * 4, 255) else rate / 2;
@@ -1110,9 +1110,9 @@ fn calcDamage(
         def = @max((def / 4) & 255, if (showdown) 1 else 0);
     }
 
-    const lvl = @as(u32, side.stored().level * @as(u2, if (crit) 2 else 1));
+    const lvl: u32 = side.stored().level * @as(u2, if (crit) 2 else 1);
 
-    def = @as(u32, if (move.effect == .Explode) @max(def / 2, 1) else def);
+    def = if (move.effect == .Explode) @max(def / 2, 1) else def;
 
     if (def == 0) return false;
 
@@ -1395,7 +1395,7 @@ fn moveHit(
         const overwritten = overwrite and state > 0;
         assert(!overwritten or (0 < state and state <= 255 and !side.active.volatiles.Bide));
 
-        var accuracy = if (overwritten) state else @as(u16, move.accuracy);
+        var accuracy: u16 = if (overwritten) state else move.accuracy;
         var boost = BOOSTS[@as(u4, @intCast(@as(i8, side.active.boosts.accuracy) + 6))];
         accuracy = accuracy * boost[0] / boost[1];
         boost = BOOSTS[@as(u4, @intCast(@as(i8, -foe.active.boosts.evasion) + 6))];

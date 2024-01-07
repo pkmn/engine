@@ -22,8 +22,8 @@ pub const Player = enum(u1) {
 
 test Player {
     try expectEqual(Player.P2, Player.P1.foe());
-    try expectEqual(@as(u8, 0b0001), @as(u8, @bitCast(Player.P1.ident(1))));
-    try expectEqual(@as(u8, 0b1101), @as(u8, @bitCast(Player.P2.ident(5))));
+    try expectEqual(0b0001, @as(u8, @bitCast(Player.P1.ident(1))));
+    try expectEqual(0b1101, @as(u8, @bitCast(Player.P2.ident(5))));
 }
 
 /// An identifier for a specific Pokémon in battle.
@@ -46,8 +46,8 @@ pub const ID = packed struct(u8) {
 };
 
 test ID {
-    try expectEqual(@as(u8, 0b0001), @as(u8, @bitCast(ID{ .player = .P1, .id = 1 })));
-    try expectEqual(@as(u8, 0b1101), @as(u8, @bitCast(ID{ .player = .P2, .id = 5 })));
+    try expectEqual(0b0001, @as(u8, @bitCast(ID{ .player = .P1, .id = 1 })));
+    try expectEqual(0b1101, @as(u8, @bitCast(ID{ .player = .P2, .id = 5 })));
     const id: ID = .{ .player = .P2, .id = 4 };
     try expectEqual(id, ID.from(id.int()));
 }
