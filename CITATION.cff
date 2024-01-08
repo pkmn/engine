@@ -5,6 +5,7 @@ authors:
   - given-names: Kirk
     family-names: Scheibelhut
     email: pre@pkmn.cc
+    orcid: 'https://orcid.org/0009-0004-7829-4237'
 license: MIT
 url: 'https://pkmn.cc/engine'
 repository-code: 'https://github.com/pkmn/engine'
