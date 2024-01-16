@@ -113,7 +113,7 @@ export function choose(
 }
 
 export function size(index: number, type: 'choices' | 'log') {
-  const bindings = (ADDON![1] ?? ADDON![0])!.bindings[index]!;
+  const bindings = (ADDON![1] ?? ADDON![0])!.bindings[index];
   return type[0] === 'c' ? bindings.CHOICES_SIZE : bindings.LOGS_SIZE;
 }
 

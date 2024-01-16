@@ -175,7 +175,7 @@ function play(
     } else {
       for (const id of ['p1', 'p2'] as const) {
         const player = players![id];
-        const request = control[id]!.activeRequest;
+        const request = control[id].activeRequest;
         if (!request || request.wait) {
           chose[id] = engine.Choice.pass();
         } else {
@@ -184,7 +184,7 @@ function play(
           while (!choices(control, id, 'move 0').includes(c)) {
             // making the unavailable request forces activeRequest to get updated
             assert.ok(!control[id].choose(adjust(c)));
-            player.receiveRequest(control[id]!.activeRequest!);
+            player.receiveRequest(control[id].activeRequest!);
           }
         }
       }
@@ -437,7 +437,7 @@ function fixTeam(gen: Generation, options: sim.AIOptions, moves: Set<ID>) {
       }
     }
   }
-  return {...options, team: Teams.pack(options.team!)!} as sim.AIOptions & {team: string};
+  return {...options, team: Teams.pack(options.team!)} as sim.AIOptions & {team: string};
 }
 
 const BINDING = ['bind', 'wrap', 'firespin', 'clamp'] as ID[];

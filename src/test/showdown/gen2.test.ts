@@ -8123,7 +8123,7 @@ describe('Gen 2', () => {
   });
 
   test('Present effect', () => {
-    const present = {key: 'data/moves.ts:14399:22', value: ranged(1, 10) - 1};
+    const present = {key: 'data/moves.ts:14397:22', value: ranged(1, 10) - 1};
     const present40 = {...present, value: ranged(6, 10) - 1};
     const present120 = {...present, value: ranged(10, 10) - 1};
     const battle = startBattle([
@@ -8330,7 +8330,7 @@ describe('Gen 2', () => {
   });
 
   test('Magnitude effect', () => {
-    const mag8 = {key: 'data/moves.ts:11245:19', value: ranged(85, 100) - 1};
+    const mag8 = {key: 'data/moves.ts:11243:19', value: ranged(85, 100) - 1};
     const mag5 = {...mag8, value: ranged(15, 100) - 1};
     const battle = startBattle([
       QKC, mag8, NO_CRIT, MIN_DMG, QKC, mag5, NO_CRIT, MIN_DMG, NO_CRIT, MIN_DMG, QKC,
