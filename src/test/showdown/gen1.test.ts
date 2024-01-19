@@ -21,11 +21,11 @@ const SECONDARY = (value: number) => ({key: 'data/mods/gen1/scripts.ts:701:25', 
 const SLP = (n: number) =>
   ({key: 'data/mods/gen1/conditions.ts:63:38', value: ranged(n, 8 - 1)});
 const DISABLE_MOVE = (m: number, n = 4) =>
-  ({key: 'data/mods/gen1/moves.ts:249:27', value: ranged(m, n) - 1});
+  ({key: 'data/mods/gen1/moves.ts:250:27', value: ranged(m, n) - 1});
 const DISABLE_DURATION = (n: number) =>
-  ({key: 'data/mods/gen1/moves.ts:253:34', value: ranged(n, 9 - 1) - 1});
+  ({key: 'data/mods/gen1/moves.ts:254:34', value: ranged(n, 9 - 1) - 1});
 const MIMIC = (m: number, n = 4) =>
-  ({key: 'data/mods/gen1/moves.ts:497:24', value: ranged(m, n) - 1});
+  ({key: 'data/mods/gen1/moves.ts:495:24', value: ranged(m, n) - 1});
 const BIDE = (n: 2 | 3) =>
   ({key: 'data/mods/gen1/moves.ts:40:34', value: ranged(n - 2, 4 - 2)});
 const NO_PAR = SECONDARY(MAX);
@@ -1681,7 +1681,7 @@ describe('Gen 1', () => {
   });
 
   test('ConfusionChance effect', () => {
-    const sub_proc = {key: 'data/mods/gen1/moves.ts:875:50', value: ranged(25, 256) - 1};
+    const sub_proc = {key: 'data/mods/gen1/moves.ts:874:50', value: ranged(25, 256) - 1};
     const no_proc = SECONDARY(sub_proc.value + 1);
     const battle = startBattle([
       HIT, NO_CRIT, MAX_DMG, sub_proc, CFZ(2), CFZ_CAN,
@@ -2719,7 +2719,7 @@ describe('Gen 1', () => {
   });
 
   test('Psywave effect', () => {
-    const PSY_MAX = {key: 'data/mods/gen1/moves.ts:578:32', value: MAX};
+    const PSY_MAX = {key: 'data/mods/gen1/moves.ts:576:32', value: MAX};
     const PSY_MIN = {...PSY_MAX, value: MIN};
     const battle = startBattle([HIT, PSY_MAX, HIT, PSY_MIN], [
       {species: 'Gengar', evs, level: 59, moves: ['Psywave']},
@@ -7287,7 +7287,7 @@ describe('Gen 1', () => {
   });
 
   test('Psywave infinite loop', () => {
-    const PSY_MAX = {key: 'data/mods/gen1/moves.ts:578:32', value: MAX};
+    const PSY_MAX = {key: 'data/mods/gen1/moves.ts:576:32', value: MAX};
     const battle = startBattle([HIT, HIT, PSY_MAX], [
       {species: 'Charmander', evs, level: 1, moves: ['Psywave']},
     ], [

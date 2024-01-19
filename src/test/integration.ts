@@ -647,7 +647,7 @@ function fromInputLog(
   return [choices.p1!, choices.p2!, index] as const;
 }
 
-type Flags = Pick<sim.ExhaustiveRunnerOptions, 'log' | 'maxFailures' | 'cycles'> & {
+type Flags = Partial<Pick<sim.ExhaustiveRunnerOptions, 'log' | 'maxFailures' | 'cycles'>> & {
   prng: PRNG | PRNGSeed;
   gen?: GenerationNum;
   duration?: number;
@@ -696,13 +696,14 @@ export async function run(gens: Generations, options: string | Flags, errors?: E
   return failures;
 }
 
-export const newSeed = (prng: PRNG) => [
-  prng.next(0x10000), prng.next(0x10000), prng.next(0x10000), prng.next(0x10000),
-] as PRNGSeed;
+export function newSeed(prng: PRNG): PRNGSeed {
+  return [prng.next(0x10000), prng.next(0x10000), prng.next(0x10000), prng.next(0x10000)];
+}
 
-export const toBigInt = (seed: PRNGSeed) =>
-  ((BigInt(seed[0]) << 48n) | (BigInt(seed[1]) << 32n) |
+export function toBigInt(seed: PRNGSeed): bigint {
+  return ((BigInt(seed[0]) << 48n) | (BigInt(seed[1]) << 32n) |
    (BigInt(seed[2]) << 16n) | BigInt(seed[3]));
+}
 
 class Errors {
   seeds: bigint[];

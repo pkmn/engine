@@ -28,7 +28,7 @@ export const ROLLS = {
       MAX_DMG: {key: keys.dmg, value: MAX},
       TIE: (n: 1 | 2) => ({key: tie, value: ranged(n, 2) - 1}),
       DRAG: (m: number, n = 5) =>
-        ({key: 'sim/battle.ts:1410:36', value: ranged(m - 1, n)}),
+        ({key: 'sim/battle.ts:1409:36', value: ranged(m - 1, n)}),
     };
   },
   metronome(gen: Generation, exclude: string[]) {
