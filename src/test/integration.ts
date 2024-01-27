@@ -460,11 +460,11 @@ const BINDING = ['bind', 'wrap', 'firespin', 'clamp'] as ID[];
 function validate(prng: PRNG, moves: Set<ID>, used: RunnerOptions['usage']) {
   const transform = moves.has('transform' as ID);
   const substitute = moves.has('substitute' as ID);
+  const disable = moves.has('disable' as ID);
   // Transform + Disable and Transform + Haze cannot be used together, so if
   // teams have been generated where both moves are present we simply choose one
   // at random to consider having been "used" and return true to retry
   if (transform) {
-    const disable = moves.has('disable' as ID);
     const haze = moves.has('haze' as ID);
     if (disable && haze) {
       used.move('transform' as ID);
@@ -490,10 +490,11 @@ function validate(prng: PRNG, moves: Set<ID>, used: RunnerOptions['usage']) {
     }
     return true;
   }
-  // Mirror Move is problematic in battles involving Transform/Substitute/binding moves
-  // - we try to avoid always simply punting on Mirror Move and being fair
-  // about which move gets a chance to be tested
+  // Mirror Move is problematic in battles involving Transform / Substitute / Disable / binding
+  // moves - we try to avoid always simply punting on Mirror Move and being fair about which move
+  // gets a chance to be tested
   if (moves.has('mirrormove' as ID)) {
+    if (disable) return true;
     if (+substitute + +transform + +!!binding.length > 1) {
       used.move('mirrormove' as ID);
       return true;
