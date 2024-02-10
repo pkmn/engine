@@ -36,15 +36,15 @@ jobs:
         if: ${{ matrix.zig == 'local' && matrix.os != 'windows-latest' }}
       - run: echo "${env:GITHUB_WORKSPACE}/build/bin/zig" >> $env:GITHUB_PATH
         if: ${{ matrix.zig == 'local' && matrix.os == 'windows-latest' }}
-      - run: zig build -j1 test ${{matrix.options}}
-      - run: zig build -j1 test ${{matrix.options}} -Doptimize=ReleaseFast
+      - run: zig build test ${{matrix.options}}
+      - run: zig build test ${{matrix.options}} -Doptimize=ReleaseFast
       - run: npm run compile
       - run: npm test
       - run: node src/bin/install-pkmn-engine --options="${{matrix.options}}"
       - run: npm run test:integration
-      - run: zig build -j1 ${{matrix.options}} -p build
+      - run: zig build ${{matrix.options}} -p build
       - run: make example options="${{matrix.options}}"
       - run: make lint
       - run: make clean && node src/bin/install-pkmn-engine --zig
-      - run: zig build -j1 ${{matrix.options}} -p build -Ddynamic
+      - run: zig build ${{matrix.options}} -p build -Ddynamic
       - run: make c-example options="${{matrix.options}}" dynamic=true
