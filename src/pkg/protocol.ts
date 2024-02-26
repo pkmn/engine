@@ -123,7 +123,7 @@ export class Log {
   }
 }
 
-type Writeable<T> = { -readonly [P in keyof T]: T[P] };
+type Writeable<T> = {-readonly [P in keyof T]: T[P]};
 type Decoder = (this: Log, offset: number, data: DataView) => {offset: number; line: ParsedLine};
 
 const GENDERS: GenderName[] = ['M', 'F', 'N'];

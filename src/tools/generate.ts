@@ -75,7 +75,7 @@ const TYPE_INDEXES = {
   Dark: 27,
 };
 
-const NAMES: { [constant: string]: string } = {
+const NAMES: {[constant: string]: string} = {
   // Items
   BLACKBELT_I: 'BlackBelt', BLACKGLASSES: 'BlackGlasses', BLK_APRICORN: 'BlackApricorn',
   BLU_APRICORN: 'BlueApricorn', BLUESKY_MAIL: 'BlueSkyMail', BRIGHTPOWDER: 'BrightPowder',
@@ -132,7 +132,7 @@ const ALWAYS_HAPPEN_SPECIAL = [
   'DrainHP', 'DreamEater', 'Explode', 'JumpKick', 'PayDay', 'Rage', 'Recoil',
 ];
 
-const GROUPS: { [constant: string]: string[] } = {
+const GROUPS: {[constant: string]: string[]} = {
   // data/battle/residual_effects_1.asm
   onBegin: [
     'Conversion', 'Haze', 'SwitchAndTeleport', 'Mist', 'FocusEnergy', 'Confusion', 'Heal',
@@ -152,7 +152,7 @@ const GROUPS: { [constant: string]: string[] } = {
   // custom group used as an optimization/simplification by the engine
   isMulti: ['DoubleHit', 'MultiHit', 'Twineedle'],
 };
-const EFFECT_TO_GROUP: { [effect: string]: string } = {};
+const EFFECT_TO_GROUP: {[effect: string]: string} = {};
 for (const group in GROUPS) {
   for (const effect of GROUPS[group]) {
     EFFECT_TO_GROUP[effect] = group;
@@ -382,7 +382,7 @@ const levenshtein = (s: string[], t: string[]) => {
 };
 
 const moveFns = async (
-  gen: Generation, dirs: { out: string; cache: string },
+  gen: Generation, dirs: {out: string; cache: string},
   update: boolean, pret: string, names: Set<string>,
 ) => {
   if (gen.num !== 2) throw new Error(`Unexpected generation ${gen.num}`);
@@ -762,9 +762,9 @@ const moveFns = async (
 };
 
 type GenerateFn = (
-  gen: Generation, dirs: { out: string; cache: string }, update: boolean, tests: boolean
+  gen: Generation, dirs: {out: string; cache: string}, update: boolean, tests: boolean
 ) => Promise<void>;
-const GEN: { [gen in GenerationNum]?: GenerateFn } = {
+const GEN: {[gen in GenerationNum]?: GenerateFn} = {
   1: async (gen, dirs, update, tests) => {
     const pret = 'https://raw.githubusercontent.com/pret/pokered/master';
     // Moves
@@ -783,7 +783,7 @@ const GEN: { [gen in GenerationNum]?: GenerateFn } = {
 
     const MOVES: string[] = [];
     const PP: string[] = [];
-    const EFFECTS: { [key: string]: Set<string>} = {
+    const EFFECTS: {[key: string]: Set<string>} = {
       onBegin: new Set(),
       onEnd: new Set(),
       isSpecial: new Set(),

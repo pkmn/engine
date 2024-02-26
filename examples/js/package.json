@@ -1,15 +1,15 @@
 {
   "dependencies": {
-    "@pkmn/data": "^0.8.6",
-    "@pkmn/dex": "^0.8.6",
+    "@pkmn/data": "^0.8.8",
+    "@pkmn/dex": "^0.8.8",
     "@pkmn/engine": "file:../..",
-    "@pkmn/sets": "^5.1.0"
+    "@pkmn/sets": "^5.1.2"
   },
   "devDependencies": {
     "parcel": "^2.11.0",
     "source-map-support": "^0.5.21",
     "typescript": "^5.3.3",
-    "vite": "^5.0.12"
+    "vite": "^5.1.4"
   },
   "scripts": {
     "prestart": "tsc -p .",

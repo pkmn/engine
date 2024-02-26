@@ -7,7 +7,7 @@ const ROOT = path.join(__dirname, '..', '..');
 let ADDON: [Bindings<false>?, Bindings<true>?] | undefined = undefined;
 
 interface Bindings<T extends boolean> {
-  options: { showdown: T; log: boolean };
+  options: {showdown: T; log: boolean};
   bindings: Binding[];
 }
 

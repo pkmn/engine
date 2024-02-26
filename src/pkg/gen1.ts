@@ -489,7 +489,7 @@ export class Pokemon implements Gen1.Pokemon {
     return status === 'psn' && this.toxic ? 'tox' : status;
   }
 
-  get statusData(): { sleep: number; self: boolean; toxic: number } {
+  get statusData(): {sleep: number; self: boolean; toxic: number} {
     const sleep = this.sleep;
     return {sleep, self: !!sleep && this.ext, toxic: this.toxic};
   }

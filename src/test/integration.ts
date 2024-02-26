@@ -337,7 +337,7 @@ function symlink(from: string, to: string) {
   return to;
 }
 
-type Writeable<T> = { -readonly [P in keyof T]: T[P] };
+type Writeable<T> = {-readonly [P in keyof T]: T[P]};
 
 // Compare Pokémon Showdown vs. @pkmn/engine output, after parsing the protocol
 // and filtering out redundant messages / smoothing over any differences

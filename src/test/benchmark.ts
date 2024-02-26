@@ -130,7 +130,7 @@ class DirectBattle extends Battle {
   // Drop logs to minimize overhead
   override hint(hint: string, once?: boolean, side?: Side) { }
   override addSplit(side: SideID, secret: any[], shared?: any[]) { }
-  override add(...parts: (any | (() => { side: SideID; secret: string; shared: string }))[]) { }
+  override add(...parts: (any | (() => {side: SideID; secret: string; shared: string}))[]) { }
   override addMove(...args: any[]) { }
   override retargetLastMove(newTarget: Pokemon) { }
 
