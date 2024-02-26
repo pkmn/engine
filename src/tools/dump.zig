@@ -70,6 +70,8 @@ pub fn main() !void {
                             var inner = false;
                             inline for (e.fields) |field| {
                                 if (inner) try w.writeAll(",\n");
+                                // TODO: ziglang/zig#18888
+                                @setEvalBranchQuota(2005);
                                 try w.print("    \"{s}\"", .{field.name});
                                 inner = true;
                             }
