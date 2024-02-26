@@ -96,7 +96,7 @@ interface PlayerOptions {
 //     need to massage the teams it produces to ensure they are legal for the
 //     generation in question (fixTeam)
 //   - we can't use the ExhaustiveRunner/CoordinatedPlayerAI as Pokémon Showdown
-//     intended because its BattleStream abstract is broken by design and the
+//     intended because its BattleStream abstraction is broken by design and the
 //     data races will cause our test fail. Instead, we manually call the AI
 //     player directly and spy on its choices (which is guaranteed not to race
 //     because all calls involved are synchronous) to be able to actually commit
