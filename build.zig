@@ -84,7 +84,7 @@ pub fn build(b: *std.Build) !void {
         lib.linker_allow_shlib_undefined = true;
         maybeStrip(b, lib, b.getInstallStep(), strip, cmd);
         // Always emit to build/lib because this is where the driver code expects to find it
-        // TODO(ziglang/zig#2231): using the following used to work (though was hacky):
+        // TODO: ziglang/zig#2231 - using the following used to work (though was hacky):
         //
         //    lib.emit_bin = .{ .emit_to = b.fmt("build/lib/{s}", .{addon}) };
         //    b.getInstallStep().dependOn(&lib.step);
