@@ -60,7 +60,7 @@ const P2 = Team.unpack(
 // Logging still will not actually take place unless we also build with -Dlog!
 // If we don't run:
 //
-//   npx install-pkmn-engine -- --options='-Dshowdown -Dlog'
+//   npx install-pkmn-engine --options='-Dshowdown -Dlog'
 //
 // beforehand then we will simply run this example with the default
 // configuration (-Dshowdown) and not receive any protocol log messages.
