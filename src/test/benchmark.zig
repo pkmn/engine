@@ -16,16 +16,7 @@ pub fn main() !void {
         errorAndExit("gen", args[1], args[0]);
     if (gen < 1 or gen > 9) errorAndExit("gen", args[1], args[0]);
 
-    var arg: []u8 = args[2];
-    var warmup: ?usize = null;
-    const index = std.mem.indexOfScalar(u8, arg, '/');
-    if (index) |i| {
-        warmup = std.fmt.parseUnsigned(usize, arg[0..i], 10) catch
-            errorAndExit("warmup", args[2], args[0]);
-        if (warmup.? == 0) errorAndExit("warmup", args[2], args[0]);
-        arg = arg[(i + 1)..arg.len];
-    }
-    const battles = std.fmt.parseUnsigned(usize, arg, 10) catch
+    const battles = std.fmt.parseUnsigned(usize, args[2], 10) catch
         errorAndExit("battles", args[2], args[0]);
     if (battles == 0) errorAndExit("battles", args[2], args[0]);
 
@@ -38,25 +29,20 @@ pub fn main() !void {
         break :seed random.int(usize);
     };
 
-    try benchmark(gen, seed, battles, warmup);
+    try experiment(gen, seed, battles);
 }
 
-pub fn benchmark(gen: u8, seed: u64, battles: usize, warmup: ?usize) !void {
+pub fn experiment(gen: u8, seed: u64, battles: usize) !void {
     std.debug.assert(gen >= 1 and gen <= 9);
 
     var choices: [pkmn.CHOICES_SIZE]pkmn.Choice = undefined;
     var random = pkmn.PSRNG.init(seed);
 
-    var time: u64 = 0;
-    var turns: usize = 0;
+    var results = [_]usize{0, 0, 0};
 
     var i: usize = 0;
-    const w = warmup orelse 0;
-    const num = battles + w;
-    while (i < num) : (i += 1) {
-        if (warmup != null and i == w) random = pkmn.PSRNG.init(seed);
-
-        const opt = .{ .cleric = showdown, .block = showdown };
+    while (i < battles) : (i += 1) {
+        const opt = .{ .cleric = true, .block = false };
         var battle = switch (gen) {
             1 => pkmn.gen1.helpers.Battle.random(&random, opt),
             else => unreachable,
@@ -66,16 +52,11 @@ pub fn benchmark(gen: u8, seed: u64, battles: usize, warmup: ?usize) !void {
             else => unreachable,
         };
 
-        std.debug.assert(!showdown or battle.side(.P1).get(1).hp > 0);
-        std.debug.assert(!showdown or battle.side(.P2).get(1).hp > 0);
-
         var c1 = pkmn.Choice{};
         var c2 = pkmn.Choice{};
 
         var p1 = pkmn.PSRNG.init(random.newSeed());
         var p2 = pkmn.PSRNG.init(random.newSeed());
-
-        var timer = try std.time.Timer.start();
 
         var result = try battle.update(c1, c2, &options);
         while (result.type == .None) : (result = try battle.update(c1, c2, &options)) {
@@ -87,17 +68,12 @@ pub fn benchmark(gen: u8, seed: u64, battles: usize, warmup: ?usize) !void {
             c2 = choices[p2.range(u8, 0, n)];
         }
 
-        const t = timer.read();
         std.debug.assert(!showdown or result.type != .Error);
-
-        if (i >= w) {
-            time += t;
-            turns += battle.turn;
-        }
+        results[@intFromEnum(result.type) - 1] += 1;
     }
 
     var out = std.io.getStdOut().writer();
-    try out.print("{d},{d},{d}\n", .{ time, turns, random.src.seed });
+    try out.print("P1:{d} P2:{d} (T:{d})\n", .{results[0], results[1], results[2]});
 }
 
 fn errorAndExit(msg: []const u8, arg: []const u8, cmd: []const u8) noreturn {
