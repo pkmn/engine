@@ -211,13 +211,11 @@ function play(
     const battle = engine.Battle.create(gen, options);
     const log = new engine.Log(gen, engine.Lookup.get(gen), options);
 
-    let start = true;
     let result = engine.Result.decode(0);
     do {
-      if (start) {
+      if (!control.started) {
         control.setPlayer('p1', p1options.spec);
         control.setPlayer('p2', p2options.spec);
-        start = false;
       } else {
         control.makeChoices(adjust(engine.Choice.format(c1)), adjust(engine.Choice.format(c2)));
         if (gen.num === 1 && problematic(control)) return;
