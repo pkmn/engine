@@ -38,42 +38,55 @@ pub fn experiment(gen: u8, seed: u64, battles: usize) !void {
     var choices: [pkmn.CHOICES_SIZE]pkmn.Choice = undefined;
     var random = pkmn.PSRNG.init(seed);
 
-    var results = [_]usize{0, 0, 0};
+    for (0..101) |chance| {
+        var results = [_]usize{0, 0, 0};
 
-    var i: usize = 0;
-    while (i < battles) : (i += 1) {
-        const opt = .{ .cleric = true, .block = false };
-        var battle = switch (gen) {
-            1 => pkmn.gen1.helpers.Battle.random(&random, opt),
-            else => unreachable,
-        };
-        var options = switch (gen) {
-            1 => pkmn.gen1.NULL,
-            else => unreachable,
-        };
+        var i: usize = 0;
+        while (i < battles) : (i += 1) {
+            const opt = .{ .cleric = true, .block = false };
+            var battle = switch (gen) {
+                1 => pkmn.gen1.helpers.Battle.random(&random, opt),
+                else => unreachable,
+            };
+            var options = switch (gen) {
+                1 => pkmn.gen1.NULL,
+                else => unreachable,
+            };
 
-        var c1 = pkmn.Choice{};
-        var c2 = pkmn.Choice{};
+            var c1 = pkmn.Choice{};
+            var c2 = pkmn.Choice{};
 
-        var p1 = pkmn.PSRNG.init(random.newSeed());
-        var p2 = pkmn.PSRNG.init(random.newSeed());
+            var p1 = pkmn.PSRNG.init(random.newSeed());
+            var p2 = pkmn.PSRNG.init(random.newSeed());
 
-        var result = try battle.update(c1, c2, &options);
-        while (result.type == .None) : (result = try battle.update(c1, c2, &options)) {
-            var n = battle.choices(.P1, result.p1, &choices);
-            if (n == 0) break;
-            c1 = choices[p1.range(u8, 0, n)];
-            n = battle.choices(.P2, result.p2, &choices);
-            if (n == 0) break;
-            c2 = choices[p2.range(u8, 0, n)];
+            var result = try battle.update(c1, c2, &options);
+            while (result.type == .None) : (result = try battle.update(c1, c2, &options)) {
+                var n = battle.choices(.P1, result.p1, &choices);
+                if (n == 0) break;
+                c1 = choose(&p1, choices[0..n], 0);
+                n = battle.choices(.P2, result.p2, &choices);
+                if (n == 0) break;
+                c2 = choose(&p2, choices[0..n], @intCast(chance));
+            }
+
+            std.debug.assert(!showdown or result.type != .Error);
+            results[@intFromEnum(result.type) - 1] += 1;
         }
 
-        std.debug.assert(!showdown or result.type != .Error);
-        results[@intFromEnum(result.type) - 1] += 1;
+        var out = std.io.getStdOut().writer();
+        try out.print("{d},{d},{d},{d}\n", .{chance,results[0], results[1], results[2]});
     }
+}
 
-    var out = std.io.getStdOut().writer();
-    try out.print("P1:{d} P2:{d} (T:{d})\n", .{results[0], results[1], results[2]});
+fn choose(rng: *pkmn.PSRNG, choices: []pkmn.Choice, chance: u8) pkmn.Choice {
+    std.debug.assert(chance <= 100);
+    if (!rng.chance(u8, chance, 100)) return choices[rng.range(u8, 0, @intCast(choices.len))];
+    var i: u8 = 0;
+    for (choices) |choice| {
+        if (choice.type == .Move) break;
+        i += 1;
+    }
+    return choices[rng.range(u8, if (i == choices.len) 0 else i, @intCast(choices.len))];
 }
 
 fn errorAndExit(msg: []const u8, arg: []const u8, cmd: []const u8) noreturn {
