@@ -31,7 +31,6 @@
     "build/test/display.js",
     "build/tools/debug.js.map",
     "build/tools/debug.js",
-    "src/bin/install-pkmn-engine",
     "src/lib/common/battle.zig",
     "src/lib/common/data.zig",
     "src/lib/common/debug.zig",
