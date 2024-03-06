@@ -66,6 +66,10 @@ pub const PSRNG = extern struct {
             (@as(u64, self.range(u16, 0, 0x10000)) << 16) |
             (@as(u64, self.range(u16, 0, 0x10000)));
     }
+
+    pub fn Bound(comptime T: type) type {
+        return std.math.IntFittingRange(0, std.math.maxInt(T) + 1);
+    }
 };
 
 test PSRNG {
@@ -197,7 +201,7 @@ pub fn FixedRNG(comptime gen: comptime_int, comptime len: usize) type {
             for (0..n) |_| _ = self.next();
         }
 
-        pub fn range(self: *Self, comptime T: type, from: T, to: Bound(T)) T {
+        pub fn range(self: *Self, comptime T: type, from: T, to: PSRNG.Bound(T)) T {
             assert(showdown);
             return @intCast(@as(u64, self.next()) * (to - from) / divisor + from);
         }
@@ -206,7 +210,7 @@ pub fn FixedRNG(comptime gen: comptime_int, comptime len: usize) type {
             self: *Self,
             comptime T: type,
             numerator: T,
-            denominator: Bound(T),
+            denominator: PSRNG.Bound(T),
         ) bool {
             assert(showdown);
             assert(denominator > 0);
@@ -236,8 +240,4 @@ fn Output(comptime gen: comptime_int) type {
         5, 6 => u32,
         else => unreachable,
     };
-}
-
-fn Bound(comptime T: type) type {
-    return std.math.IntFittingRange(0, std.math.maxInt(T) + 1);
 }
