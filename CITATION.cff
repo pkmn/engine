@@ -15,5 +15,5 @@ abstract: >-
   performance and designed for tooling, embedded systems, and artificial
   intelligence use cases. This engine aims to be a frame-accurate and
   bug-for-bug compatible implementation of both Pokémon battles as defined by
-  the original game code and the Pokémon Showdown1 simulator which represents
+  the original game code and the Pokémon Showdown simulator which represents
   Pokémon battling as practically interpreted online.
