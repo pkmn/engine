@@ -294,7 +294,6 @@ const TestStep = struct {
 
     pub fn create(b: *std.Build, options: *std.Build.Step.Options, config: Config) *TestStep {
         const coverage = b.option([]const u8, "test-coverage", "Generate test coverage");
-        const test_file = b.option([]const u8, "test-file", "Input file for test");
         const test_filter =
             b.option([]const u8, "test-filter", "Skip tests that do not match filter");
 
@@ -302,13 +301,8 @@ const TestStep = struct {
         const step = std.Build.Step.init(.{ .id = .custom, .name = "Run all tests", .owner = b });
         self.* = .{ .step = step, .build = test_filter == null };
 
-        const path = test_file orelse "src/lib/test.zig";
         const tests = b.addTest(.{
-            .name = b.fmt("{s}-{s}", .{
-                std.fs.path.basename(std.fs.path.dirname(path).?),
-                std.fs.path.stem(std.fs.path.basename(path)),
-            }),
-            .root_source_file = .{ .path = path },
+            .root_source_file = .{ .path = "src/lib/test.zig" },
             .optimize = config.optimize,
             .target = config.target,
             .filter = test_filter,

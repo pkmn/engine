@@ -148,7 +148,7 @@ patch:
 
 .PHONY: t
 t:
-	zig build --summary all test -Dlog -Dchance -Dcalc -Dtest-file=src/lib/gen$(gen)/test.zig -Dtest-filter="$(filter)" $(opt)
+	zig build --summary all test -Dlog -Dchance -Dcalc -Dtest-filter="$(filter)" $(opt)
 
 .PHONY: it
 it:
