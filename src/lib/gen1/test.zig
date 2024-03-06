@@ -10072,6 +10072,143 @@ test "MAX_LOGS" {
     try expectLog(&expected_buf, &actual_buf);
 }
 
+test "RNG overrides" {
+    const Random = extern struct {
+        state: u8 = 0,
+
+        pub fn speedTie(_: @This()) bool {
+            return true;
+        }
+
+        pub fn criticalHit(_: @This(), _: Player, _: u8) bool {
+            return false;
+        }
+
+        pub fn damage(_: @This(), _: Player) u8 {
+            return 239;
+        }
+
+        pub fn hit(_: @This(), _: Player, _: u8) bool {
+            return true;
+        }
+
+        pub fn confused(_: @This(), _: Player) bool {
+            return false;
+        }
+
+        pub fn paralyzed(_: @This(), _: Player) bool {
+            return false;
+        }
+
+        pub fn secondaryChance(_: @This(), _: Player, _: u8) bool {
+            return true;
+        }
+
+        pub fn metronome(random: @This(), player: Player) Move {
+            if (random.state == 0) {
+                return if (player == .P1) Move.Psybeam else Move.Sludge;
+            } else {
+                return if (player == .P1) Move.Psychic else Move.Thrash;
+            }
+        }
+
+        pub fn psywave(_: @This(), _: Player) u8 {
+            return 1;
+        }
+
+        pub fn sleepDuration(_: @This(), _: Player) u3 {
+            return 1;
+        }
+
+        pub fn disableDuration(_: @This(), _: Player) u4 {
+            return 1;
+        }
+
+        pub fn confusionDuration(_: @This(), _: Player, _: bool) u3 {
+            return 2;
+        }
+
+        // pub fn attackingDuration(_: @This(), _: Player, _: bool) u3 {
+        //     return 3;
+        // }
+
+        pub fn distribution(_: @This(), _: Player) u3 {
+            return 2;
+        }
+
+        pub fn moveSlot(_: @This(), _: Player, _: []data.MoveSlot, _: u4) u4 {
+            return 2;
+        }
+
+        pub fn next(_: @This()) u8 {
+            unreachable;
+        }
+    };
+    var battle: data.Battle(Random) = .{
+        .rng = .{},
+        .sides = .{
+            helpers.Side.init(&.{.{
+                .species = .Chansey,
+                .moves = &.{ .Spore, .Metronome, .ThunderShock, .Disable },
+            }}),
+            helpers.Side.init(&.{.{
+                .species = .Chansey,
+                .moves = &.{ .Metronome, .Psywave, .Clamp },
+            }}),
+        },
+    };
+
+    try expectEqual(Result.Default, try battle.update(.{}, .{}, &NULL));
+
+    var copy = battle;
+    // var p1 = copy.side(.P1);
+    var p2 = copy.side(.P2);
+
+    var expected_buf: [data.MAX_LOGS]u8 = undefined;
+    var actual_buf: [data.MAX_LOGS]u8 = undefined;
+
+    var expected_stream: ByteStream = .{ .buffer = &expected_buf };
+    var actual_stream: ByteStream = .{ .buffer = &actual_buf };
+
+    const expected: FixedLog = .{ .writer = expected_stream.writer() };
+    const actual: FixedLog = .{ .writer = actual_stream.writer() };
+
+    var options = pkmn.battle.options(actual, chance.NULL, calc.NULL);
+
+    try expectEqual(Result.Default, try battle.update(move(1), move(1), &options));
+    try expected.move(.{ P1.ident(1), Move.Spore, P2.ident(1) });
+    p2.get(1).status = Status.slp(1);
+    try expected.status(.{ P2.ident(1), p2.get(1).status, .From, Move.Spore });
+    try expected.curestatus(.{ P2.ident(1), p2.get(1).status, .Message });
+    try expected.turn(.{2});
+
+    try expectLog(&expected_buf, &actual_buf);
+    expected_stream.reset();
+    actual_stream.reset();
+
+    // FIXME damage
+
+    try expectEqual(Result.Default, try battle.update(move(2), move(1), &options));
+    try expected.move(.{ P1.ident(1), Move.Metronome, P1.ident(1) });
+    try expected.move(.{ P1.ident(1), Move.Psybeam, P2.ident(1), Move.Metronome });
+    try expected.start(.{ P2.ident(1), .Confusion });
+    try expected.activate(.{ P2.ident(1), .Confusion });
+    try expected.move(.{ P2.ident(1), Move.Metronome, P2.ident(1) });
+    try expected.move(.{ P2.ident(1), Move.Sludge, P1.ident(1), Move.Metronome });
+
+    try expectLog(&expected_buf, &actual_buf);
+    expected_stream.reset();
+    actual_stream.reset();
+
+    battle.rng.state += 1;
+
+    try expectEqual(Result.Default, try battle.update(move(3), move(2), &options));
+
+    try expectEqual(Result.Default, try battle.update(move(4), move(3), &options));
+
+    // try expectEqual(Result.Default, try battle.update(move(2), move(1), &NULL));
+}
+
 test "transitions" {
     if (!pkmn.options.calc or !pkmn.options.chance) return error.SkipZigTest;
 
