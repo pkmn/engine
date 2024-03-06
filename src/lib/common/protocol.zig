@@ -1202,14 +1202,11 @@ pub fn expectLog(
 ) !void {
     if (!enabled) return;
 
-    const color = color: {
-        if (std.process.hasEnvVarConstant("ZIG_DEBUG_COLOR")) {
-            break :color true;
-        } else if (std.process.hasEnvVarConstant("NO_COLOR")) {
-            break :color false;
-        } else {
-            break :color std.io.getStdErr().supportsAnsiEscapeCodes();
-        }
+    const color = if (std.process.hasEnvVarConstant("ZIG_DEBUG_COLOR"))
+        true
+    else switch (std.io.tty.detectConfig(std.io.getStdErr())) {
+        .escape_codes => true,
+        else => false,
     };
 
     expectEqualBytes(expected, actual, offset) catch |err| switch (err) {
