@@ -136,6 +136,8 @@ TODO
 - [Pokemon Online](https://github.com/po-devs/pokemon-online) documentation
   ([RBY](https://raw.githubusercontent.com/po-devs/pokemon-online/master/bin/database/rby-stuff.txt))
 - [PokemonLab / Shoddy Battle](https://github.com/cathyjf/PokemonLab)
+- [poke-engine](https://github.com/SirSkaro/poke-engine)
+- [Pokemon Battle Simulator](https://github.com/hiimvincent/poke-battle-sim)
 - [PokeSim](https://github.com/aed3/poke-sim)
 
 ### RNG
