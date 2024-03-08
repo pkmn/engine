@@ -124,7 +124,7 @@ const bootstrap = (
     const sampled = [];
     const length = arr.length;
     for (let i = 0; i < n; i++) {
-      sampled.push(arr[random!(0, length)]);
+      sampled.push(arr[random(0, length)]);
     }
     return sampled;
   };

@@ -6391,7 +6391,7 @@ describe('Gen 2', () => {
   });
 
   test('Conversion2 effect', () => {
-    const proc = {key: 'data/moves.ts:2893:28', value: MAX};
+    const proc = {key: 'data/moves.ts:2921:28', value: MAX};
     const battle = startBattle([QKC, proc, QKC], [
       {species: 'Porygon2', evs, moves: ['Conversion2']},
     ], [
@@ -7811,7 +7811,7 @@ describe('Gen 2', () => {
   });
 
   test('Attract effect', () => {
-    const can = {key: 'data/moves.ts:735:14', value: MAX};
+    const can = {key: 'data/moves.ts:763:14', value: MAX};
     const cant = {...can, value: MIN};
     const battle = startBattle([QKC, QKC, QKC, QKC, QKC, cant, QKC, can, QKC, QKC], [
       {species: 'Smoochum', evs, moves: ['Attract', 'Splash']},
@@ -8123,7 +8123,7 @@ describe('Gen 2', () => {
   });
 
   test('Present effect', () => {
-    const present = {key: 'data/moves.ts:14397:22', value: ranged(1, 10) - 1};
+    const present = {key: 'data/moves.ts:14425:22', value: ranged(1, 10) - 1};
     const present40 = {...present, value: ranged(6, 10) - 1};
     const present120 = {...present, value: ranged(10, 10) - 1};
     const battle = startBattle([
@@ -8330,7 +8330,7 @@ describe('Gen 2', () => {
   });
 
   test('Magnitude effect', () => {
-    const mag8 = {key: 'data/moves.ts:11248:19', value: ranged(85, 100) - 1};
+    const mag8 = {key: 'data/moves.ts:11276:19', value: ranged(85, 100) - 1};
     const mag5 = {...mag8, value: ranged(15, 100) - 1};
     const battle = startBattle([
       QKC, mag8, NO_CRIT, MIN_DMG, QKC, mag5, NO_CRIT, MIN_DMG, NO_CRIT, MIN_DMG, QKC,
