@@ -1091,7 +1091,7 @@ pub const Species = enum(u8) {
     /// The number of Pokémon species in this generation.
     pub const size = 151;
 
-    /// The Pokémon's critical hit rate=io out of 256.
+    /// The Pokémon's critical hit ratio out of 256.
     pub fn chance(id: Species) u8 {
         assert(id != .None);
         return CHANCES[@intFromEnum(id) - 1];
