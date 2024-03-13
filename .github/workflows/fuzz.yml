@@ -19,7 +19,7 @@ jobs:
         options: ['', '-Dshowdown']
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: goto-bus-stop/setup-zig@v2
       - run: npm install --ignore-scripts
       - run: zig build -Doptimize=ReleaseSafe -Dlog -Dchance -Dcalc ${{matrix.options}} fuzz -- ${{matrix.gen}} 15m | tee seed.txt
@@ -32,7 +32,7 @@ jobs:
           node src/bin/install-pkmn-engine --options="-Dshowdown -Dlog -Dchance -Dcalc"
           npm run integration -- --gen=${{matrix.gen}} --duration=15m --maxFailures=5 --debug=false
         if: ${{ matrix.options != '' }}
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         if: failure()
         with:
           name: logs
