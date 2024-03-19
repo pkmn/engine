@@ -158,8 +158,8 @@ function residualEvent(this: Battle, eventid: string, relayVar?: any) {
 // *correct* way. eg. instead of assigning "priorities" to no-op handlers, the
 // handlers in question should be removed entirely (which can be accomplished by
 // disabling inheritance or setting them to `null`). Similarly, in many places
-// order should be used
-// instead, or multiple other conditions should be changed as opposed to the ones chosen here etc.
+// order should be used instead, or multiple other conditions should be changed
+// as opposed to the ones chosen here etc.
 export const patch = {
   generation: (gen: Generation) => {
     // Add priorities to mods to avoid speed ties - ordering is arbitrary
