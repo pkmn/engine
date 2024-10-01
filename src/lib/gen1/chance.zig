@@ -130,11 +130,13 @@ pub fn Observation(comptime field: Duration.Field) type {
             started,
             continuing,
             ended,
-            // TODO haze support
-            unused1,
-            unused2,
-            unused3,
-            unused4,
+            started,`
+            continuing,
+            ended,
+            unused,
+            haze_started,
+            haze_continuing,
+            haze_ended,
         },
         .confusion => enum(u4) {
             started,
@@ -146,11 +148,10 @@ pub fn Observation(comptime field: Duration.Field) type {
             /// point of view based solely on public information extra work must be done to correct
             /// for the information leak
             overwritten,
-            // TODO haze support
-            unused1,
-            unused2,
-            unused3,
-            unused4,
+            haze_started,
+            haze_continuing,
+            haze_ended,
+            haze_overwritten,
         },
     };
 }
