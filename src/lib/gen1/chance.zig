@@ -119,6 +119,7 @@ test Actions {
 }
 
 /// Observation made about a duration - whether the duration has started, been continued, or ended.
+/// TODO expand regarding haze
 pub fn Observation(comptime field: Duration.Field) type {
     return switch (field) {
         .attacking, .binding => enum(u2) {
@@ -130,7 +131,7 @@ pub fn Observation(comptime field: Duration.Field) type {
             started,
             continuing,
             ended,
-            started,`
+            started,
             continuing,
             ended,
             unused,
@@ -154,6 +155,37 @@ pub fn Observation(comptime field: Duration.Field) type {
             haze_overwritten,
         },
     };
+}
+
+pub fn haze(obs: anytype) @TypeOf(obs) {
+    return @enumFromInt(@intFromEnum(obs) + 4);
+}
+
+test haze {
+    try expectEqual(Observation(.sleep).haze_started, haze(Observation(.sleep).started));
+    try expectEqual(Observation(.disable).haze_continuing, haze(Observation(.disable).continuing));
+    try expectEqual(Observation(.sleep).haze_ended, haze(Observation(.sleep).ended));
+    try expectEqual(
+        Optional(Observation(.confusion)).haze_overwritten,
+        haze(Optional(Observation(.confusion)).overwritten),
+    );
+}
+
+pub fn unhaze(obs: anytype) @TypeOf(obs) {
+    return @enumFromInt(@intFromEnum(obs) - 4);
+}
+
+test unhaze {
+    try expectEqual(Observation(.sleep).started, unhaze(Observation(.sleep).haze_started));
+    try expectEqual(
+        Optional(Observation(.disable)).continuing,
+        unhaze(Optional(Observation(.disable)).haze_continuing),
+    );
+    try expectEqual(Observation(.sleep).ended, unhaze(Observation(.sleep).haze_ended));
+    try expectEqual(
+        Observation(.confusion).overwritten,
+        unhaze(Observation(.confusion).haze_overwritten),
+    );
 }
 
 /// Information about the RNG that was observed during a Generation I battle `update` for a
