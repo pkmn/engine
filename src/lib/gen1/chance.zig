@@ -632,6 +632,15 @@ pub fn Chance(comptime Rational: type) type {
             }
         }
 
+        pub fn haze(self: *Self, comptime field: Action.Field, player: Player, who: Player) void {
+            if (player == who) return self.observe(field, who, .None);
+            // const a = self.actions.get(who);
+            // const val = @field(a, @tagName(field));
+            // if (val == .None) return;
+            // @field(a, @tagName(field)) = @enumFromInt(@intFromEnum(val) + 4);
+            return self.observe(field, who, .None);
+        }
+
         pub fn sleep(self: *Self, player: Player, obs: Optional(Observation(.sleep))) Error!void {
             if (!enabled) return;
 
@@ -1202,6 +1211,10 @@ const Null = struct {
         obs: Optional(Observation(.confusion)),
     ) void {
         _ = .{ self, field, player, obs };
+    }
+
+    pub fn haze(self: Null, comptime field: Action.Field, player: Player, who: Player) void {
+        _ = .{ self, field, player, who };
     }
 
     pub fn sleep(self: Null, player: Player, obs: Optional(Observation(.sleep))) Error!void {

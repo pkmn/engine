@@ -2060,24 +2060,24 @@ pub const Effects = struct {
                 if (p != player and Status.any(s.stored().status)) {
                     try log.curestatus(.{ foe_ident, foe_stored.status, .Silent });
                     s.stored().status = 0;
-                    options.chance.observe(.sleep, p, .None);
+                    options.chance.haze(.sleep, player, p);
                 } else if (showdown and s.stored().status == Status.TOX) {
                     s.stored().status = Status.init(.PSN);
                     try log.status(.{ battle.active(p), s.stored().status, .None });
                 }
-                try clearVolatiles(battle, p, options);
+                try clearVolatiles(battle, player, p, options);
             }
         } else {
             if (Status.any(foe_stored.status)) {
                 if (Status.is(foe_stored.status, .FRZ) or Status.is(foe_stored.status, .SLP)) {
                     foe.last_selected_move = .SKIP_TURN;
-                    options.chance.observe(.sleep, player.foe(), .None);
+                    options.chance.haze(.sleep, player, player.foe());
                 }
                 try log.curestatus(.{ foe_ident, foe_stored.status, .Silent });
                 foe_stored.status = 0;
             }
-            try clearVolatiles(battle, player, options);
-            try clearVolatiles(battle, player.foe(), options);
+            try clearVolatiles(battle, player, player, options);
+            try clearVolatiles(battle, player, player.foe(), options);
         }
     }
 
@@ -2708,7 +2708,7 @@ fn isForced(active: anytype) bool {
         active.volatiles.Thrashing or active.volatiles.Charging;
 }
 
-fn clearVolatiles(battle: anytype, who: Player, options: anytype) !void {
+fn clearVolatiles(battle: anytype, player: Player, who: Player, options: anytype) !void {
     var log = options.log;
     var side = battle.side(who);
     var volatiles = &side.active.volatiles;
@@ -2717,13 +2717,13 @@ fn clearVolatiles(battle: anytype, who: Player, options: anytype) !void {
     if (volatiles.disable_move != 0) {
         volatiles.disable_move = 0;
         volatiles.disable_duration = 0;
-        options.chance.observe(.disable, who, .None);
+        options.chance.haze(.disable, player, who);
         try log.end(.{ ident, .DisableSilent });
     }
     if (volatiles.Confusion) {
         // volatiles.confusion is left unchanged
         volatiles.Confusion = false;
-        options.chance.observe(.confusion, who, .None);
+        options.chance.haze(.confusion, player, who);
         try log.end(.{ ident, .ConfusionSilent });
     }
     if (volatiles.Mist) {
