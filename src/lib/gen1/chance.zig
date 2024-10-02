@@ -131,9 +131,6 @@ pub fn Observation(comptime field: Duration.Field) type {
             started,
             continuing,
             ended,
-            started,
-            continuing,
-            ended,
             unused,
             haze_started,
             haze_continuing,
@@ -172,14 +169,16 @@ test haze {
 }
 
 pub fn unhaze(obs: anytype) @TypeOf(obs) {
-    return @enumFromInt(@intFromEnum(obs) - 4);
+    assert(@intFromEnum(@field(@TypeOf(obs), "started")) == 0);
+    return @enumFromInt(@as(u4, @intCast(0b1011 & @as(u4, @intFromEnum(obs)))));
 }
 
 test unhaze {
+    try expectEqual(Observation(.sleep).started, unhaze(Observation(.sleep).started));
     try expectEqual(Observation(.sleep).started, unhaze(Observation(.sleep).haze_started));
     try expectEqual(
-        Optional(Observation(.disable)).continuing,
-        unhaze(Optional(Observation(.disable)).haze_continuing),
+        Observation(.disable).continuing,
+        unhaze(Observation(.disable).haze_continuing),
     );
     try expectEqual(Observation(.sleep).ended, unhaze(Observation(.sleep).haze_ended));
     try expectEqual(
