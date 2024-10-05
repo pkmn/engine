@@ -28,7 +28,7 @@
 # linked. Some documentation suggests that GCC requires the static library to be
 # named libpkmn.a instead of pkmn.lib, but the latter seems to work fine.
 
-ROOT=../../build
+ROOT=../../zig-out
 CFLAGS = -Wall -Wextra -pedantic -std=c99 -I$(ROOT)/include
 
 suffix ?= $(if $(findstring showdown,$(options)),-showdown,)

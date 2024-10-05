@@ -33,14 +33,12 @@ extern "C" {
 #include <stddef.h>
 #include <stdint.h>
 
-#ifndef float64_t
 #if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 201112L
 #include <assert.h>
 #include <limits.h>
 static_assert(sizeof(double) * CHAR_BIT == 64, "libpkmn requires IEEE 754 64-bit doubles");
 #endif
-#define float64_t double
-#endif
+typedef double float64_t;
 
 /**
  * Defines an opaque pkmn type. These are given a size so that they may be
