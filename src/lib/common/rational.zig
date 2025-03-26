@@ -304,13 +304,6 @@ fn reduce_(r: anytype) void {
     assert(r.q >= 1);
 }
 
-fn cross_product(comptime T: type, r: anytype, s: anytype) !struct { ab: T, dc: T } {
-    return .{
-        .ab = try std.math.mul(T, r.p, s.p),
-        .dc = try std.math.mul(T, r.q, s.q),
-    };
-}
-
 fn multiplication(comptime T: type, r: anytype, p: anytype, q: anytype) !void {
     r.p = try std.math.mul(T, r.p, p);
     r.q = try std.math.mul(T, r.q, q);
