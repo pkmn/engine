@@ -68,6 +68,11 @@ pub fn Rational(comptime T: type) type {
             return mul_(T, o, r, s);
         }
 
+        /// Compares two rationals using the identity (a/b) > (c/d) => ad > bc
+        pub fn cmp(r: *Self, s: anytype) Error!std.math.Order {
+            return cmp_(T, o, r, s);
+        }
+
         /// Normalize the rational by reducing by the greatest common divisor.
         pub fn reduce(r: *Self) void {
             reduce_(r);
@@ -113,6 +118,11 @@ pub fn Rational(comptime T: type) type {
         /// Multiplies two rationals.
         pub fn mul(r: *Self, s: anytype) Error!void {
             return mul_(T, o, r, s);
+        }
+
+        /// Compares two rationals using the identity (a/b) > (c/d) => ad > bc
+        pub fn cmp(r: *Self, s: anytype) Error!std.math.Order {
+            return cmp_(T, o, r, s);
         }
 
         /// Normalize the rational by reducing by the greatest common divisor.
@@ -247,6 +257,39 @@ fn mul_(comptime T: type, comptime o: comptime_int, r: anytype, s: anytype) !voi
     }
 }
 
+fn cmp_(comptime T: type, comptime o: comptime_int, r: anytype, s: anytype) !std.math.Order {
+    switch (@typeInfo(T)) {
+        Int => {
+            const ab = std.math.mul(T, r.p, s.q) catch |err| switch (err) {
+                error.Overflow => blk: {
+                    r.reduce();
+                    s.reduce();
+                    break :blk std.math.mul(T, r.p, s.q) catch unreachable;
+                },
+            };
+            const dc = std.math.mul(T, r.q, s.p) catch unreachable;
+
+            return std.math.order(ab, dc);
+        },
+        Float => {
+            if (r.q > o or r.p > o) r.reduce();
+            if (s.q > o or s.p > o) s.reduce();
+
+            const ab = std.math.mul(T, r.p, s.q) catch |err| switch (err) {
+                error.Overflow => blk: {
+                    r.reduce();
+                    s.reduce();
+                    break :blk std.math.mul(T, r.p, s.q) catch unreachable;
+                },
+            };
+            const dc = std.math.mul(T, r.q, s.p) catch unreachable;
+
+            return std.math.order(ab, dc);
+        },
+        else => unreachable,
+    }
+}
+
 fn reduce_(r: anytype) void {
     const d = gcd(r.p, r.q);
     if (d == 1) return;
@@ -259,6 +302,13 @@ fn reduce_(r: anytype) void {
 
     assert(r.p >= 1);
     assert(r.q >= 1);
+}
+
+fn cross_product(comptime T: type, r: anytype, s: anytype) !struct { ab: T, dc: T } {
+    return .{
+        .ab = try std.math.mul(T, r.p, s.p),
+        .dc = try std.math.mul(T, r.q, s.q),
+    };
 }
 
 fn multiplication(comptime T: type, r: anytype, p: anytype, q: anytype) !void {
@@ -388,6 +438,23 @@ test Rational {
         try r.add(&s);
         r.reduce();
         try expectEqual(Rational(t){ .p = 71, .q = 78 }, r);
+
+        var h = Rational(t){ .p = 3, .q = 5 };
+        // Same Denominator
+        var cmptr = Rational(t){ .p = 2, .q = 5 };
+        try expectEqual(h.cmp(&cmptr), .lt);
+        cmptr = Rational(t){ .p = 4, .q = 5 };
+        try expectEqual(h.cmp(&cmptr), .gt);
+
+        // Same Numerator
+        cmptr = Rational(t){ .p = 3, .q = 6 };
+        try expectEqual(h.cmp(&cmptr), .lt);
+        cmptr = Rational(t){ .p = 3, .q = 4 };
+        try expectEqual(h.cmp(&cmptr), .gt);
+
+        try doTurn(&h);
+        cmptr = Rational(t){ .p = 4567216874, .q = 89124781931234 };
+        try expectEqual(h.cmp(&cmptr), .lt);
     }
 }
 
