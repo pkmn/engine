@@ -23,10 +23,10 @@ pub fn Rational(comptime T: type) type {
     // instead start reducing when we get sufficiently close to the limit of the mantissa
     // (in our domain we expect updates to involve numbers < 2**10, so we should be safe
     // not reducing before we are 2**10 away from "overflowing" the mantissa)
-    const o = if (@typeInfo(T) == Float)
-        std.math.pow(T, 2, std.math.floatMantissaBits(T) - 10)
-    else
-        0;
+    const o = if (@typeInfo(T) == Float) blk: {
+        @setEvalBranchQuota(1500);
+        break :blk std.math.pow(T, 2, std.math.floatMantissaBits(T) - 10);
+    } else 0;
 
     const Err = switch (@typeInfo(T)) {
         Int => error{Overflow},
@@ -260,31 +260,28 @@ fn mul_(comptime T: type, comptime o: comptime_int, r: anytype, s: anytype) !voi
 fn cmp_(comptime T: type, comptime o: comptime_int, r: anytype, s: anytype) !std.math.Order {
     switch (@typeInfo(T)) {
         Int => {
-            const ab = std.math.mul(T, r.p, s.q) catch |err| switch (err) {
-                error.Overflow => blk: {
-                    r.reduce();
-                    s.reduce();
-                    break :blk std.math.mul(T, r.p, s.q) catch unreachable;
-                },
-            };
-            const dc = std.math.mul(T, r.q, s.p) catch unreachable;
+            r.reduce();
+            s.reduce();
 
-            return std.math.order(ab, dc);
+            const ad = std.math.mul(T, r.p, s.q) catch |err| switch (err) {
+                error.Overflow => return error.Overflow,
+                else => unreachable,
+            };
+            const bc = std.math.mul(T, r.q, s.p) catch |err| switch (err) {
+                error.Overflow => return error.Overflow,
+                else => unreachable,
+            };
+
+            return std.math.order(ad, bc);
         },
         Float => {
             if (r.q > o or r.p > o) r.reduce();
             if (s.q > o or s.p > o) s.reduce();
 
-            const ab = std.math.mul(T, r.p, s.q) catch |err| switch (err) {
-                error.Overflow => blk: {
-                    r.reduce();
-                    s.reduce();
-                    break :blk std.math.mul(T, r.p, s.q) catch unreachable;
-                },
-            };
-            const dc = std.math.mul(T, r.q, s.p) catch unreachable;
+            const ad: T = r.p * s.q;
+            const bc: T = r.q * s.p;
 
-            return std.math.order(ab, dc);
+            return std.math.order(ad, bc);
         },
         else => unreachable,
     }
@@ -435,19 +432,23 @@ test Rational {
         var h = Rational(t){ .p = 3, .q = 5 };
         // Same Denominator
         var cmptr = Rational(t){ .p = 2, .q = 5 };
-        try expectEqual(h.cmp(&cmptr), .lt);
-        cmptr = Rational(t){ .p = 4, .q = 5 };
         try expectEqual(h.cmp(&cmptr), .gt);
+        cmptr = Rational(t){ .p = 4, .q = 5 };
+        try expectEqual(h.cmp(&cmptr), .lt);
 
         // Same Numerator
         cmptr = Rational(t){ .p = 3, .q = 6 };
-        try expectEqual(h.cmp(&cmptr), .lt);
-        cmptr = Rational(t){ .p = 3, .q = 4 };
         try expectEqual(h.cmp(&cmptr), .gt);
+        cmptr = Rational(t){ .p = 3, .q = 4 };
+        try expectEqual(h.cmp(&cmptr), .lt);
 
         try doTurn(&h);
         cmptr = Rational(t){ .p = 4567216874, .q = 89124781931234 };
-        try expectEqual(h.cmp(&cmptr), .lt);
+        if (t == u64) {
+            try expectEqual(h.cmp(&cmptr), error.Overflow);
+        } else {
+            try expectEqual(h.cmp(&cmptr), .lt);
+        }
     }
 }
 
