@@ -23,9 +23,10 @@ pub fn Rational(comptime T: type) type {
     // instead start reducing when we get sufficiently close to the limit of the mantissa
     // (in our domain we expect updates to involve numbers < 2**10, so we should be safe
     // not reducing before we are 2**10 away from "overflowing" the mantissa)
-    const o = if (@typeInfo(T) == Float) blk: {
-        break :blk std.math.pow(T, 2, std.math.floatMantissaBits(T) - 10);
-    } else 0;
+    const o = if (@typeInfo(T) == Float)
+        std.math.pow(T, 2, std.math.floatMantissaBits(T) - 10)
+    else
+        0;
 
     const Err = switch (@typeInfo(T)) {
         Int => error{Overflow},
@@ -263,11 +264,19 @@ fn cmp_(comptime T: type, comptime o: comptime_int, r: anytype, s: anytype) !std
             s.reduce();
 
             const ad = std.math.mul(T, r.p, s.q) catch |err| switch (err) {
-                error.Overflow => return error.Overflow,
+                error.Overflow => reduce: {
+                    r.reduce();
+                    s.reduce();
+                    break :reduce try std.math.mul(T, r.p, s.q);
+                },
                 else => unreachable,
             };
             const bc = std.math.mul(T, r.q, s.p) catch |err| switch (err) {
-                error.Overflow => return error.Overflow,
+                error.Overflow => reduce: {
+                    r.reduce();
+                    s.reduce();
+                    break :reduce try std.math.mul(T, r.q, s.p);
+                },
                 else => unreachable,
             };
 
@@ -395,7 +404,8 @@ fn doTurn(r: anytype) !void {
 
 test Rational {
     inline for (.{ u64, u128, u256, f64 }) |t| {
-        var r: Rational(t) = .{};
+        const R = Rational(t);
+        var r: R = .{};
 
         var c: t = 128;
         _ = &c;
@@ -417,15 +427,13 @@ test Rational {
 
         r.reset();
 
-        var s = Rational(t){ .p = 10, .q = 13 };
+        var s = R{ .p = 10, .q = 13 };
         try r.mul(&s);
-        s.reset();
-        try s.update(3, 4);
+        s = R{ .p = 3, .q = 4 };
         try r.mul(&s);
         try expectEqual(Rational(t){ .p = 30, .q = 52 }, r);
 
-        s.reset();
-        try s.update(1, 3);
+        s = R{ .p = 1, .q = 3 };
         try r.add(&s);
         r.reduce();
         try expectEqual(Rational(t){ .p = 71, .q = 78 }, r);
@@ -434,25 +442,20 @@ test Rational {
         // Same Denominator
         var cmptr = Rational(t){ .p = 2, .q = 5 };
         try expectEqual(h.cmp(&cmptr), .gt);
-        cmptr.reset();
-        try cmptr.update(4, 5);
+        cmptr = R{ .p = 4, .q = 5 };
         try expectEqual(h.cmp(&cmptr), .lt);
 
         // Same Numerator
-        cmptr.reset();
-        try cmptr.update(1, 2);
+        cmptr = R{ .p = 3, .q = 6 };
         try expectEqual(h.cmp(&cmptr), .gt);
-        cmptr.reset();
-        try cmptr.update(3, 4);
+        cmptr = R{ .p = 3, .q = 4 };
         try expectEqual(h.cmp(&cmptr), .lt);
 
-        cmptr.reset();
-        try cmptr.update(3, 5);
+        cmptr = R{ .p = 3, .q = 5 };
         try expectEqual(h.cmp(&cmptr), .eq);
 
         try doTurn(&h);
-        cmptr.reset();
-        try cmptr.update(4567216874, 89124781931235);
+        cmptr = R{ .p = 4567216874, .q = 89124781931235 };
         if (t == u64) {
             try expectEqual(h.cmp(&cmptr), error.Overflow);
         } else {
