@@ -24,7 +24,6 @@ pub fn Rational(comptime T: type) type {
     // (in our domain we expect updates to involve numbers < 2**10, so we should be safe
     // not reducing before we are 2**10 away from "overflowing" the mantissa)
     const o = if (@typeInfo(T) == Float) blk: {
-        @setEvalBranchQuota(1500);
         break :blk std.math.pow(T, 2, std.math.floatMantissaBits(T) - 10);
     } else 0;
 
@@ -420,11 +419,13 @@ test Rational {
 
         var s = Rational(t){ .p = 10, .q = 13 };
         try r.mul(&s);
-        s = Rational(t){ .p = 3, .q = 4 };
+        s.reset();
+        try s.update(3, 4);
         try r.mul(&s);
         try expectEqual(Rational(t){ .p = 30, .q = 52 }, r);
 
-        s = Rational(t){ .p = 1, .q = 3 };
+        s.reset();
+        try s.update(1, 3);
         try r.add(&s);
         r.reduce();
         try expectEqual(Rational(t){ .p = 71, .q = 78 }, r);
@@ -433,17 +434,25 @@ test Rational {
         // Same Denominator
         var cmptr = Rational(t){ .p = 2, .q = 5 };
         try expectEqual(h.cmp(&cmptr), .gt);
-        cmptr = Rational(t){ .p = 4, .q = 5 };
+        cmptr.reset();
+        try cmptr.update(4, 5);
         try expectEqual(h.cmp(&cmptr), .lt);
 
         // Same Numerator
-        cmptr = Rational(t){ .p = 3, .q = 6 };
+        cmptr.reset();
+        try cmptr.update(1, 2);
         try expectEqual(h.cmp(&cmptr), .gt);
-        cmptr = Rational(t){ .p = 3, .q = 4 };
+        cmptr.reset();
+        try cmptr.update(3, 4);
         try expectEqual(h.cmp(&cmptr), .lt);
 
+        cmptr.reset();
+        try cmptr.update(3, 5);
+        try expectEqual(h.cmp(&cmptr), .eq);
+
         try doTurn(&h);
-        cmptr = Rational(t){ .p = 4567216874, .q = 89124781931234 };
+        cmptr.reset();
+        try cmptr.update(4567216874, 89124781931235);
         if (t == u64) {
             try expectEqual(h.cmp(&cmptr), error.Overflow);
         } else {
@@ -504,6 +513,10 @@ pub const BigRational = struct {
     pub fn mul(r: *BigRational, s: *const BigRational) !void {
         try r.val.mul(r.val, s.val);
     }
+
+    pub fn cmp(r: *BigRational, s: *const BigRational) Error!std.math.Order {
+        return std.math.big.Rational.order(r.val, s.val);
+    }
 };
 
 test BigRational {
@@ -547,6 +560,9 @@ test BigRational {
 
     try s.setRatio(71, 78);
     try expect((try s.order(r.val)) == .eq);
+
+    try expectEqual(t.cmp(&r), .lt);
+    try expectEqual(r.cmp(&t), .gt);
 }
 
 test "minimum" {
