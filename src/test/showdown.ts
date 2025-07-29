@@ -30,7 +30,7 @@ export const ROLLS = {
       MAX_DMG: {key: keys.dmg, value: MAX},
       TIE: (n: 1 | 2) => ({key: tie, value: ranged(n, 2) - 1}),
       DRAG: (m: number, n = 5) =>
-        ({key: 'sim/battle.ts:1512:36', value: ranged(m - 1, n)}),
+        ({key: 'sim/battle.ts:1544:36', value: ranged(m - 1, n)}),
     };
   },
   metronome(gen: Generation, exclude: string[]) {
@@ -41,7 +41,7 @@ export const ROLLS = {
     return (move: string, skip: string[] = []) => {
       const moves = all.filter(m => !skip.includes(m));
       const value = ranged(moves.indexOf(move) + 1, moves.length) - 1;
-      return {key: 'data/mods/gen4/moves.ts:1068:23', value};
+      return {key: 'data/mods/gen4/moves.ts:1073:23', value};
     };
   },
 };
@@ -283,14 +283,20 @@ export const Choices = new class {
         }
       }
 
-      const binding = active.volatiles['partialtrappinglock'];
+      if (active.volatiles['partialtrappinglock']) {
+        // Pokémon Showdown's partialtrappinglock uses onOverrideAction to
+        // ignore the input - we simply must use a valid move slot index and
+        // since every Pokémon is guaranteed to have at least one move 'move 1'
+        // should always be legal
+        options.push('move 1');
+        return options;
+      }
+
       const before = options.length;
       let slot = 0;
       for (const move of active.moveSlots) {
         slot++;
-        // Pokémon Showdown expect us to select 0 PP moves when binding as it disables
-        // everything but the move we are to use (and forced trapping moves underflow)
-        if ((move.pp === 0 && !binding) || move.disabled) continue;
+        if (move.pp === 0 || move.disabled) continue;
         options.push(`move ${slot}`);
       }
       if (options.length === before) {
@@ -437,7 +443,7 @@ export class FixedRNG extends PRNG {
 
 export const FILTER = new Set([
   '', 't:', 'gametype', 'player', 'teamsize', 'gen', 'message', 'done', 'error',
-  'bigerror', 'tier', 'rule', 'start', 'upkeep', '-message', '-hint', 'debug',
+  'bigerror', 'tier', 'rule', 'start', 'upkeep', '-message', '-hint', 'debug', 'raw',
 ]);
 
 function filter(raw: string[]) {

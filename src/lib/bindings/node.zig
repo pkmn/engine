@@ -1,9 +1,14 @@
-const c = @import("../common/napi.zig");
+const c = @import("napi");
 const js = @import("../common/js.zig");
 const pkmn = @import("../pkmn.zig");
 const std = @import("std");
 
 const assert = std.debug.assert;
+
+const C = if (@hasDecl(std.builtin.CallingConvention, "c"))
+    std.builtin.CallingConvention.c
+else
+    std.builtin.CallingConvention.C;
 
 pub fn register(env: c.napi_env) c.napi_value {
     const object = js.Object.init(env);
@@ -49,7 +54,7 @@ fn bind(env: c.napi_env, gen: anytype) c.napi_value {
 
 fn update(gen: anytype) c.napi_callback {
     return struct {
-        fn call(env: c.napi_env, info: c.napi_callback_info) callconv(.C) c.napi_value {
+        fn call(env: c.napi_env, info: c.napi_callback_info) callconv(C) c.napi_value {
             var argc: usize = 4;
             var argv: [4]c.napi_value = undefined;
             assert(c.napi_get_cb_info(env, info, &argc, &argv, null, null) == c.napi_ok);
@@ -91,7 +96,7 @@ fn update(gen: anytype) c.napi_callback {
 
 fn choices(gen: anytype) c.napi_callback {
     return struct {
-        fn call(env: c.napi_env, info: c.napi_callback_info) callconv(.C) c.napi_value {
+        fn call(env: c.napi_env, info: c.napi_callback_info) callconv(C) c.napi_value {
             var argc: usize = 4;
             var argv: [4]c.napi_value = undefined;
             assert(c.napi_get_cb_info(env, info, &argc, &argv, null, null) == c.napi_ok);

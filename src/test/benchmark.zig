@@ -3,6 +3,8 @@ const std = @import("std");
 
 const showdown = pkmn.options.showdown;
 
+const writergate = @hasDecl(std.fs.File, "stdout");
+
 pub fn main() !void {
     var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
     defer arena.deinit();
@@ -99,18 +101,21 @@ pub fn benchmark(gen: u8, seed: u64, battles: usize, warmup: ?usize) !void {
         }
     }
 
-    var out = std.io.getStdOut().writer();
+    var stdout = if (writergate) std.fs.File.stdout().writer(&.{}) else std.io.getStdOut();
+    var out = if (writergate) &stdout.interface else stdout.writer();
     try out.print("{d},{d},{d}\n", .{ time, turns, random.src.seed });
 }
 
 fn errorAndExit(msg: []const u8, arg: []const u8, cmd: []const u8) noreturn {
-    const err = std.io.getStdErr().writer();
+    var stderr = if (writergate) std.fs.File.stderr().writer(&.{}) else std.io.getStdErr();
+    var err = if (writergate) &stderr.interface else stderr.writer();
     err.print("Invalid {s}: {s}\n", .{ msg, arg }) catch {};
     usageAndExit(cmd);
 }
 
 fn usageAndExit(cmd: []const u8) noreturn {
-    const err = std.io.getStdErr().writer();
+    var stderr = if (writergate) std.fs.File.stderr().writer(&.{}) else std.io.getStdErr();
+    var err = if (writergate) &stderr.interface else stderr.writer();
     err.print("Usage: {s} <GEN> <(WARMUP/)BATTLES> <SEED?>\n", .{cmd}) catch {};
     std.process.exit(1);
 }

@@ -16,8 +16,8 @@ export interface Bindings<T extends boolean> {
 export interface Binding {
   CHOICES_SIZE: number;
   LOGS_SIZE: number;
-  update(battle: ArrayBuffer, c1: number, c2: number, log: ArrayBuffer | undefined): number;
-  choices(battle: ArrayBuffer, player: number, request: number, out: ArrayBuffer): number;
+  update(battle: ArrayBufferLike, c1: number, c2: number, log: ArrayBufferLike | undefined): number;
+  choices(battle: ArrayBufferLike, player: number, request: number, out: ArrayBufferLike): number;
 }
 
 const ADDONS: [Bindings<false>?, Bindings<true>?] = [];
@@ -64,10 +64,10 @@ function addons(showdown: boolean) {
 export function update(
   index: number,
   showdown: boolean,
-  battle: ArrayBuffer,
+  battle: ArrayBufferLike,
   c1?: Choice,
   c2?: Choice,
-  log?: ArrayBuffer,
+  log?: ArrayBufferLike,
 ) {
   return Result.decode(ADDONS[+showdown]!.bindings[index]
     .update(battle, Choice.encode(c1), Choice.encode(c2), log));
@@ -76,7 +76,7 @@ export function update(
 export function choices(
   index: number,
   showdown: boolean,
-  battle: ArrayBuffer,
+  battle: ArrayBufferLike,
   player: Player,
   choice: Choice['type'],
   out: Uint8Array,

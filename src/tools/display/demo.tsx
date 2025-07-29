@@ -53,7 +53,7 @@ const App = ({gen, data, showdown, instance}: {
   const durations = 0n; // TODO
   const move = engine.Choice.encode(engine.Choice.move(1));
   const results =
-    transitions(battle.bytes().buffer, move, move, durations, true);
+    transitions(battle.bytes().buffer as ArrayBuffer, move, move, durations, true);
   console.debug(results);
   deinit(results);
 

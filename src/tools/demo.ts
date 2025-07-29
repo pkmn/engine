@@ -93,8 +93,10 @@ const SKIP = ['gen1lc'] as ID[];
 
   const memory: [WebAssembly.Memory] = [null!];
   const decoder = new TextDecoder();
-  const instance =
-    await WebAssembly.instantiate(new WebAssembly.Module(bytes), imports(memory, decoder));
+  const instance = await WebAssembly.instantiate(
+    new WebAssembly.Module(bytes.buffer as ArrayBuffer),
+    imports(memory, decoder)
+  );
   memory[0] = instance.exports.memory as WebAssembly.Memory;
   await initialize(showdown, instance);
   const battle = Battle.create(gen, {

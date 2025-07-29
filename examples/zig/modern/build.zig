@@ -8,7 +8,7 @@ pub fn build(b: *std.Build) void {
         b.option(bool, "showdown", "Enable Pokémon Showdown compatibility mode") orelse false;
     const log = b.option(bool, "log", "Enable protocol message logging") orelse false;
 
-    const exe = b.addExecutable(.{
+    const exe = b.addExecutable(if (@hasDecl(std.Build.ExecutableOptions, "root_source_file")) .{
         .name = "example",
         .root_source_file = if (@hasField(std.Build.LazyPath, "path"))
             .{ .path = "example.zig" }
@@ -16,6 +16,13 @@ pub fn build(b: *std.Build) void {
             b.path("example.zig"),
         .optimize = optimize,
         .target = target,
+    } else .{
+        .name = "example",
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("example.zig"),
+            .optimize = optimize,
+            .target = target,
+        }),
     });
     const pkmn = b.dependency("pkmn", .{ .showdown = showdown, .log = log });
     exe.root_module.addImport("pkmn", pkmn.module("pkmn"));

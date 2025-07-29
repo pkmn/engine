@@ -3,8 +3,11 @@ const std = @import("std");
 
 const assert = std.debug.assert;
 
+const C = if (@hasDecl(std.builtin.CallingConvention, "c"))
+    std.builtin.CallingConvention.c
+else
+    std.builtin.CallingConvention.C;
 const Enum = if (@hasField(std.builtin.Type, "enum")) .@"enum" else .Enum;
-const Strong = if (@hasField(std.builtin.GlobalLinkage, "strong")) .strong else .Strong;
 
 pub const options = pkmn.options;
 
@@ -19,7 +22,7 @@ pub fn gen(comptime num: comptime_int) type {
             c1: pkmn.Choice,
             c2: pkmn.Choice,
             options_: ?[*]u8,
-        ) callconv(.C) pkmn.Result {
+        ) callconv(C) pkmn.Result {
             return (if (options_) |o| result: {
                 const buf = @as([*]u8, @ptrCast(o))[0..g.LOGS_SIZE];
                 var stream: pkmn.protocol.ByteStream = .{ .buffer = buf };
@@ -38,7 +41,7 @@ pub fn gen(comptime num: comptime_int) type {
             player: u8,
             request: u8,
             buf: [*]u8,
-        ) callconv(.C) u8 {
+        ) callconv(C) u8 {
             assert(player <= @field(@typeInfo(pkmn.Player), @tagName(Enum)).fields.len);
             assert(request <= @field(@typeInfo(pkmn.Choice.Type), @tagName(Enum)).fields.len);
 
@@ -48,10 +51,12 @@ pub fn gen(comptime num: comptime_int) type {
     };
 }
 
-pub fn exports() type {
-    @export(gen(1).update, .{ .name = "GEN1_update", .linkage = Strong });
-    @export(gen(1).choices, .{ .name = "GEN1_choices", .linkage = Strong });
-    return struct {};
+pub fn exports() void {
+    if (@hasDecl(std.zig, "Zir") and !@hasField(std.zig.Zir.Inst.Tag, "export_value")) {
+        @import("modern/wasm.zig").exports();
+    } else {
+        @import("legacy/wasm.zig").exports();
+    }
 }
 
 fn size(n: usize) u32 {

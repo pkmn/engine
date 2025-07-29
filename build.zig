@@ -15,7 +15,9 @@ const Step = if (@hasDecl(std.Build, "Step")) std.Build.Step else .{
 };
 const has_path = @hasField(std.Build.LazyPath, "path");
 const root_module = @hasField(Step.Compile, "root_module");
-const force_pic = !@hasField(std.Build.SharedLibraryOptions, "pic");
+const lib_helper = @hasDecl(std.Build, "addSharedLibrary");
+const writergate = @hasDecl(std.fs.File, "stdout");
+const force_pic = lib_helper and !@hasField(std.Build.SharedLibraryOptions, "pic");
 const ResolvedTarget =
     if (@hasDecl(std.Build, "ResolvedTarget")) std.Build.ResolvedTarget else std.zig.CrossTarget;
 
@@ -126,9 +128,25 @@ pub fn build(b: *std.Build) !void {
 
     var c = false;
     if (node_headers) |headers| {
+        const TranslateC = std.Build.Step.TranslateC;
+        const translate_c = b.addTranslateC(if (@hasField(TranslateC.Options, "source_file")) .{
+            .source_file = .{ .path = "src/lib/napi.h" },
+            .target = target,
+            .optimize = optimize,
+        } else .{
+            .root_source_file = b.path("src/lib/napi.h"),
+            .target = target,
+            .optimize = optimize,
+        });
+        if (@hasDecl(TranslateC, "addSystemIncludePath")) {
+            translate_c.addSystemIncludePath(b.path(headers));
+        } else {
+            translate_c.addIncludeDir(headers);
+        }
+
         const addon = b.fmt("{s}.node", .{name});
         const path = if (has_path) .{ .path = "src/lib/node.zig" } else b.path("src/lib/node.zig");
-        const lib = b.addSharedLibrary(if (force_pic) .{
+        const lib = if (lib_helper) b.addSharedLibrary(if (force_pic) .{
             .name = addon,
             .root_source_file = path,
             .optimize = optimize,
@@ -140,14 +158,35 @@ pub fn build(b: *std.Build) !void {
             .target = target,
             .strip = strip,
             .pic = pic,
+        }) else b.addLibrary(.{
+            .linkage = .dynamic,
+            .name = addon,
+            .root_module = b.createModule(.{
+                .root_source_file = path,
+                .optimize = optimize,
+                .target = target,
+                .strip = strip,
+                .pic = pic,
+            }),
         });
-        (if (root_module) lib.root_module else lib).addOptions("build_options", options);
-        lib.addSystemIncludePath(if (has_path) .{ .path = headers } else b.path(headers));
+        if (root_module) {
+            lib.root_module.addOptions("build_options", options);
+            lib.root_module.addImport("napi", translate_c.createModule());
+        } else {
+            lib.addOptions("build_options", options);
+            lib.addModule("napi", translate_c.createModule());
+        }
         lib.linkLibC();
         if (node_import_lib) |il| {
             lib.addObjectFile(if (has_path) .{ .path = il } else b.path(il));
         } else if (detect(target).os.tag == .windows) {
-            try std.io.getStdErr().writeAll("Must provide --node-import-library path on Windows\n");
+            const msg = "Must provide --node-import-library path on Windows\n";
+            if (writergate) {
+                var writer = std.fs.File.stderr().writer(&.{});
+                try writer.interface.writeAll(msg);
+            } else {
+                try std.io.getStdErr().writeAll(msg);
+            }
             std.process.exit(1);
         }
         lib.linker_allow_shlib_undefined = true;
@@ -177,7 +216,7 @@ pub fn build(b: *std.Build) !void {
         try buildWasm(b, n, path, optimize, strip, pic, wasm_stack_size, mod, options);
     } else if (dynamic) {
         const path = if (has_path) .{ .path = "src/lib/c.zig" } else b.path("src/lib/c.zig");
-        const lib = b.addSharedLibrary(if (force_pic) .{
+        const lib = if (lib_helper) b.addSharedLibrary(if (force_pic) .{
             .name = name,
             .root_source_file = path,
             .version = try std.SemanticVersion.parse(version),
@@ -191,6 +230,16 @@ pub fn build(b: *std.Build) !void {
             .target = target,
             .strip = strip,
             .pic = pic,
+        }) else b.addLibrary(.{
+            .linkage = .dynamic,
+            .name = name,
+            .root_module = b.createModule(.{
+                .root_source_file = path,
+                .optimize = optimize,
+                .target = target,
+                .strip = strip,
+                .pic = pic,
+            }),
         });
         (if (root_module) lib.root_module else lib).addOptions("build_options", options);
         lib.addIncludePath(if (has_path) .{ .path = "src/include" } else b.path("src/include"));
@@ -200,7 +249,7 @@ pub fn build(b: *std.Build) !void {
         c = true;
     } else {
         const path = if (has_path) .{ .path = "src/lib/c.zig" } else b.path("src/lib/c.zig");
-        const lib = b.addStaticLibrary(if (force_pic) .{
+        const lib = if (lib_helper) b.addStaticLibrary(if (force_pic) .{
             .name = name,
             .root_source_file = path,
             .optimize = optimize,
@@ -212,6 +261,16 @@ pub fn build(b: *std.Build) !void {
             .target = target,
             .strip = strip,
             .pic = pic,
+        }) else b.addLibrary(.{
+            .linkage = .static,
+            .name = name,
+            .root_module = b.createModule(.{
+                .root_source_file = path,
+                .optimize = optimize,
+                .target = target,
+                .strip = strip,
+                .pic = pic,
+            }),
         });
         (if (root_module) lib.root_module else lib).addOptions("build_options", options);
         lib.addIncludePath(if (has_path) .{ .path = "src/include" } else b.path("src/include"));
@@ -251,8 +310,8 @@ pub fn build(b: *std.Build) !void {
         const pkgconfig_file = try std.fs.cwd().createFile(file, .{});
 
         const dirname = comptime std.fs.path.dirname(@src().file) orelse ".";
-        const writer = pkgconfig_file.writer();
-        try writer.print(
+        var writer = if (writergate) pkgconfig_file.writer(&.{}) else pkgconfig_file;
+        try (if (writergate) writer.interface else writer.writer()).print(
             \\prefix={0s}/{1s}
             \\includedir=${{prefix}}/include
             \\libdir=${{prefix}}/lib
@@ -376,7 +435,16 @@ fn buildWasm(
         };
     const path = if (has_path) .{ .path = root_src_file } else b.path(root_src_file);
     const bin = if (entry) bin: {
-        const exe = b.addExecutable(if (force_pic) .{
+        const exe = b.addExecutable(if (!lib_helper) .{
+            .name = name,
+            .root_module = b.createModule(.{
+                .root_source_file = path,
+                .optimize = mode,
+                .target = freestanding,
+                .strip = strip,
+                .pic = pic,
+            }),
+        } else if (force_pic) .{
             .name = name,
             .root_source_file = path,
             .optimize = mode,
@@ -481,7 +549,7 @@ const TestStep = struct {
         self.* = .{ .step = step, .build = test_filter == null };
 
         const path = if (has_path) .{ .path = "src/lib/test.zig" } else b.path("src/lib/test.zig");
-        const tests = b.addTest(if (force_pic) .{
+        const tests = b.addTest(if (lib_helper) if (force_pic) .{
             .root_source_file = path,
             .optimize = config.optimize,
             .target = config.target,
@@ -494,6 +562,16 @@ const TestStep = struct {
             .single_threaded = true,
             .strip = config.strip,
             .pic = config.pic,
+        } else .{
+            .root_module = b.createModule(.{
+                .root_source_file = path,
+                .optimize = config.optimize,
+                .target = config.target,
+                .single_threaded = true,
+                .strip = config.strip,
+                .pic = config.pic,
+            }),
+            .filters = if (test_filter) |filter| &.{filter} else &.{},
         });
         (if (root_module) tests.root_module else tests).addOptions("build_options", options);
 
@@ -529,7 +607,16 @@ fn tool(b: *std.Build, path: []const u8, config: ToolConfig) !?*Step.Run {
     if (index) |i| name = name[0..i];
     if (config.options.showdown orelse false) name = b.fmt("{s}-showdown", .{name});
 
-    const exe = b.addExecutable(if (force_pic) .{
+    const exe = b.addExecutable(if (!lib_helper) .{
+        .name = name,
+        .root_module = b.createModule(.{
+            .root_source_file = if (has_path) .{ .path = path } else b.path(path),
+            .target = config.general.target,
+            .optimize = config.general.optimize,
+            .strip = config.general.strip,
+            .pic = config.general.pic,
+        }),
+    } else if (force_pic) .{
         .name = name,
         .root_source_file = if (has_path) .{ .path = path } else b.path(path),
         .target = config.general.target,

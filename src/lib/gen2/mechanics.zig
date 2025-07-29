@@ -8,6 +8,7 @@ const pkmn = @import("../pkmn.zig");
 const protocol = @import("../common/protocol.zig");
 const rng = @import("../common/rng.zig");
 const std = @import("std");
+const util = @import("../common/util.zig");
 
 const Activate = protocol.Activate;
 const ActivePokemon = data.ActivePokemon;
@@ -3081,7 +3082,7 @@ pub const Rolls = struct {
     }
 
     // Conversion 2 can at most choose between 7 types (vs. a Grass-type attack)
-    var CONVERSION_2: [7]Type = [_]Type{.@"???"} ** 7;
+    var CONVERSION_2: [7]Type = util.repeat(Type, .@"???", 7);
 
     fn conversion2(battle: anytype, player: Player, mtype: Type, options: anytype) !Type {
         var i: u8 = 0;

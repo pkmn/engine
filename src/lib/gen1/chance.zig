@@ -99,8 +99,12 @@ pub const Actions = extern struct {
         try writer.writeAll(">");
     }
 
-    pub fn format(a: Actions, comptime f: []const u8, o: std.fmt.FormatOptions, w: anytype) !void {
+    pub const format = if (@hasDecl(std.fmt, "Options")) new else old;
+    fn old(a: Actions, comptime f: []const u8, o: anytype, w: anytype) !void {
         _ = .{ f, o };
+        try new(a, w);
+    }
+    fn new(a: Actions, w: anytype) !void {
         try fmt(a, w, false);
     }
 };
@@ -191,8 +195,12 @@ pub const Action = packed struct(u64) {
 
     pub const Field = std.meta.FieldEnum(Action);
 
-    pub fn format(a: Action, comptime f: []const u8, o: std.fmt.FormatOptions, w: anytype) !void {
+    pub const format = if (@hasDecl(std.fmt, "Options")) new else old;
+    fn old(a: Action, comptime f: []const u8, o: anytype, w: anytype) !void {
         _ = .{ f, o };
+        try new(a, w);
+    }
+    fn new(a: Action, w: anytype) !void {
         try fmt(a, w, false);
     }
 
@@ -256,14 +264,13 @@ pub const Durations = extern struct {
         return if (player == .P1) &self.p1 else &self.p2;
     }
 
-    pub fn format(
-        self: Durations,
-        comptime fmt: []const u8,
-        opts: std.fmt.FormatOptions,
-        writer: anytype,
-    ) !void {
-        _ = .{ fmt, opts };
-        try writer.print("[P1 = {}, P2 = {}]", .{ self.p1, self.p2 });
+    pub const format = if (@hasDecl(std.fmt, "Options")) new else old;
+    fn old(self: Durations, comptime f: []const u8, o: anytype, w: anytype) !void {
+        _ = .{ f, o };
+        try new(self, w);
+    }
+    fn new(self: Durations, w: anytype) !void {
+        try w.print("[P1 = {f}, P2 = {f}]", .{ self.p1, self.p2 });
     }
 };
 
@@ -279,36 +286,35 @@ pub const Duration = packed struct(u32) {
 
     _: u1 = 0,
 
-    pub fn format(
-        self: Duration,
-        comptime fmt: []const u8,
-        opts: std.fmt.FormatOptions,
-        writer: anytype,
-    ) !void {
-        _ = .{ fmt, opts };
-        try writer.writeByte('(');
+    pub const format = if (@hasDecl(std.fmt, "Options")) new else old;
+    fn old(self: Duration, comptime f: []const u8, o: anytype, w: anytype) !void {
+        _ = .{ f, o };
+        try new(self, w);
+    }
+    pub fn new(self: Duration, w: anytype) !void {
+        try w.writeByte('(');
         var printed = false;
         inline for (@field(@typeInfo(Duration), @tagName(Struct)).fields) |field| {
             const val = @field(self, field.name);
             switch (@typeInfo(@TypeOf(val))) {
                 Int => if (val != 0) {
-                    if (printed) try writer.writeAll(", ");
+                    if (printed) try w.writeAll(", ");
                     if (comptime std.mem.eql(u8, field.name, "sleeps")) {
-                        try writer.print("{s}:[", .{field.name});
+                        try w.print("{s}:[", .{field.name});
                         for (0..6) |i| {
-                            if (i != 0) try writer.writeByte(',');
-                            try writer.print("{d}", .{Sleeps.get(val, i)});
+                            if (i != 0) try w.writeByte(',');
+                            try w.print("{d}", .{Sleeps.get(val, i)});
                         }
-                        try writer.writeAll("]");
+                        try w.writeAll("]");
                     } else {
-                        try writer.print("{s}:{d}", .{ field.name, val });
+                        try w.print("{s}:{d}", .{ field.name, val });
                     }
                     printed = true;
                 },
                 else => unreachable,
             }
         }
-        try writer.writeByte(')');
+        try w.writeByte(')');
     }
 };
 
@@ -1067,7 +1073,7 @@ pub fn expectProbability(r: anytype, p: u64, q: u64) !void {
 
     r.reduce();
     if (r.p != p or r.q != q) {
-        print("expected {d}/{d}, found {}\n", .{ p, q, r });
+        print("expected {d}/{d}, found {f}\n", .{ p, q, r });
         return error.TestExpectedEqual;
     }
 }

@@ -212,7 +212,7 @@ pub const Pokemon = struct {
             );
         }
 
-        var ms = [_]MoveSlot{.{}} ** 4;
+        var ms = util.repeat(MoveSlot, .{}, 4);
         const n = if (rand.chance(u8, 1, 100)) rand.range(u4, 1, 3 + 1) else 4;
         for (0..n) |i| {
             var m: Move = .None;

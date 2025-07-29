@@ -5,7 +5,8 @@ const assert = std.debug.assert;
 
 const Bool = if (@hasField(std.builtin.Type, "bool")) .bool else .Bool;
 
-// TODO: ziglang/zig#104
+/// Optimized optional representation which stores the empty None value as a sentinel.
+/// NOTE: ziglang/zig#104
 pub fn Optional(comptime T: type) type {
     const fields = std.meta.fields(switch (@typeInfo(T)) {
         Bool => enum { false, true },

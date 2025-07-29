@@ -22,9 +22,9 @@ pub const Choice = @import("common/data.zig").Choice;
 /// considered terminal.
 pub const Result = @import("common/data.zig").Result;
 
-// TODO
+/// Helpers for working with bit-packed arrays of non-powers-of-2 types.
 pub const Array = @import("common/array.zig").Array;
-// TODO
+/// Optimized optional representation which stores the empty None value as a sentinel.
 pub const Optional = @import("common/optional.zig").Optional;
 
 /// Pokémon Showdown's RNG (backed by a Generation V & VI RNG).
@@ -35,10 +35,10 @@ pub const protocol = if (options.internal) @import("common/protocol.zig") else s
     /// Logs protocol information to its `Writer` during a battle update when
     /// `options.log` is enabled.
     pub const Log = @import("common/protocol.zig").Log;
-    /// Stripped down version of `std.io.FixedBufferStream` optimized for
-    /// efficiently writing the individual protocol bytes. Note that the
-    /// `ByteStream.Writer` is **not** a `std.io.Writer` and should not be
-    /// used for general purpose writing.
+    /// Stripped down version of `std.Io.Writer.fixed` optimized for efficiently
+    /// writing the individual protocol bytes. Note that the `ByteStream.Writer`
+    /// is **not** a `std.Io.Writer` and should not be used for general purpose
+    /// writing.
     pub const ByteStream = @import("common/protocol.zig").ByteStream;
     /// `Log` type backed by the optimized `ByteStream.Writer`. Intended to be
     /// intialized with a `LOGS_SIZE`-sized buffer.
@@ -49,14 +49,62 @@ pub const protocol = if (options.internal) @import("common/protocol.zig") else s
     pub const NULL = @import("common/protocol.zig").NULL;
 };
 
-pub usingnamespace @import("common/rational.zig");
+/// Specialization of a rational number used by the engine to compute probabilties.
+pub const Rational = @import("common/rational.zig").Rational;
 
 /// Namespace for cross-generation battle-related types.
 pub const battle = @import("common/battle.zig");
 
 /// Namespace for Generation I Pokémon.
 pub const gen1 = struct {
-    pub usingnamespace @import("gen1/data.zig");
+    const data = @import("gen1/data.zig");
+    /// The minimum size in bytes required to hold all Generation I choice options.
+    pub const MAX_CHOICES = data.MAX_CHOICES;
+    /// The maximum number of bytes possibly logged by a single Generation I update.
+    pub const MAX_LOGS = data.MAX_LOGS;
+    /// The optimal size in bytes required to hold all Generation I choice options.
+    /// At least as large as MAX_CHOICES.
+    pub const CHOICES_SIZE = data.CHOICES_SIZE;
+    /// The optimal size in bytes required to hold the largest amount of log data possible from a
+    /// single Generation I update. At least as large as MAX_LOGS.
+    pub const LOGS_SIZE = data.LOGS_SIZE;
+    ///  Null object pattern implementation of pkmn.battle.Options for Generation I.
+    pub const NULL = data.NULL;
+    /// The pseudo random number generator used by Generation I.
+    pub const PRNG = data.PRNG;
+    /// Representation of a Generation I battle.
+    pub const Battle = data.Battle;
+    /// Representation of one side of a Generation I Pokémon battle.
+    pub const Side = data.Side;
+    /// Representation of the state for single Generation I Pokémon while active in battle.
+    pub const ActivePokemon = data.ActivePokemon;
+    /// Representation of the state for single Generation I Pokémon while inactive in the party.
+    pub const Pokemon = data.Pokemon;
+    /// Representation of a Generation I Pokémon's move slot in a battle.
+    pub const MoveSlot = data.MoveSlot;
+    /// Details required to detect desyncs based on the move last selected/executed by players.
+    pub const MoveDetails = data.MoveDetails;
+    /// Bitfield representation of a Generation I & II Pokémon's major status condition.
+    pub const Status = data.Status;
+    /// Bitfield representation of volatile statuses and associated data in Generation I.
+    pub const Volatiles = data.Volatiles;
+    /// Representation of a Pokémon's stats in Generation I.
+    pub const Stats = data.Stats;
+    /// Representation of a Pokémon's boosts in Generation I.
+    pub const Boosts = data.Boosts;
+    /// Representation of a Generation I Pokémon move.
+    pub const Move = data.Move;
+    /// Representation of a Generation I Pokémon species.
+    pub const Species = data.Species;
+    /// Representation of a Generation I type in Pokémon.
+    pub const Type = data.Type;
+    /// Representation of a Generation I Pokémon's typing.
+    pub const Types = data.Types;
+    /// Modifiers for the effectiveness of a type vs. another type in Pokémon.
+    pub const Effectiveness = data.Effectiveness;
+    /// Representation of a Generation I Pokémon's determinant values.
+    pub const DVs = data.DVs;
+
     /// Tracks chance actions and their associated probability during a
     /// Generation I battle update when `options.chance` is enabled.
     pub const Chance = @import("gen1/chance.zig").Chance;
@@ -107,7 +155,34 @@ pub const gen1 = struct {
 
 /// TODO
 pub const gen2 = struct {
-    pub usingnamespace @import("gen2/data.zig");
+    const data = @import("gen2/data.zig");
+    pub const MAX_CHOICES = data.MAX_CHOICES;
+    pub const MAX_LOGS = data.MAX_LOGS;
+    pub const CHOICES_SIZE = data.CHOICES_SIZE;
+    pub const LOGS_SIZE = data.LOGS_SIZE;
+    pub const NULL = data.NULL;
+    pub const PRNG = data.PRNG;
+    pub const Battle = data.Battle;
+    pub const Field = data.Field;
+    pub const Weather = data.Weather;
+    pub const Side = data.Side;
+    pub const ActivePokemon = data.ActivePokemon;
+    pub const Pokemon = data.Pokemon;
+    pub const Gender = data.Gender;
+    pub const DVs = data.DVs;
+    pub const MoveSlot = data.MoveSlot;
+    pub const Status = data.Status;
+    pub const TriAttack = data.TriAttack;
+    pub const Volatiles = data.Volatiles;
+    pub const Stats = data.Stats;
+    pub const Boosts = data.Boosts;
+    pub const Item = data.Item;
+    pub const Move = data.Move;
+    pub const Species = data.Species;
+    pub const Type = data.Type;
+    pub const Types = data.Types;
+    pub const Effectiveness = data.Effectiveness;
+
     pub const Chance = @import("gen2/chance.zig").Chance;
     pub const chance = struct {
         pub const Actions = @import("gen2/chance.zig").Actions;
@@ -126,7 +201,6 @@ pub const gen2 = struct {
 };
 
 // Internal APIs used by other pkmn libraries, not actually part of the public API.
-// NOTE: `pub usingnamespace struct { ... }` here results in a (false?) dependency loop
 pub const js = if (options.internal) @import("common/js.zig") else {};
 pub const bindings = if (options.internal) struct {
     pub const c = @import("bindings/c.zig");

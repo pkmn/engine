@@ -62,7 +62,7 @@ pub fn Battle(comptime RNG: anytype) type {
         /// The last damage dealt by either side.
         last_damage: u16 = 0,
         /// Details about the last move selected/used by each player required to detect desyncs.
-        last_moves: [2]MoveDetails = [_]MoveDetails{.{}} ** 2,
+        last_moves: [2]MoveDetails = util.repeat(MoveDetails, .{}, 2),
         /// The pseudo random number generator.
         rng: RNG,
 
@@ -122,12 +122,12 @@ test Battle {
 /// Representation of one side of a Generation I Pokémon battle.
 pub const Side = extern struct {
     /// The player's party in its original order
-    pokemon: [6]Pokemon = [_]Pokemon{.{}} ** 6,
+    pokemon: [6]Pokemon = util.repeat(Pokemon, .{}, 6),
     /// The active Pokémon for the side, zero initialized if the battle has yet to start.
     /// Note that fainted Pokémon are still consider "active" until their replacement switches in.
     active: ActivePokemon = .{},
     /// One-based slot indexes reflecting the current order of the player's party.
-    order: [6]u8 = [_]u8{0} ** 6,
+    order: [6]u8 = util.repeat(u8, 0, 6),
     /// The last move the player selected.
     last_selected_move: Move = .None,
     /// The last move the player used.
@@ -166,7 +166,7 @@ pub const ActivePokemon = extern struct {
     /// The active Pokémon's volatile statuses and associated data.
     volatiles: Volatiles = .{},
     /// The active Pokémon's current move slots.
-    moves: [4]MoveSlot = [_]MoveSlot{.{}} ** 4,
+    moves: [4]MoveSlot = util.repeat(MoveSlot, .{}, 4),
 
     comptime {
         assert(@sizeOf(ActivePokemon) == 32);
@@ -186,7 +186,7 @@ pub const Pokemon = extern struct {
     /// The Pokémon's unmodified stats.
     stats: Stats(u16) = .{},
     /// The Pokémon's original stored move slots.
-    moves: [4]MoveSlot = [_]MoveSlot{.{}} ** 4,
+    moves: [4]MoveSlot = util.repeat(MoveSlot, .{}, 4),
     /// The Pokémon's current HP.
     hp: u16 = 0,
     /// The Pokémon's current status.

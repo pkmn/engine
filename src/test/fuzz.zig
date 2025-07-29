@@ -2,6 +2,8 @@ const builtin = @import("builtin");
 const pkmn = @import("pkmn");
 const std = @import("std");
 
+const writergate = @hasDecl(std.fs.File, "stdout");
+
 pub const pkmn_options = pkmn.Options{ .internal = true };
 
 const Frame = struct {
@@ -63,40 +65,41 @@ pub fn main() !void {
 
         try fuzz(allocator, seed, duration);
     } else {
-        const stdin = std.io.getStdIn();
-        var reader = std.io.bufferedReader(stdin.reader());
-        var r = reader.reader();
+        var in: if (writergate) [4096]u8 else void = undefined;
+        var stdin = if (writergate) std.fs.File.stdin().reader(&in) else std.io.getStdIn();
+        const r = if (writergate) &stdin.interface else stdin.reader();
 
-        if (try r.readByte() != @intFromBool(showdown)) {
-            const err = std.io.getStdErr().writer();
+        if (try takeByte(r) != @intFromBool(showdown)) {
+            var stderr = if (writergate) std.fs.File.stderr().writer(&.{}) else std.io.getStdErr();
+            var err = if (writergate) &stderr.interface else stderr.writer();
             err.print("Cannot process frame from -Dshowdown={}\n", .{!showdown}) catch {};
             usageAndExit(args[0]);
         }
 
-        gen = try r.readByte();
+        gen = try takeByte(r);
         if (gen < 1 or gen > 9) errorAndExit("gen", gen, args[0]);
 
-        const size = try r.readInt(i16, endian);
+        const size = try takeInt(r, i16, endian);
         if (size != -1 and size != 0) errorAndExit("log size", size, args[0]);
 
-        _ = try r.readInt(i32, endian);
+        _ = try takeInt(r, i32, endian);
         _ = try switch (gen) {
-            1 => r.readStruct(pkmn.gen1.Battle(pkmn.gen1.PRNG)),
+            1 => takeStruct(r, pkmn.gen1.Battle(pkmn.gen1.PRNG)),
             else => unreachable,
         };
-        if (size != 0) _ = try r.readByte();
+        if (size != 0) _ = try takeByte(r);
 
         const durations = try switch (gen) {
-            1 => r.readStruct(pkmn.gen1.chance.Durations),
+            1 => takeStruct(r, pkmn.gen1.chance.Durations),
             else => unreachable,
         };
         var battle = try switch (gen) {
-            1 => r.readStruct(pkmn.gen1.Battle(pkmn.gen1.PRNG)),
+            1 => takeStruct(r, pkmn.gen1.Battle(pkmn.gen1.PRNG)),
             else => unreachable,
         };
-        _ = try r.readStruct(pkmn.Result);
-        const c1 = try r.readStruct(pkmn.Choice);
-        const c2 = try r.readStruct(pkmn.Choice);
+        _ = try takeStruct(r, pkmn.Result);
+        const c1 = try takeStruct(r, pkmn.Choice);
+        const c2 = try takeStruct(r, pkmn.Choice);
 
         switch (gen) {
             1 => {
@@ -241,7 +244,8 @@ pub fn update(
 ) pkmn.Result {
     if (!chance) return battle.update(c1, c2, options) catch unreachable;
     const writer = std.io.null_writer;
-    // const writer = std.io.getStdErr().writer();
+    // var stderr = if (writergate) std.fs.File.stderr().writer(&.{}) else std.io.getStdErr();
+    // var writer = if (writergate) &stderr.interface else stderr.writer();
     return switch (gen) {
         1 => pkmn.gen1.calc.update(battle, c1, c2, options, allocator, writer, transitions),
         else => unreachable,
@@ -249,13 +253,15 @@ pub fn update(
 }
 
 fn errorAndExit(msg: []const u8, arg: anytype, cmd: []const u8) noreturn {
-    const err = std.io.getStdErr().writer();
+    var stderr = if (writergate) std.fs.File.stderr().writer(&.{}) else std.io.getStdErr();
+    var err = if (writergate) &stderr.interface else stderr.writer();
     err.print("Invalid {s}: {any}\n", .{ msg, arg }) catch {};
     usageAndExit(cmd);
 }
 
 fn usageAndExit(cmd: []const u8) noreturn {
-    const err = std.io.getStdErr().writer();
+    var stderr = if (writergate) std.fs.File.stderr().writer(&.{}) else std.io.getStdErr();
+    var err = if (writergate) &stderr.interface else stderr.writer();
     err.print("Usage: {s} <GEN> <DURATION> <SEED?>\n", .{cmd}) catch {};
     std.process.exit(1);
 }
@@ -274,16 +280,18 @@ fn deinit(allocator: std.mem.Allocator) void {
 }
 
 fn dump(seed: u64) !void {
-    const out = std.io.getStdOut();
-    var bw = std.io.bufferedWriter(out.writer());
-    var w = bw.writer();
-    if (out.isTty() or builtin.mode != .Debug) {
+    var stdout = if (writergate) std.fs.File.stdout() else std.io.getStdOut();
+    var out: if (writergate) [4096]u8 else void = undefined;
+    var bw = if (writergate) stdout.writer(&out) else std.io.bufferedWriter(stdout.writer());
+    var w = if (writergate) &bw.interface else bw.writer();
+
+    if (stdout.isTty() or builtin.mode != .Debug) {
         try w.print("0x{X}\n", .{seed});
     } else {
         try w.writeInt(u64, seed, endian);
-        try display(&w, false);
+        try display(w, false);
     }
-    try bw.flush();
+    try if (writergate) w.flush() else bw.flush();
 
     // Write the last state information to the logs/ directory if it
     // exists so that it can easily be turned into a regression testcase
@@ -294,7 +302,12 @@ fn dump(seed: u64) !void {
     const dir = std.fs.cwd();
     const file = dir.createFile(name, .{}) catch return;
     defer file.close();
-    try display(&file.writer(), true);
+    if (writergate) {
+        var f = file.writer(&.{});
+        try display(&f.interface, true);
+    } else {
+        try display(&file.writer(), true);
+    }
 
     var p: [1024]u8 = undefined;
     const path = try dir.realpath(name, &p);
@@ -319,20 +332,33 @@ fn display(w: anytype, final: bool) !void {
             try w.writeByte(0);
             try w.writeAll(f.extra);
             try w.writeAll(f.state);
-            try w.writeStruct(f.result);
-            try w.writeStruct(f.c1);
-            try w.writeStruct(f.c2);
+            try writeStruct(w, f.result);
+            try writeStruct(w, f.c1);
+            try writeStruct(w, f.c2);
         } else {
             for (fs.items) |f| {
                 try w.writeAll(f.log);
                 try w.writeAll(f.state);
-                try w.writeStruct(f.result);
-                try w.writeStruct(f.c1);
-                try w.writeStruct(f.c2);
+                try writeStruct(w, f.result);
+                try writeStruct(w, f.c1);
+                try writeStruct(w, f.c2);
             }
         }
     }
     if (buf) |b| try w.writeAll(b.items);
+}
+
+const takeByte = if (writergate) std.io.Reader.takeByte else std.fs.File.Reader.readByte;
+const takeInt = if (writergate) std.io.Reader.takeInt else std.fs.File.Reader.readInt;
+fn takeStruct(r: anytype, comptime T: type) !T {
+    return if (writergate)
+        std.io.Reader.takeStruct(r, T, endian)
+    else
+        std.fs.File.Reader.readStruct(r, T);
+}
+
+fn writeStruct(w: anytype, s: anytype) !void {
+    try if (writergate) w.writeStruct(s, endian) else w.writeStruct(s);
 }
 
 pub const panic =

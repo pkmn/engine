@@ -74,3 +74,12 @@ fn CopyPtrAttrs(
 pub fn FieldType(comptime T: type, comptime field: std.meta.FieldEnum(T)) type {
     return std.meta.fieldInfo(T, field).type;
 }
+
+// Replacement for array multiplication after ziglang/zig#24738 (@splat only works after 0.14.0)
+pub fn repeat(comptime T: type, t: T, comptime n: usize) [n]T {
+    var ts: [n]T = undefined;
+    inline for (0..n) |i| {
+        ts[i] = t;
+    }
+    return ts;
+}

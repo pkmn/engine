@@ -803,10 +803,13 @@ export async function run(gens: Generations, options: string | Flags, errors?: E
 
     const lines = log.split('\n');
     const spec = JSON.parse(lines[0].slice(7)) as
-      {formatid: string; seed: [number, number, number, number]};
+      {formatid: string; seed: string | [number, number, number, number]};
+    if (!Array.isArray(spec.seed)) {
+      spec.seed = spec.seed.split(',').map(n => +n) as [number, number, number, number];
+    }
     const p1 = {spec: JSON.parse(lines[1].slice(10)) as {name: string; team: string}};
     const p2 = {spec: JSON.parse(lines[2].slice(10)) as {name: string; team: string}};
-    play(gen, spec, p1, p2, lines, true);
+    play(gen, spec as any, p1, p2, lines, true);
     return 0;
   }
 

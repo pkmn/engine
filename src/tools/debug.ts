@@ -10,7 +10,23 @@ import * as gen1 from '../pkg/gen1';
 import * as display from './display';
 
 const ROOT = path.resolve(__dirname, '..', '..');
-const ZIG = path.dirname(JSON.parse(execFileSync('zig', ['env'], {encoding: 'utf8'})).lib_dir);
+const ZIG = path.dirname(parse(execFileSync('zig', ['env'], {encoding: 'utf8'})).lib_dir);
+
+function parse(s: string) {
+  try {
+    return JSON.parse(s);
+  } catch (e) {
+    if (!(e instanceof SyntaxError)) throw e;
+    const json = s
+      // "key": -> "key": (ensures keys are quoted)
+      .replace(/\.([a-zA-Z_][a-zA-Z0-9_]*)\s*=/g, '"$1":')
+      // .{ -> { (converts ZON struct to JSON object)
+      .replace(/\.\{/g, '{')
+      // Remove trailing commas, which are invalid in JSON
+      .replace(/,\s*([}\]])/g, '$1');
+    return JSON.parse(json);
+  }
+};
 
 export function error(err: string) {
   return (err

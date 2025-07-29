@@ -30,7 +30,12 @@ function toBinding(gen: number, w: WebAssembly.Exports): Binding {
   return {
     CHOICES_SIZE,
     LOGS_SIZE,
-    update(battle: ArrayBuffer, c1: number, c2: number, log: ArrayBuffer | undefined): number {
+    update(
+      battle: ArrayBufferLike,
+      c1: number,
+      c2: number,
+      log: ArrayBufferLike | undefined,
+    ): number {
       const bytes = new Uint8Array(battle);
       memory.set(bytes, 0);
 
@@ -45,7 +50,12 @@ function toBinding(gen: number, w: WebAssembly.Exports): Binding {
       bytes.set(memory.subarray(0, size));
       return result;
     },
-    choices(battle: ArrayBuffer, player: number, request: number, options: ArrayBuffer): number {
+    choices(
+      battle: ArrayBufferLike,
+      player: number,
+      request: number,
+      options: ArrayBufferLike,
+    ): number {
       const opts = new Uint8Array(options);
       memory.set(new Uint8Array(battle));
       const n = choices(0, player, request, size);

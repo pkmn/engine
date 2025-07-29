@@ -39,4 +39,7 @@ export default [...pkmn, {
 }, {
   files: ["src/tools/generate.ts"],
   rules: {"@typescript-eslint/restrict-template-expressions": ["error", {"allowBoolean": true}]}
+}, {
+  files: ["src/tools/display/debug.tsx"],
+  rules: {"@stylistic/indent": "off"}
 }];

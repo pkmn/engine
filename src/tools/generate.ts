@@ -1077,7 +1077,7 @@ const GEN: {[gen in GenerationNum]?: GenerateFn} = {
         precedenceFn,
       },
       Types: {
-        qualifier: 'packed',
+        keyword: 'packed struct(u8)',
         size: 1,
       },
     });
@@ -1170,7 +1170,7 @@ const GEN: {[gen in GenerationNum]?: GenerateFn} = {
         extraFns,
       },
       Types: {
-        qualifier: 'extern',
+        keyword: 'extern struct',
         size: 2,
         extraFns: sandstormFn,
       },

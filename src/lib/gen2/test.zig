@@ -10,6 +10,7 @@ const protocol = @import("../common/protocol.zig");
 const rational = @import("../common/rational.zig");
 const rng = @import("../common/rng.zig");
 const std = @import("std");
+const util = @import("../common/util.zig");
 
 const ArgType = protocol.ArgType;
 const ArrayList = std.ArrayList;
@@ -134,8 +135,8 @@ test "start (all fainted)" {
 test "switching (order)" {
     var battle = Battle.init(
         0x12345678,
-        &[_]Pokemon{.{ .species = .Abra, .moves = &.{.Teleport} }} ** 6,
-        &[_]Pokemon{.{ .species = .Gastly, .moves = &.{.Lick} }} ** 6,
+        &util.repeat(Pokemon, .{ .species = .Abra, .moves = &.{.Teleport} }, 6),
+        &util.repeat(Pokemon, .{ .species = .Gastly, .moves = &.{.Lick} }, 6),
     );
     battle.turn = 1;
     const p1 = battle.side(.P1);

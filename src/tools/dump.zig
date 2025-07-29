@@ -5,6 +5,7 @@ const protocol = pkmn.protocol;
 
 const Enum = if (@hasField(std.builtin.Type, "enum")) .@"enum" else .Enum;
 const Struct = if (@hasField(std.builtin.Type, "struct")) .@"struct" else .Struct;
+const writergate = @hasDecl(std.fs.File, "stdout");
 
 pub const pkmn_options = pkmn.Options{ .internal = true };
 
@@ -34,9 +35,13 @@ pub fn main() !void {
         usageAndExit(args[0]);
     }
 
-    const out = std.io.getStdOut();
-    var buf = std.io.bufferedWriter(out.writer());
-    var w = buf.writer();
+    var out_buf: if (writergate) [4096]u8 else void = undefined;
+    var out = if (writergate)
+        std.fs.File.stdout().writer(&out_buf)
+    else
+        std.io.bufferedWriter(std.io.getStdOut().writer());
+    var w = if (writergate) &out.interface else out.writer();
+    defer (if (writergate) w.flush() else out.flush()) catch {};
 
     switch (tool) {
         .markdown => {
@@ -149,8 +154,6 @@ pub fn main() !void {
             try w.writeAll("]\n");
         },
     }
-
-    try buf.flush();
 }
 
 fn print(w: anytype, name: []const u8, comptime T: type, comptime bits: bool) !void {
@@ -168,7 +171,8 @@ fn print(w: anytype, name: []const u8, comptime T: type, comptime bits: bool) !v
 }
 
 fn usageAndExit(cmd: []const u8) noreturn {
-    const err = std.io.getStdErr().writer();
+    var stderr = if (writergate) std.fs.File.stderr().writer(&.{}) else std.io.getStdErr();
+    var err = if (writergate) &stderr.interface else stderr.writer();
     err.print("Usage: {s} <markdown|protocol|layout>\n", .{cmd}) catch {};
     std.process.exit(1);
 }

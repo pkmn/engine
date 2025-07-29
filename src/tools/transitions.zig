@@ -7,6 +7,7 @@ const showdown = pkmn.options.showdown;
 const swtch = pkmn.gen1.helpers.swtch;
 
 const endian = builtin.cpu.arch.endian();
+const writergate = @hasDecl(std.fs.File, "stdout");
 
 pub const pkmn_options = pkmn.Options{ .internal = true };
 
@@ -74,7 +75,7 @@ pub fn main() !void {
 
     _ = try battle.update(move(1), move(1), &options);
     format(gen, &stream);
-    std.debug.print("\x1b[41m{} {}\x1b[K\x1b[0m\n", .{
+    std.debug.print("\x1b[41m{f} {f}\x1b[K\x1b[0m\n", .{
         options.chance.actions,
         options.chance.durations,
     });
@@ -82,7 +83,7 @@ pub fn main() !void {
 
     _ = try battle.update(move(1), move(0), &options);
     format(gen, &stream);
-    std.debug.print("\x1b[41m{} {}\x1b[K\x1b[0m\n", .{
+    std.debug.print("\x1b[41m{f} {f}\x1b[K\x1b[0m\n", .{
         options.chance.actions,
         options.chance.durations,
     });
@@ -90,20 +91,28 @@ pub fn main() !void {
 
     _ = try battle.update(move(1), move(0), &options);
     format(gen, &stream);
-    std.debug.print("\x1b[41m{} {}\x1b[K\x1b[0m\n", .{
+    std.debug.print("\x1b[41m{f} {f}\x1b[K\x1b[0m\n", .{
         options.chance.actions,
         options.chance.durations,
     });
     options.chance.reset();
 
-    const out = std.io.getStdOut().writer();
-    // const out = std.io.null_writer;
-    const stats = try pkmn.gen1.calc.transitions(battle, move(1), move(0), allocator, out, .{
+    var buffer: if (writergate) [4096]u8 else void = undefined;
+    var out = if (writergate)
+        std.fs.File.stdout().writer(&buffer)
+    else
+        std.io.bufferedWriter(std.io.getStdOut().writer());
+    var writer = if (writergate) &out.interface else out.writer();
+    defer (if (writergate) writer.flush() else out.flush()) catch {};
+
+    const w = writer;
+    // const w = std.io.null_writer;
+    const stats = try pkmn.gen1.calc.transitions(battle, move(1), move(0), allocator, w, .{
         .durations = options.chance.durations,
         .cap = true,
         .seed = seed,
     });
-    try out.print("{}\n", .{stats.?});
+    try writer.print("{}\n", .{stats.?});
 }
 
 fn format(gen: u8, stream: *pkmn.protocol.ByteStream) void {
@@ -116,13 +125,15 @@ fn format(gen: u8, stream: *pkmn.protocol.ByteStream) void {
 }
 
 fn errorAndExit(msg: []const u8, arg: []const u8, cmd: []const u8) noreturn {
-    const err = std.io.getStdErr().writer();
+    var stderr = if (writergate) std.fs.File.stderr().writer(&.{}) else std.io.getStdErr();
+    var err = if (writergate) &stderr.interface else stderr.writer();
     err.print("Invalid {s}: {any}\n", .{ msg, arg }) catch {};
     usageAndExit(cmd);
 }
 
 fn usageAndExit(cmd: []const u8) noreturn {
-    const err = std.io.getStdErr().writer();
+    var stderr = if (writergate) std.fs.File.stderr().writer(&.{}) else std.io.getStdErr();
+    var err = if (writergate) &stderr.interface else stderr.writer();
     err.print("Usage: {s} <GEN> <SEED?>\n", .{cmd}) catch {};
     std.process.exit(1);
 }

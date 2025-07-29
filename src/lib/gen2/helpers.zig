@@ -4,6 +4,7 @@ const gen1 = @import("../gen1/data.zig");
 const options = @import("../common/options.zig");
 const rng = @import("../common/rng.zig");
 const std = @import("std");
+const util = @import("../common/util.zig");
 
 const assert = std.debug.assert;
 const Choice = common.Choice;
@@ -195,7 +196,7 @@ pub const Pokemon = struct {
             );
         }
 
-        var ms = [_]MoveSlot{.{}} ** 4;
+        var ms = util.repeat(MoveSlot, .{}, 4);
         const n = if (rand.chance(u8, 1, 100)) rand.range(u4, 1, 3 + 1) else 4;
         for (0..n) |i| {
             var m: Move = .None;

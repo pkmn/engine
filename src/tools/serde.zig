@@ -1,7 +1,10 @@
+const builtin = @import("builtin");
 const pkmn = @import("pkmn");
 const std = @import("std");
 
 const gen1 = pkmn.gen1.helpers;
+
+const writergate = @hasDecl(std.fs.File, "stdout");
 
 pub fn main() !void {
     var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
@@ -18,9 +21,13 @@ pub fn main() !void {
     const seed = if (args.len > 2) std.fmt.parseUnsigned(u64, args[2], 10) catch
         errorAndExit("seed", args[2], args[0]) else null;
 
-    const out = std.io.getStdOut();
-    var buf = std.io.bufferedWriter(out.writer());
-    var w = buf.writer();
+    var buf: if (writergate) [4096]u8 else void = undefined;
+    var out = if (writergate)
+        std.fs.File.stdout().writer(&buf)
+    else
+        std.io.bufferedWriter(std.io.getStdOut().writer());
+    var writer = if (writergate) &out.interface else out.writer();
+    defer (if (writergate) writer.flush() else out.flush()) catch {};
 
     var prng = if (seed) |s| pkmn.PSRNG.init(s) else null;
     const battle = switch (gen) {
@@ -28,8 +35,13 @@ pub fn main() !void {
         else => unreachable,
     };
 
-    try w.writeStruct(battle);
-    try buf.flush();
+    if (writergate) {
+        // TODO: writer.writeStruct is broken on Zig...
+        // try writer.writeStruct(battle, builtin.cpu.arch.endian());
+        try writer.writeAll(@ptrCast((&battle)[0..1]));
+    } else {
+        try writer.writeStruct(battle);
+    }
 
     const serialized = std.mem.toBytes(battle);
     const deserialized = std.mem.bytesToValue(@TypeOf(battle), &serialized);
@@ -37,13 +49,15 @@ pub fn main() !void {
 }
 
 fn errorAndExit(msg: []const u8, arg: []const u8, cmd: []const u8) noreturn {
-    const err = std.io.getStdErr().writer();
+    var stderr = if (writergate) std.fs.File.stderr().writer(&.{}) else std.io.getStdErr();
+    var err = if (writergate) &stderr.interface else stderr.writer();
     err.print("Invalid {s}: {s}\n", .{ msg, arg }) catch {};
     usageAndExit(cmd);
 }
 
 fn usageAndExit(cmd: []const u8) noreturn {
-    const err = std.io.getStdErr().writer();
+    var stderr = if (writergate) std.fs.File.stderr().writer(&.{}) else std.io.getStdErr();
+    var err = if (writergate) &stderr.interface else stderr.writer();
     err.print("Usage: {s} <GEN> <SEED?>\n", .{cmd}) catch {};
     std.process.exit(1);
 }

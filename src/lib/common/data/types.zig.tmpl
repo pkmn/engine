@@ -44,7 +44,7 @@ pub const Type = enum({{{ Type.type }}}) {
 };
 
 /// Representation of a Pokémon's typing.
-pub const Types = {{{ Types.qualifier }}} struct {
+pub const Types = {{{ Types.keyword }}} {
     /// A Pokémon's primary type.
     type1: Type = .Normal,
     /// A Pokémon's secondary type (may be identical to its primary type).

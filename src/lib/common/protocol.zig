@@ -819,9 +819,9 @@ pub fn Log(comptime Writer: type) type {
 /// `Log` type backed by the optimized `ByteStream.Writer`.
 pub const FixedLog = Log(ByteStream.Writer);
 
-/// Stripped down version of `std.io.FixedBufferStream` optimized for efficiently writing the
-/// individual protocol bytes. Note that the `ByteStream.Writer` is **not** a `std.io.Writer` and
-/// should not be used for general purpose writing.
+/// Stripped down version of `std.Io.Writer.fixed` optimized for efficiently writing the
+/// individual protocol bytes. Note that the `ByteStream.Writer` is **not** a `std.Io.Writer`
+/// and should not be used for general purpose writing.
 pub const ByteStream = struct {
     buffer: []u8,
     pos: usize = 0,
@@ -1208,9 +1208,11 @@ pub fn expectLog(
 ) !void {
     if (!enabled) return;
 
+    const stderr =
+        if (@hasDecl(std.io, "getStdErr")) std.io.getStdErr() else std.fs.File.stderr();
     const color = if (std.process.hasEnvVarConstant("ZIG_DEBUG_COLOR"))
         true
-    else switch (std.io.tty.detectConfig(std.io.getStdErr())) {
+    else switch (std.io.tty.detectConfig(stderr)) {
         .escape_codes => true,
         else => false,
     };

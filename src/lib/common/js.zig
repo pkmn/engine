@@ -1,5 +1,5 @@
 const std = @import("std");
-const c = @import("napi.zig");
+const c = @import("napi");
 
 const assert = std.debug.assert;
 

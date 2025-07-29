@@ -334,7 +334,7 @@ pub fn transitions(
                             acts.p1.damage = @intCast(p1d);
                             acts.p2.damage = @intCast(p2d);
                             if ((try seen.getOrPut(acts)).found_existing) {
-                                err("already seen {}", .{acts}, options.seed);
+                                err("already seen {f}", .{acts}, options.seed);
                                 return error.TestUnexpectedResult;
                             }
                         }
@@ -351,7 +351,7 @@ pub fn transitions(
                     stats.saved += 1;
 
                     if (p.q < p.p) {
-                        err("improper fraction {}", .{p}, options.seed);
+                        err("improper fraction {f}", .{p}, options.seed);
                         return error.TestUnexpectedResult;
                     }
                 } else {
@@ -411,7 +411,7 @@ pub fn transitions(
 
     p.reduce();
     if (p.p != 1 or p.q != 1) {
-        err("expected 1, found {}", .{p}, options.seed);
+        err("expected 1, found {f}", .{p}, options.seed);
         return error.TestExpectedEqual;
     }
 
@@ -504,7 +504,7 @@ pub fn update(
 fn expectEqualActions(expected: Actions, actual: Actions) !void {
     return expectEqual(expected, actual) catch |e| switch (e) {
         error.TestExpectedEqual => {
-            std.debug.print("expected {}, found {}\n", .{ expected, actual });
+            std.debug.print("expected {f}, found {f}\n", .{ expected, actual });
             return e;
         },
         else => return e,
@@ -527,7 +527,9 @@ fn unfix(actual: anytype) data.Battle(data.PRNG) {
 }
 
 fn err(comptime fmt: []const u8, v: anytype, seed: ?u64) void {
-    const w = std.io.getStdErr().writer();
+    const writergate = @hasDecl(std.fs.File, "stderr");
+    var stderr = if (writergate) std.fs.File.stderr().writer(&.{}) else std.io.getStdErr();
+    var w = if (writergate) &stderr.interface else stderr.writer();
     w.print(fmt, v) catch return;
     if (seed) |s| return w.print("{}\n", .{s}) catch return;
     return w.writeByte('\n') catch return;

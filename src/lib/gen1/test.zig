@@ -10,6 +10,7 @@ const protocol = @import("../common/protocol.zig");
 const rational = @import("../common/rational.zig");
 const rng = @import("../common/rng.zig");
 const std = @import("std");
+const util = @import("../common/util.zig");
 
 const ArrayList = std.ArrayList;
 const assert = std.debug.assert;
@@ -135,8 +136,8 @@ test "start (all fainted)" {
 test "switching (order)" {
     var battle = Battle.init(
         0x12345678,
-        &[_]Pokemon{.{ .species = .Abra, .moves = &.{.Teleport} }} ** 6,
-        &[_]Pokemon{.{ .species = .Gastly, .moves = &.{.Lick} }} ** 6,
+        &util.repeat(Pokemon, .{ .species = .Abra, .moves = &.{.Teleport} }, 6),
+        &util.repeat(Pokemon, .{ .species = .Gastly, .moves = &.{.Lick} }, 6),
     );
     battle.turn = 1;
     const p1 = battle.side(.P1);
@@ -3023,7 +3024,8 @@ test "Binding effect" {
             HIT, ~CRIT, MIN_DMG, MIN_WRAP,
             HIT, ~CRIT, MAX_DMG, MIN_WRAP,
             HIT,
-            PAR_CAN, HIT, MAX_WRAP, PAR_CAN,
+            PAR_CAN, HIT, MAX_WRAP,
+            PAR_CAN,
             PAR_CANT, PAR_CAN,
             HIT, MIN_WRAP,
         } else .{
@@ -5363,7 +5365,6 @@ test "Metronome effect" {
     // zig fmt: off
         if (showdown) .{
             wrap, HIT, ~CRIT, MIN_DMG, MIN_WRAP,
-            // BUG: tackle, HIT,
             petal_dance, THRASH_3, HIT, ~CRIT, MIN_DMG,
             ~HIT, CFZ_2, ~HIT,
             CFZ_CAN, mimic, HIT, MIMIC_2, disable, HIT,
@@ -5396,20 +5397,9 @@ test "Metronome effect" {
     try t.expectProbability(1881, 17358848); // (1/163) * (216/256) * (209/256) * (1/39)
 
     var n = t.battle.actual.choices(.P2, .Move, &choices);
-    try expectEqualSlices(
-        Choice,
-        if (showdown) &[_]Choice{ move(1), move(2), move(3) } else &[_]Choice{forced},
-        choices[0..n],
-    );
+    try expectEqualSlices(Choice, &[_]Choice{forced}, choices[0..n]);
 
-    if (showdown) {
-        // try t.log.expected.move(.{ P2.ident(1), Move.Metronome, P2.ident(1) });
-        // try t.log.expected.move(.{ P2.ident(1), Move.Tackle, P1.ident(1), Move.Metronome });
-        // BUG: can't implement Pokémon Showdown's broken partialtrappinglock mechanics
-        try t.log.expected.move(.{ P2.ident(1), Move.Metronome, P1.ident(1) });
-    } else {
-        try t.log.expected.move(.{ P2.ident(1), Move.Wrap, P1.ident(1) });
-    }
+    try t.log.expected.move(.{ P2.ident(1), Move.Wrap, P1.ident(1) });
     t.expected.p1.get(1).hp -= 14;
     try t.log.expected.damage(.{ P1.ident(1), t.expected.p1.get(1), .None });
     try t.log.expected.cant(.{ P1.ident(1), .Bound });
@@ -6866,14 +6856,22 @@ test "Hyper Beam + Substitute bug" {
     try t.verify();
 }
 
+// FIXME
 test "Mimic infinite PP bug" {
+    // .{ HIT, 1 } ++ @as([15]U, @bitCast(@as([15][2]U, @splat(.{  ~CRIT, HIT })))
+    // zig fmt: off
+    const rolls: [32]U = .{
+        HIT, 1,
+        ~CRIT, HIT, ~CRIT, HIT, ~CRIT, HIT, ~CRIT, HIT, ~CRIT, HIT,
+        ~CRIT, HIT, ~CRIT, HIT, ~CRIT, HIT, ~CRIT, HIT, ~CRIT, HIT,
+        ~CRIT, HIT, ~CRIT, HIT, ~CRIT, HIT, ~CRIT, HIT, ~CRIT, HIT,
+    };
+    // zig fmt: on
+
     // Mimic first
     {
         var battle = Battle.fixed(
-            if (showdown)
-                .{ HIT, MAX }
-            else
-                .{ HIT, 1 } ++ .{ ~CRIT, HIT } ** 15,
+            if (showdown) .{ HIT, MAX } else rolls,
             &.{.{ .species = .Gengar, .moves = &.{ .Splash, .MegaKick } }},
             &.{
                 .{ .species = .Gengar, .level = 99, .moves = &.{ .Mimic, .MegaKick, .Splash } },
@@ -6905,10 +6903,7 @@ test "Mimic infinite PP bug" {
     // Mimicked move first
     {
         var battle = Battle.fixed(
-            if (showdown)
-                .{ HIT, MAX }
-            else
-                .{ HIT, 1 } ++ .{ ~CRIT, HIT } ** 15,
+            if (showdown) .{ HIT, MAX } else rolls,
             &.{.{ .species = .Gengar, .moves = &.{ .Splash, .MegaKick } }},
             &.{
                 .{ .species = .Gengar, .level = 99, .moves = &.{ .MegaKick, .Mimic, .Splash } },
@@ -6945,7 +6940,6 @@ test "Mirror Move + Wrap bug" {
 
     var t = Test((if (showdown)
         .{ ~HIT, HIT, ~CRIT, MIN_DMG, MIN_WRAP }
-        // BUG: .{ ~HIT, HIT, ~CRIT, MIN_DMG, MIN_WRAP, HIT }
     else
         .{ MIN_WRAP, ~CRIT, MIN_DMG, ~HIT, ~CRIT, MIN_WRAP, ~CRIT, MIN_DMG, HIT })).init(
         &.{.{ .species = .Tentacruel, .moves = &.{ .Wrap, .Surf } }},
@@ -6969,14 +6963,10 @@ test "Mirror Move + Wrap bug" {
     const expected = if (showdown) &[_]Choice{ move(1), move(2) } else &[_]Choice{move(0)};
     try expectEqualSlices(Choice, expected, choices[0..n]);
     n = t.battle.actual.choices(.P2, .Move, &choices);
-    try expectEqualSlices(Choice, expected, choices[0..n]);
+    try expectEqualSlices(Choice, &[_]Choice{forced}, choices[0..n]);
 
     try t.log.expected.cant(.{ P1.ident(1), .Bound });
-    if (showdown) {
-        try t.log.expected.move(.{ P2.ident(1), Move.Gust, P1.ident(1) });
-    } else {
-        try t.log.expected.move(.{ P2.ident(1), Move.Wrap, P1.ident(1) });
-    }
+    try t.log.expected.move(.{ P2.ident(1), Move.Wrap, P1.ident(1) });
     t.expected.p1.get(1).hp -= 20;
     try t.log.expected.damage(.{ P1.ident(1), t.expected.p1.get(1), .None });
     try t.log.expected.turn(.{3});
@@ -7902,6 +7892,7 @@ test "Toxic counter glitches" {
 
 test "Poison/Burn animation with 0 HP" {
     // https://pkmn.cc/bulba/List_of_graphical_quirks_(Generation_I)
+    // https://glitchcity.wiki/wiki/Poison/Burn_animation_with_0_HP_glitch
 
     // Faint from Recoil (no healing on Pokémon Showdown)
     {
@@ -7940,11 +7931,9 @@ test "Poison/Burn animation with 0 HP" {
         try t.log.expected.damage(.{ P1.ident(1), t.expected.p1.get(1), .None });
         t.expected.p2.get(1).hp -= 30;
         try t.log.expected.damage(.{ P2.ident(1), t.expected.p2.get(1), .RecoilOf, P1.ident(1) });
-        if (!showdown) {
-            try t.log.expected.damage(.{ P2.ident(1), t.expected.p2.get(1), .Poison });
-            t.expected.p1.get(1).hp += 90;
-            try t.log.expected.heal(.{ P1.ident(1), t.expected.p1.get(1), .Silent });
-        }
+        if (!showdown) try t.log.expected.damage(.{ P2.ident(1), t.expected.p2.get(1), .Poison });
+        t.expected.p1.get(1).hp += 90;
+        try t.log.expected.heal(.{ P1.ident(1), t.expected.p1.get(1), .Silent });
         try t.log.expected.faint(.{ P2.ident(1), true });
 
         try expectEqual(Result{ .p1 = .Pass, .p2 = .Switch }, try t.update(move(2), move(2)));
@@ -7988,11 +7977,9 @@ test "Poison/Burn animation with 0 HP" {
         try t.log.expected.miss(.{P2.ident(1)});
         t.expected.p2.get(1).hp -= 1;
         try t.log.expected.damage(.{ P2.ident(1), t.expected.p2.get(1), .None });
-        if (!showdown) {
-            try t.log.expected.damage(.{ P2.ident(1), t.expected.p2.get(1), .Poison });
-            t.expected.p1.get(1).hp += 90;
-            try t.log.expected.heal(.{ P1.ident(1), t.expected.p1.get(1), .Silent });
-        }
+        if (!showdown) try t.log.expected.damage(.{ P2.ident(1), t.expected.p2.get(1), .Poison });
+        t.expected.p1.get(1).hp += 90;
+        try t.log.expected.heal(.{ P1.ident(1), t.expected.p1.get(1), .Silent });
         try t.log.expected.faint(.{ P2.ident(1), true });
 
         try expectEqual(Result{ .p1 = .Pass, .p2 = .Switch }, try t.update(move(2), move(2)));
@@ -9317,7 +9304,7 @@ test "Partial trapping move Mirror Move glitch" {
     const MIN_WRAP = MIN;
 
     var t = Test((if (showdown)
-        .{ ~HIT, HIT, ~CRIT, MAX_DMG, MIN_WRAP }
+        .{ ~HIT, HIT, ~CRIT, MAX_DMG, MIN_WRAP, ~HIT }
     else
         .{ ~CRIT, MIN_WRAP, ~CRIT, MAX_DMG, ~HIT, ~CRIT, MIN_WRAP, ~CRIT, MAX_DMG, HIT })).init(
         &.{.{ .species = .Pidgeot, .moves = &.{ .Agility, .MirrorMove } }},
@@ -9351,14 +9338,15 @@ test "Partial trapping move Mirror Move glitch" {
 
     if (showdown) {
         try t.log.expected.switched(.{ P2.ident(2), t.expected.p2.get(2) });
-        try t.log.expected.move(.{ P1.ident(1), Move.MirrorMove, P1.ident(1) });
-        try t.log.expected.fail(.{ P1.ident(1), .None });
+        try t.log.expected.move(.{ P1.ident(1), Move.FireSpin, P2.ident(2) });
+        try t.log.expected.lastmiss(.{});
+        try t.log.expected.miss(.{P1.ident(1)});
         try t.log.expected.turn(.{4});
     }
 
     const result = if (showdown) Result.Default else Result.Error;
     try expectEqual(result, try t.update(move(if (showdown) 2 else 0), swtch(2)));
-    try t.expectProbability(1, 1);
+    try if (showdown) t.expectProbability(39, 128) else t.expectProbability(1, 1); // (78/256)
 
     try t.verify();
 }
@@ -10074,15 +10062,20 @@ test "MIN_CHANCE" {
     const NO_FLINCH = comptime ranged(77, 256);
     const rollingKick = comptime metronome(.RollingKick);
 
-    var t = Test(if (showdown)
-        .{ TIE_1, PAR_CAN, HIT, CFZ_5, CFZ_CAN, PAR_CAN, HIT, CFZ_5, TIE_1 } ++
-            .{ CFZ_CAN, PAR_CAN, rollingKick, HIT, ~CRIT, MIN_DMG, NO_FLINCH } ** 2
-    else
-        .{ TIE_1, PAR_CAN, HIT, CFZ_5, CFZ_CAN, PAR_CAN, HIT, CFZ_5, TIE_1 } ++
-            .{ CFZ_CAN, PAR_CAN, ~CRIT, rollingKick, ~CRIT, MIN_DMG, HIT, NO_FLINCH } ** 2).init(
+    // zig fmt: off
+    var t = Test(if (showdown) .{
+        TIE_1, PAR_CAN, HIT, CFZ_5, CFZ_CAN, PAR_CAN, HIT, CFZ_5, TIE_1,
+        CFZ_CAN, PAR_CAN, rollingKick, HIT, ~CRIT, MIN_DMG, NO_FLINCH,
+        CFZ_CAN, PAR_CAN, rollingKick, HIT, ~CRIT, MIN_DMG, NO_FLINCH
+    } else .{
+        TIE_1, PAR_CAN, HIT, CFZ_5, CFZ_CAN, PAR_CAN, HIT, CFZ_5, TIE_1,
+        CFZ_CAN, PAR_CAN, ~CRIT, rollingKick, ~CRIT, MIN_DMG, HIT, NO_FLINCH,
+        CFZ_CAN, PAR_CAN, ~CRIT, rollingKick, ~CRIT, MIN_DMG, HIT, NO_FLINCH
+    }).init(
         &.{.{ .species = .Hitmonlee, .status = PAR, .moves = &.{ .ConfuseRay, .Metronome } }},
         &.{.{ .species = .Hitmonlee, .status = PAR, .moves = &.{ .ConfuseRay, .Metronome } }},
     );
+    // zig fmt: on
     defer t.deinit();
 
     try t.log.expected.move(.{ P1.ident(1), Move.ConfuseRay, P2.ident(1) });
@@ -10515,7 +10508,7 @@ fn Test(comptime rolls: anytype) type {
             const r = self.options.chance.probability;
             // DEBUG(r);
             if (r.p != p or r.q != q) {
-                print("expected {d}/{d}, found {}\n", .{ p, q, r });
+                print("expected {d}/{d}, found {f}\n", .{ p, q, r });
                 return error.TestExpectedEqual;
             }
         }

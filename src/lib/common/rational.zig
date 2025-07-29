@@ -78,14 +78,13 @@ pub fn Rational(comptime T: type) type {
             reduce_(r);
         }
 
-        pub fn format(
-            self: Self,
-            comptime fmt: []const u8,
-            opts: std.fmt.FormatOptions,
-            writer: anytype,
-        ) !void {
+        pub const format = if (@hasDecl(std.fmt, "Options")) new else old;
+        fn old(self: Self, comptime fmt: []const u8, opts: anytype, w: anytype) !void {
             _ = .{ fmt, opts };
-            try writer.print("{d}/{d}", .{ self.p, self.q });
+            try new(self, w);
+        }
+        fn new(self: Self, w: anytype) !void {
+            try w.print("{d}/{d}", .{ self.p, self.q });
         }
     } else struct {
         const Self = @This();
@@ -130,14 +129,13 @@ pub fn Rational(comptime T: type) type {
             reduce_(r);
         }
 
-        pub fn format(
-            self: Self,
-            comptime fmt: []const u8,
-            opts: std.fmt.FormatOptions,
-            writer: anytype,
-        ) !void {
+        pub const format = if (@hasDecl(std.fmt, "Options")) new else old;
+        fn old(self: Self, comptime fmt: []const u8, opts: anytype, w: anytype) !void {
             _ = .{ fmt, opts };
-            try writer.print("{d}/{d}", .{ self.p, self.q });
+            try new(self, w);
+        }
+        fn new(self: Self, w: anytype) !void {
+            try w.print("{d}/{d}", .{ self.p, self.q });
         }
     };
 }

@@ -1,6 +1,9 @@
 const std = @import("std");
 const pkmn = @import("pkmn");
 
+// Ugly workaround to support breaking changes to Zig's Writer API in 0.15.0
+const writergate = @hasDecl(std.fs.File, "stdout");
+
 pub fn main() !void {
     // Set up required to be able to parse command line arguments
     var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
@@ -10,8 +13,10 @@ pub fn main() !void {
     const args = try std.process.argsAlloc(allocator);
     defer std.process.argsFree(allocator, args);
 
+    var stderr = if (writergate) std.fs.File.stderr().writer(&.{}) else std.io.getStdErr();
+    var err = if (writergate) &stderr.interface else stderr.writer();
+
     // Expect that we have been given a decimal seed as our only argument
-    const err = std.io.getStdErr().writer();
     if (args.len != 2) {
         try err.print("Usage: {s} <seed>\n", .{args[0]});
         std.process.exit(1);
@@ -55,9 +60,9 @@ pub fn main() !void {
     // `pkmn.LOGS_SIZE` is guaranteed to be large enough for a single update. This will only be
     // written to if `-Dlog` is enabled - `pkmn.protocol.NULL` can be used to turn all of the
     // logging into no-ops. Here we are using the optimized `pkmn.protocol.ByteStream` which should
-    // be more efficient than `pkmn.protocol.Log(std.io.FixedBufferStream([]u8).Writer)`, though
-    // that or a `Log` backed by some other `std.io.Writer` would also work. This example doesn't
-    // demonstrate how to use `-Dchance` or `-Dcalc` so we just pass the no-op implementations here
+    // be more efficient than `pkmn.protocol.Log(std.Io.Writer.fixed([]u8))`, though that or a `Log`
+    // backed by some other `std.Io.Writer` would also work. This example doesn't demonstrate how
+    // to use `-Dchance` or `-Dcalc` so we just pass the no-op implementations here
     var buf: [pkmn.LOGS_SIZE]u8 = undefined;
     var stream = pkmn.protocol.ByteStream{ .buffer = &buf };
     var options = pkmn.battle.options(
@@ -100,6 +105,7 @@ pub fn main() !void {
         else => unreachable,
     };
 
-    const out = std.io.getStdOut().writer();
+    var stdout = if (writergate) std.fs.File.stdout().writer(&.{}) else std.io.getStdOut();
+    var out = if (writergate) &stdout.interface else stdout.writer();
     try out.print("Battle {s} after {d} turns\n", .{ msg, battle.turn });
 }

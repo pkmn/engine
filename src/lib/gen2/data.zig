@@ -57,7 +57,7 @@ pub fn Battle(comptime RNG: anytype) type {
         turn: u16 = 0,
         field: Field = .{},
 
-        _: [padding]u8 = .{0} ** padding,
+        _: [padding]u8 = util.repeat(u8, 0, padding),
 
         pub fn side(self: anytype, player: Player) PointerType(@TypeOf(self), Side) {
             assert(isPointerTo(self, Self));
@@ -100,13 +100,13 @@ pub const Weather = enum(u4) {
 };
 
 pub const Side = extern struct {
-    pokemon: [6]Pokemon = [_]Pokemon{.{}} ** 6,
+    pokemon: [6]Pokemon = util.repeat(Pokemon, .{}, 6),
     active: ActivePokemon align(8) = .{},
     conditions: Conditions = .{},
     // NB: wLastPlayerCounterMove / wLastEnemyCounterMove (wLastPlayerMove / wLastEnemyMove)
     last_used_move: Move = .None,
 
-    _: [7]u8 = .{0} ** 7,
+    _: [7]u8 = util.repeat(u8, 0, 7),
 
     const Conditions = packed struct(u32) {
         Spikes: bool = false,
@@ -161,7 +161,7 @@ pub const Side = extern struct {
 pub const ActivePokemon = extern struct {
     volatiles: Volatiles align(4) = .{},
     stats: Stats(u16) = .{},
-    moves: [4]MoveSlot = [_]MoveSlot{.{}} ** 4,
+    moves: [4]MoveSlot = util.repeat(MoveSlot, .{}, 4),
     boosts: Boosts = .{},
     types: Types = .{},
     species: Species = .None,
@@ -182,7 +182,7 @@ pub const ActivePokemon = extern struct {
 
 pub const Pokemon = extern struct {
     stats: Stats(u16) = .{},
-    moves: [4]MoveSlot = [_]MoveSlot{.{}} ** 4,
+    moves: [4]MoveSlot = util.repeat(MoveSlot, .{}, 4),
     types: Types = .{},
     dvs: DVs = .{},
     hp: u16 = 0,

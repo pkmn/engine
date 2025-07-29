@@ -81,8 +81,12 @@ pub const Actions = extern struct {
         try writer.writeAll(">");
     }
 
-    pub fn format(a: Actions, comptime f: []const u8, o: std.fmt.FormatOptions, w: anytype) !void {
+    pub const format = if (@hasDecl(std.fmt, "Options")) new else old;
+    fn old(a: Actions, comptime f: []const u8, o: anytype, w: anytype) !void {
         _ = .{ f, o };
+        try new(a, w);
+    }
+    fn new(a: Actions, w: anytype) !void {
         try fmt(a, w, false);
     }
 };
@@ -186,8 +190,12 @@ pub const Action = packed struct(u128) {
 
     pub const Field = std.meta.FieldEnum(Action);
 
-    pub fn format(a: Action, comptime f: []const u8, o: std.fmt.FormatOptions, w: anytype) !void {
+    pub const format = if (@hasDecl(std.fmt, "Options")) new else old;
+    fn old(a: Action, comptime f: []const u8, o: anytype, w: anytype) !void {
         _ = .{ f, o };
+        try new(a, w);
+    }
+    fn new(a: Action, w: anytype) !void {
         try fmt(a, w, false);
     }
 
@@ -786,7 +794,7 @@ pub fn expectProbability(r: anytype, p: u64, q: u64) !void {
 
     r.reduce();
     if (r.p != p or r.q != q) {
-        print("expected {d}/{d}, found {}\n", .{ p, q, r });
+        print("expected {d}/{d}, found {f}\n", .{ p, q, r });
         return error.TestExpectedEqual;
     }
 }

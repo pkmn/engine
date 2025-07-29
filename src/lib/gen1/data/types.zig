@@ -108,7 +108,7 @@ pub const Type = enum(u4) {
 };
 
 /// Representation of a Pokémon's typing.
-pub const Types = packed struct {
+pub const Types = packed struct(u8) {
     /// A Pokémon's primary type.
     type1: Type = .Normal,
     /// A Pokémon's secondary type (may be identical to its primary type).
