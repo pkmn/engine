@@ -5,6 +5,7 @@ const protocol = pkmn.protocol;
 
 const Enum = if (@hasField(std.builtin.Type, "enum")) .@"enum" else .Enum;
 const Struct = if (@hasField(std.builtin.Type, "struct")) .@"struct" else .Struct;
+
 const writergate = @hasDecl(std.fs.File, "stdout");
 
 pub const pkmn_options = pkmn.Options{ .internal = true };

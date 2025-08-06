@@ -10,18 +10,21 @@ const Pointer = if (@hasField(std.builtin.Type, "pointer")) .pointer else .Point
 const Struct = if (@hasField(std.builtin.Type, "struct")) .@"struct" else .Struct;
 const Union = if (@hasField(std.builtin.Type, "union")) .@"union" else .Union;
 
+const writergate = @hasDecl(std.fs.File, "stdout");
+
 pub fn print(value: anytype) void {
     if (@hasDecl(debug, "lockStdErr")) debug.lockStdErr() else debug.getStderrMutex().lock();
     defer if (@hasDecl(debug, "unlockStdErr"))
         debug.unlockStdErr()
     else
         debug.getStderrMutex().unlock();
-    const stderr = io.getStdErr().writer();
+    var stderr = if (writergate) std.fs.File.stderr().writer(&.{}) else std.io.getStdErr();
+    var err = if (writergate) &stderr.interface else stderr.writer();
 
     nosuspend {
-        stderr.writeAll("\x1b[41m") catch return;
+        err.writeAll("\x1b[41m") catch return;
         if (@TypeOf(@src()) == @TypeOf(value)) {
-            stderr.print("{s} ({s}:{d}:{d})", .{
+            err.print("{s} ({s}:{d}:{d})", .{
                 value.fn_name,
                 value.file,
                 value.line,
@@ -33,7 +36,7 @@ pub fn print(value: anytype) void {
                     if (info.is_tuple) {
                         inline for (info.fields, 0..) |f, i| {
                             inspect(@field(value, f.name));
-                            if (i < info.fields.len - 1) stderr.writeAll(" ") catch return;
+                            if (i < info.fields.len - 1) err.writeAll(" ") catch return;
                         }
                     } else {
                         inspect(value);
@@ -42,43 +45,44 @@ pub fn print(value: anytype) void {
                 else => inspect(value),
             }
         }
-        stderr.writeAll("\x1b[K\x1b[0m\n") catch return;
+        err.writeAll("\x1b[K\x1b[0m\n") catch return;
     }
 }
 
 fn inspect(value: anytype) void {
-    const stderr = io.getStdErr().writer();
+    var stderr = if (writergate) std.fs.File.stderr().writer(&.{}) else std.io.getStdErr();
+    var err = if (writergate) &stderr.interface else stderr.writer();
 
     nosuspend {
-        const err = "Unable to format type '" ++ @typeName(@TypeOf(value)) ++ "'";
+        const msg = "Unable to format type '" ++ @typeName(@TypeOf(value)) ++ "'";
         switch (@typeInfo(@TypeOf(value))) {
             Array => |info| {
-                if (info.child == u8) return stderr.print("{s}", .{value}) catch return;
-                @compileError(err);
+                if (info.child == u8) return err.print("{s}", .{value}) catch return;
+                @compileError(msg);
             },
             Pointer => |ptr_info| switch (ptr_info.size) {
                 .One => switch (@typeInfo(ptr_info.child)) {
                     Array => |info| {
-                        if (info.child == u8) return stderr.print("{s}", .{value}) catch return;
-                        @compileError(err);
+                        if (info.child == u8) return err.print("{s}", .{value}) catch return;
+                        @compileError(msg);
                     },
                     Enum, Union, Struct => return inspect(value.*),
-                    else => @compileError(err),
+                    else => @compileError(msg),
                 },
                 .Many, .C => {
                     if (ptr_info.sentinel) |_| return inspect(std.mem.span(value));
                     if (ptr_info.child == u8) {
-                        return stderr.print("{s}", .{std.mem.span(value)}) catch return;
+                        return err.print("{s}", .{std.mem.span(value)}) catch return;
                     }
-                    @compileError(err);
+                    @compileError(msg);
                 },
                 .Slice => {
-                    if (ptr_info.child == u8) return stderr.print("{s}", .{value}) catch return;
-                    @compileError(err);
+                    if (ptr_info.child == u8) return err.print("{s}", .{value}) catch return;
+                    @compileError(msg);
                 },
             },
-            Optional => stderr.print("{?}", .{value}) catch return,
-            else => stderr.print("{}", .{value}) catch return,
+            Optional => err.print("{?}", .{value}) catch return,
+            else => err.print("{}", .{value}) catch return,
         }
     }
 }

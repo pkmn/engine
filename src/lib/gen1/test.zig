@@ -12,7 +12,7 @@ const rng = @import("../common/rng.zig");
 const std = @import("std");
 const util = @import("../common/util.zig");
 
-const ArrayList = std.ArrayList;
+const ArrayList = if (@hasDecl(std, "array_list")) std.array_list.Managed else std.ArrayList;
 const assert = std.debug.assert;
 const Battle = helpers.Battle;
 const ByteStream = protocol.ByteStream;
@@ -247,8 +247,8 @@ test "switching (brn/par)" {
 }
 
 test "turn order (priority)" {
-    var t = Test(
     // zig fmt: off
+    var t = Test(
         if (showdown) .{
             HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG,
             HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG,
@@ -470,8 +470,8 @@ test "turn order (complex speed tie)" {
         const petal_dance = comptime metronome(.PetalDance);
         const THRASH_3 = if (showdown) comptime ranged(1, 4 - 2) - 1 else MIN;
 
-        var t = Test(
         // zig fmt: off
+        var t = Test(
             if (showdown) .{
                 TIE_2, fly, dig, TIE_1, HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG,
                 swift, ~CRIT, MIN_DMG, petal_dance, THRASH_3, HIT, ~CRIT, MIN_DMG,
@@ -659,8 +659,8 @@ test "accuracy (normal)" {
 test "damage calc" {
     const NO_BRN = MAX;
 
-    var t = Test(
     // zig fmt: off
+    var t = Test(
         if (showdown) .{
             HIT, ~CRIT, MIN_DMG, HIT, CRIT, MAX_DMG, NO_BRN, HIT, ~CRIT, MIN_DMG
         } else .{
@@ -1276,8 +1276,8 @@ test "Twineedle effect" {
     // breaks the target's substitute, the move ends.
     const PROC = comptime ranged(52, 256) - 1;
     const NO_PROC = PROC + 1;
-    var t = Test(
     // zig fmt: off
+    var t = Test(
         if (showdown) .{
             HIT, CRIT, MAX_DMG,
             HIT, ~CRIT, MIN_DMG, NO_PROC,
@@ -1486,8 +1486,8 @@ test "PoisonChance effect" {
     const LO_PROC = comptime ranged(52, 256) - 1;
     const HI_PROC = comptime ranged(103, 256) - 1;
 
-    var t = Test(
     // zig fmt: off
+    var t = Test(
         if (showdown) .{
             HIT, ~CRIT, MIN_DMG, LO_PROC, HIT, ~CRIT, MIN_DMG, HI_PROC,
             HIT, ~CRIT, MAX_DMG,
@@ -1575,8 +1575,8 @@ test "BurnChance effect" {
     const LO_PROC = comptime ranged(26, 256) - 1;
     const HI_PROC = comptime ranged(77, 256) - 1;
 
-    var t = Test(
     // zig fmt: off
+    var t = Test(
         if (showdown) .{
             HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HI_PROC,
             HIT, ~CRIT, MIN_DMG,
@@ -1664,8 +1664,8 @@ test "FreezeChance effect" {
     const PAR_CANT = MIN;
     const MIN_WRAP = MIN;
 
-    var t = Test(
     // zig fmt: off
+    var t = Test(
         if (showdown) .{
             HIT, ~CRIT, MIN_DMG, HIT,
             HIT, ~CRIT, MIN_DMG, FRZ, PAR_CANT,
@@ -1845,8 +1845,8 @@ test "Paralyze effect" {
     // Paralyzes the target.
     const PROC = comptime ranged(63, 256) - 1;
     const NO_PROC = PROC + 1;
-    var t = Test(
     // zig fmt: off
+    var t = Test(
         if (showdown) .{
             ~HIT, HIT,
             HIT, NO_PROC, HIT,
@@ -1953,8 +1953,8 @@ test "ParalyzeChance effect" {
     const PAR_CAN = MAX;
     const PAR_CANT = MIN;
 
-    var t = Test(
     // zig fmt: off
+    var t = Test(
         if (showdown) .{
             HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG,
             HIT, ~CRIT, MIN_DMG, HI_PROC, HIT, ~CRIT, MIN_DMG, HI_PROC,
@@ -2052,8 +2052,8 @@ test "Sleep effect" {
     const SLP_1 = if (showdown) comptime ranged(1, 8 - 1) else 1;
     const SLP_2 = if (showdown) comptime ranged(2, 8 - 1) else 2;
 
-    var t = Test(
     // zig fmt: off
+    var t = Test(
         if (showdown) .{
             HIT, SLP_1, HIT, SLP_2, HIT, HIT, HIT, ~CRIT, MIN_DMG,
         } else .{
@@ -2227,8 +2227,8 @@ test "ConfusionChance effect" {
     const CFZ_2 = MIN;
     const CFZ_CAN = if (showdown) comptime ranged(128, 256) - 1 else MIN;
 
-    var t = Test(
     // zig fmt: off
+    var t = Test(
         if (showdown) .{
             HIT, ~CRIT, MAX_DMG, PROC, CFZ_2, CFZ_CAN,
             HIT, ~CRIT, MAX_DMG,
@@ -2302,8 +2302,8 @@ test "FlinchChance effect" {
     const LO_PROC = comptime ranged(26, 256) - 1;
     const HI_PROC = comptime ranged(77, 256) - 1;
 
-    var t = Test(
     // zig fmt: off
+    var t = Test(
         if (showdown) .{
             HIT, ~CRIT, MIN_DMG, HI_PROC,
             HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HI_PROC,
@@ -2426,8 +2426,8 @@ test "FlinchChance effect" {
 // Move.Screech: DefenseDown2
 test "StatDown effect" {
     // Lowers the target's X stat by Y stage(s).
-    var t = Test(
     // zig fmt: off
+    var t = Test(
         if (showdown) .{
             HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG,
             HIT, HIT,
@@ -2506,8 +2506,8 @@ test "StatDownChance effect" {
     const PROC = comptime ranged(85, 256) - 1;
     const NO_PROC = PROC + 1;
 
-    var t = Test(
     // zig fmt: off
+    var t = Test(
         if (showdown) .{
             HIT, ~CRIT, MIN_DMG, NO_PROC, HIT, ~CRIT, MIN_DMG, PROC,
             HIT, ~CRIT, MIN_DMG, NO_PROC, HIT, ~CRIT, MIN_DMG, PROC,
@@ -2580,8 +2580,8 @@ test "StatDownChance effect" {
 // Move.Amnesia: SpecialUp2
 test "StatUp effect" {
     // Raises the target's X stat by Y stage(s).
-    var t = Test(
     // zig fmt: off
+    var t = Test(
         if (showdown) .{
             HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG,
             HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG,
@@ -2713,8 +2713,8 @@ test "Charge effect" {
     const DISABLE_DURATION_2 = comptime ranged(2, 9 - 1) - 1;
     const DISABLE_MOVE_2 = if (showdown) MAX else 1;
 
-    var t = Test(
     // zig fmt: off
+    var t = Test(
         if (showdown) .{
             HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG,
             HIT, DISABLE_MOVE_2, DISABLE_DURATION_2, HIT,
@@ -3018,8 +3018,8 @@ test "Binding effect" {
     const PAR_CAN = MAX;
     const PAR_CANT = MIN;
 
-    var t = Test(
     // zig fmt: off
+    var t = Test(
         if (showdown) .{
             HIT, ~CRIT, MIN_DMG, MIN_WRAP,
             HIT, ~CRIT, MAX_DMG, MIN_WRAP,
@@ -3188,8 +3188,8 @@ test "JumpKick effect" {
     // If this attack misses the target, the user takes 1 HP of crash damage. If the user has a
     // substitute, the crash damage is dealt to the target's substitute if it has one, otherwise no
     // crash damage is dealt.
-    var t = Test(
     // zig fmt: off
+    var t = Test(
         if (showdown) .{
             ~HIT, HIT, CRIT, MAX_DMG, ~HIT, ~HIT,
         } else .{
@@ -3311,8 +3311,8 @@ test "Struggle effect" {
     // Deals Normal-type damage. If this move was successful, the user takes damage equal to 1/2 the
     // HP lost by the target, rounded down, but not less than 1 HP. This move is automatically used
     // if none of the user's known moves can be selected.
-    var t = Test(
     // zig fmt: off
+    var t = Test(
         if (showdown) .{
             HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG,
         } else .{
@@ -3404,8 +3404,8 @@ test "Thrashing effect" {
 
     // normal
     {
-        var t = Test(
         // zig fmt: off
+        var t = Test(
             if (showdown) .{
                 THRASH_3, HIT, ~CRIT, MIN_DMG, HIT, CFZ_5,
                 CFZ_CAN, ~HIT, THRASH_3, ~HIT,
@@ -3726,8 +3726,8 @@ test "Disable effect" {
     const DISABLE_MOVE_2 = if (showdown) comptime ranged(2, 4) - 1 else 2;
     const DISABLE_MOVE_4 = if (showdown) MAX else 3;
 
-    var t = Test(
     // zig fmt: off
+    var t = Test(
         if (showdown) .{
             HIT, DISABLE_MOVE_1, DISABLE_DURATION_1, HIT, ~CRIT, MIN_DMG,
             HIT, DISABLE_MOVE_2, DISABLE_DURATION_5, HIT, ~CRIT, MIN_DMG,
@@ -3871,8 +3871,8 @@ test "Mist effect" {
     // effect. If any Pokemon uses Haze, this effect ends.
     const PROC = comptime ranged(85, 256) - 1;
 
-    var t = Test(
     // zig fmt: off
+    var t = Test(
         if (showdown) .{
             HIT, ~CRIT, MIN_DMG, PROC,
             HIT, ~CRIT, MIN_DMG, HIT,
@@ -3954,8 +3954,8 @@ test "Mist effect" {
 test "HyperBeam effect" {
     // If this move is successful, the user must recharge on the following turn and cannot select a
     // move, unless the target or its substitute was knocked out by this move.
-    var t = Test(
     // zig fmt: off
+    var t = Test(
         if (showdown) .{
             HIT, ~CRIT, MAX_DMG, HIT, ~CRIT, MAX_DMG, HIT, ~CRIT, MIN_DMG,
         } else .{
@@ -4061,8 +4061,8 @@ test "Counter effect" {
     const NO_PROC = MAX;
     const MIN_HITS = MIN;
     const SLP_3 = if (showdown) comptime ranged(3, 8 - 1) else 3;
-    var t = Test(
     // zig fmt: off
+    var t = Test(
         if (showdown) .{
             HIT, ~CRIT, MIN_DMG, NO_PROC, HIT,
             HIT, MIN_HITS, ~CRIT, MIN_DMG, HIT,
@@ -4435,8 +4435,8 @@ test "DreamEater effect" {
     // by the target, rounded down, but not less than 1 HP. If this move breaks the target's
     // substitute, the user does not recover any HP.
     {
-        var t = Test(
         // zig fmt: off
+        var t = Test(
             if (showdown) .{
                 HIT, MAX, HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, NOP,
             } else .{
@@ -4731,8 +4731,8 @@ test "Rage effect" {
     const DISABLE_MOVE_1 = if (showdown) comptime ranged(1, 2) - 1 else 0;
     const DISABLE_DURATION_5 = comptime ranged(5, 9 - 1) - 1;
 
-    var t = Test(
     // zig fmt: off
+    var t = Test(
         if (showdown) .{
             HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG,
             HIT, ~CRIT, MIN_DMG, ~HIT,
@@ -5043,8 +5043,8 @@ test "Haze effect" {
     const haze = comptime metronome(.Haze);
     const ember = comptime metronome(.Ember);
 
-    var t = Test(
     // zig fmt: off
+    var t = Test(
         if (showdown) .{
             HIT, HIT,
             HIT, PAR_CAN, HIT, CFZ_5,
@@ -5200,8 +5200,8 @@ test "Bide effect" {
         const CFZ_3 = if (showdown) comptime ranged(2, 6 - 2) - 1 else 1;
         const CFZ_CAN = if (showdown) comptime ranged(128, 256) - 1 else MIN;
 
-        var t = Test(
         // zig fmt: off
+        var t = Test(
         if (showdown) .{
             BIDE_3, HIT, HIT, HIT, ~CRIT, MIN_DMG, BIDE_3, HIT, HIT, CFZ_3, CFZ_CAN,
         } else .{
@@ -5361,8 +5361,8 @@ test "Metronome effect" {
     const rage = comptime metronome(.Rage);
     const quick_attack = comptime metronome(.QuickAttack);
 
-    var t = Test(
     // zig fmt: off
+    var t = Test(
         if (showdown) .{
             wrap, HIT, ~CRIT, MIN_DMG, MIN_WRAP,
             petal_dance, THRASH_3, HIT, ~CRIT, MIN_DMG,
@@ -5512,8 +5512,8 @@ test "Metronome effect" {
 test "MirrorMove effect" {
     // The user uses the last move used by the target. Fails if the target has not made a move, or
     // if the last move used was Mirror Move.
-    var t = Test(
     // zig fmt: off
+    var t = Test(
         if (showdown) .{
             HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG,
             HIT, ~CRIT, MIN_DMG, ~CRIT, MIN_DMG,
@@ -5768,8 +5768,8 @@ test "Transform effect" {
     const no_crit = if (showdown) comptime ranged(Species.chance(.Articuno), 256) else 6;
     const DVS: data.DVs = .{ .atk = 0, .def = 0, .spe = 0, .spc = 0 };
 
-    var t = Test(
     // zig fmt: off
+    var t = Test(
         if (showdown) .{
             TIE_1, ~HIT, TIE_2, HIT, no_crit, MIN_DMG, HIT, no_crit, MIN_DMG, TIE_2,
         } else .{
@@ -6686,8 +6686,8 @@ test "Infinite Metronome" {
 
     // Charge
     {
-        var t = Test(
         // zig fmt: off
+        var t = Test(
             if (showdown) .{
                 skull_bash, mirror_move, mirror_move, fly, ~HIT,
             } else .{
@@ -6740,8 +6740,8 @@ test "Infinite Metronome" {
     }
     // non-Charge
     {
-        var t = Test(
         // zig fmt: off
+        var t = Test(
             if (showdown) .{
                 pound, HIT, ~CRIT, MIN_DMG, mirror_move, HIT, ~CRIT, MIN_DMG,
             } else .{
@@ -6775,8 +6775,8 @@ test "Infinite Metronome" {
 test "Mirror Move/Metronome + Substitute bug" {
     const seismic_toss = comptime metronome(.SeismicToss);
     const bonemerang = comptime metronome(.Bonemerang);
-    var t = Test(
     // zig fmt: off
+    var t = Test(
         if (showdown) .{
             seismic_toss, HIT, ~HIT, bonemerang, HIT, ~CRIT, MIN_DMG
         } else .{
@@ -7036,8 +7036,8 @@ test "Wrap locking + KOs bug" {
     const PROC = MIN;
     const MIN_WRAP = MIN;
 
-    var t = Test(
     // zig fmt: off
+    var t = Test(
         if (showdown) .{
             HIT, ~CRIT, MIN_DMG, PROC, HIT, ~CRIT, MIN_DMG, MIN_WRAP,
             HIT, ~HIT, HIT, ~CRIT, MIN_DMG, PROC, ~HIT,
@@ -7275,8 +7275,8 @@ test "Min/max stat recalculation bug" {
     const PAR_CAN = MAX;
     const HI_PROC = comptime ranged(77, 256) - 1;
 
-    var t = Test(
     // zig fmt: off
+    var t = Test(
         if (showdown) .{
             HIT, HIT, PAR_CAN, NOP, HIT, HIT, HIT, HIT, ~CRIT,
             MIN_DMG, HI_PROC, PAR_CAN, NOP, HIT, PAR_CAN, HIT, PAR_CAN,
@@ -7624,8 +7624,8 @@ test "Counter glitches" {
 
     // self-Counter
     {
-        var t = Test(
         // zig fmt: off
+        var t = Test(
             if (showdown) .{
                 HIT, PAR_CAN, HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, PAR_CANT, HIT,
             } else .{
@@ -7680,8 +7680,8 @@ test "Counter glitches" {
     }
     // Desync
     {
-        var t = Test(
         // zig fmt: off
+        var t = Test(
             if (showdown) .{
                 HIT, PAR_CAN, HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, PAR_CANT, HIT,
             } else .{
@@ -7744,8 +7744,8 @@ test "Freeze top move selection glitch" {
     const FRZ = comptime ranged(26, 256) - 1;
     const NO_BRN = FRZ + 1;
 
-    var t = Test(
     // zig fmt: off
+    var t = Test(
         if (showdown) .{
             HIT, ~CRIT, MIN_DMG, FRZ, HIT, ~CRIT, MIN_DMG,
             HIT, ~CRIT, MIN_DMG, NO_BRN,
@@ -8073,8 +8073,8 @@ test "Defrost move forcing" {
     const FRZ = comptime ranged(26, 256) - 1;
     const NO_BRN = FRZ + 1;
 
-    var t = Test(
     // zig fmt: off
+    var t = Test(
         if (showdown) .{
             HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, FRZ,
             HIT, ~CRIT, MIN_DMG, NO_BRN, HIT, ~CRIT, MIN_DMG,
@@ -8218,8 +8218,8 @@ test "Division by 0" {
     }
     // Defense/Special stat is 512 or 513 + Reflect/Light Screen.
     {
-        var t = Test(
         // zig fmt: off
+        var t = Test(
             if (showdown) .{
                 HIT, ~CRIT, MAX_DMG, HIT, ~CRIT, MAX_DMG, HIT, HIT, ~CRIT, MAX_DMG,
             } else .{
@@ -8292,8 +8292,8 @@ test "Division by 0" {
     }
     // Defense/Special stat >= 514 + Reflect/Light Screen.
     {
-        var t = Test(
         // zig fmt: off
+        var t = Test(
             if (showdown) .{
                 HIT, ~CRIT, MAX_DMG, HIT, ~CRIT, MAX_DMG, HIT,  HIT, ~CRIT, MAX_DMG,
             } else .{
@@ -8369,8 +8369,8 @@ test "Hyper Beam + Freeze permanent helplessness" {
     const FRZ = comptime ranged(26, 256) - 1;
     const NO_BRN = FRZ + 1;
 
-    var t = Test(
     // zig fmt: off
+    var t = Test(
         if (showdown) .{
             HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, FRZ,
             HIT, ~CRIT, MIN_DMG, NO_BRN, ~HIT,
@@ -8496,8 +8496,8 @@ test "Hyper Beam + Sleep move glitch" {
     const SLP_2 = if (showdown) comptime ranged(2, 8 - 1) else 2;
     const PROC = MIN;
 
-    var t = Test(
     // zig fmt: off
+    var t = Test(
         if (showdown) .{
             HIT, HIT, ~CRIT, MIN_DMG, SLP_2, HIT, ~CRIT, MIN_DMG, PROC, ~HIT,
         } else .{
@@ -8680,8 +8680,8 @@ test "Invulnerability glitch" {
     const PAR_CAN = MAX;
     const PAR_CANT = MIN;
 
-    var t = Test(
     // zig fmt: off
+    var t = Test(
         if (showdown) .{
             HIT,
             PAR_CAN,
@@ -9352,8 +9352,8 @@ test "Partial trapping move Mirror Move glitch" {
 }
 
 test "Rage + Substitute bug" {
-    var t = Test(
     // zig fmt: off
+    var t = Test(
         if (showdown) .{
             HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HIT, ~CRIT, MIN_DMG, HIT, CRIT, MAX_DMG,
         } else .{
@@ -9459,8 +9459,8 @@ test "Rage and Thrash / Petal Dance accuracy bug" {
     const HIT_168 = comptime ranged(168, 256) - 1;
     const MISS_84 = comptime ranged(84, 256);
 
-    var t = Test(
     // zig fmt: off
+    var t = Test(
         if (showdown) .{
             THRASH_4, HIT_255, ~CRIT, MIN_DMG,
             HIT_168, ~CRIT, MIN_DMG,
@@ -9813,8 +9813,8 @@ test "Transform + Mirror Move/Metronome PP error" {
     }
     // Struggle softlock
     {
-        var t = Test(
         // zig fmt: off
+        var t = Test(
             if (showdown) .{
                 HIT, TIE_1, HIT, HIT, HIT, ~HIT, HIT, ~CRIT, MIN_DMG, HIT,
             } else .{
@@ -10435,8 +10435,8 @@ fn Test(comptime rolls: anytype) type {
 
             t.battle.expected = Battle.fixed(rolls, pokemon1, pokemon2);
             t.battle.actual = t.battle.expected;
-            t.buf.expected = std.ArrayList(u8).init(std.testing.allocator);
-            t.buf.actual = std.ArrayList(u8).init(std.testing.allocator);
+            t.buf.expected = ArrayList(u8).init(std.testing.allocator);
+            t.buf.actual = ArrayList(u8).init(std.testing.allocator);
             t.log.expected = .{ .writer = t.buf.expected.writer() };
             t.log.actual = .{ .writer = t.buf.actual.writer() };
 

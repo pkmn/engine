@@ -20,6 +20,7 @@ const writergate = @hasDecl(std.fs.File, "stdout");
 const force_pic = lib_helper and !@hasField(std.Build.SharedLibraryOptions, "pic");
 const ResolvedTarget =
     if (@hasDecl(std.Build, "ResolvedTarget")) std.Build.ResolvedTarget else std.zig.CrossTarget;
+const ArrayList = if (@hasDecl(std, "array_list")) std.array_list.Managed else std.ArrayList;
 
 pub fn module(b: *std.Build, options: Options) *std.Build.Module {
     const dirname = comptime std.fs.path.dirname(@src().file) orelse ".";
@@ -339,7 +340,7 @@ pub fn build(b: *std.Build) !void {
     // TODO: tests can be run multiple times due to @imports
     const tests = TestStep.create(b, options, config);
 
-    var exes = std.ArrayList(*Step.Compile).init(b.allocator);
+    var exes = ArrayList(*Step.Compile).init(b.allocator);
     const tools: ToolConfig = .{
         .options = .{
             .showdown = showdown,
@@ -596,7 +597,7 @@ const ToolConfig = struct {
     tool: struct {
         tests: ?*TestStep,
         name: ?[]const u8 = null,
-        exes: *std.ArrayList(*Step.Compile),
+        exes: *ArrayList(*Step.Compile),
     },
 };
 
@@ -666,7 +667,7 @@ fn exists(path: []const u8) !bool {
 const ToolsStep = struct {
     step: std.Build.Step,
 
-    pub fn create(b: *std.Build, exes: *std.ArrayList(*Step.Compile)) *ToolsStep {
+    pub fn create(b: *std.Build, exes: *ArrayList(*Step.Compile)) *ToolsStep {
         const self = b.allocator.create(ToolsStep) catch @panic("OOM");
         const step = std.Build.Step.init(.{ .id = .custom, .name = "Install tools", .owner = b });
         self.* = .{ .step = step };
@@ -681,7 +682,7 @@ fn detect(target: anytype) std.Target {
 }
 
 pub fn exports(b: *std.Build, bytes: []const u8) ![][]const u8 {
-    var symbols = std.ArrayList([]const u8).init(b.allocator);
+    var symbols = ArrayList([]const u8).init(b.allocator);
 
     var it = std.mem.splitSequence(u8, bytes, "export ");
     _ = it.next();

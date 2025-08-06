@@ -1559,7 +1559,7 @@ pub const Effects = struct {
         const last = battle.foe(player).lastMove(true);
         const failed = volatiles.Encore or
             (last == .None or last == .Struggle or
-            last == .Encore or .last == .MirrorMove);
+                last == .Encore or .last == .MirrorMove);
         if (failed) return options.log.fail(.{ foe_ident, .None });
 
         var slot: u3 = 0;

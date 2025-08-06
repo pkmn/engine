@@ -13,7 +13,7 @@ const std = @import("std");
 const util = @import("../common/util.zig");
 
 const ArgType = protocol.ArgType;
-const ArrayList = std.ArrayList;
+const ArrayList = if (@hasDecl(std, "array_list")) std.array_list.Managed else std.ArrayList;
 const assert = std.debug.assert;
 const Battle = helpers.Battle;
 const ByteStream = protocol.ByteStream;
@@ -1432,8 +1432,8 @@ fn Test(comptime rolls: anytype) type {
 
             t.battle.expected = Battle.fixed(rolls, pokemon1, pokemon2);
             t.battle.actual = t.battle.expected;
-            t.buf.expected = std.ArrayList(u8).init(std.testing.allocator);
-            t.buf.actual = std.ArrayList(u8).init(std.testing.allocator);
+            t.buf.expected = ArrayList(u8).init(std.testing.allocator);
+            t.buf.actual = ArrayList(u8).init(std.testing.allocator);
             t.log.expected = .{ .writer = t.buf.expected.writer() };
             t.log.actual = .{ .writer = t.buf.actual.writer() };
 

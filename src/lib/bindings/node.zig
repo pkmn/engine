@@ -65,7 +65,7 @@ fn update(gen: anytype) c.napi_callback {
             assert(c.napi_get_arraybuffer_info(env, argv[0], &data, &len) == c.napi_ok);
             assert(len == @sizeOf(gen.Battle(gen.PRNG)));
 
-            var battle: *gen.Battle(gen.PRNG) = @alignCast(@ptrCast(data.?));
+            var battle: *gen.Battle(gen.PRNG) = @ptrCast(@alignCast(data.?));
             const c1: pkmn.Choice = @bitCast(js.Number.get(env, argv[1], u8));
             const c2: pkmn.Choice = @bitCast(js.Number.get(env, argv[2], u8));
 
@@ -107,7 +107,7 @@ fn choices(gen: anytype) c.napi_callback {
             assert(c.napi_get_arraybuffer_info(env, argv[0], &data, &len) == c.napi_ok);
             assert(len == @sizeOf(gen.Battle(gen.PRNG)));
 
-            var battle: *gen.Battle(gen.PRNG) = @alignCast(@ptrCast(data.?));
+            var battle: *gen.Battle(gen.PRNG) = @ptrCast(@alignCast(data.?));
             const player: pkmn.Player = @enumFromInt(js.Number.get(env, argv[1], u8));
             const request: pkmn.Choice.Type = @enumFromInt(js.Number.get(env, argv[2], u8));
 

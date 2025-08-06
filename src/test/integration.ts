@@ -187,12 +187,20 @@ function play(
   let index = 0;
   const getChoices = (): [engine.Choice, engine.Choice] => {
     if (replay) {
+      const p1 = control.p1.active[0];
+      const p2 = control.p2.active[0];
       [chose.p1, chose.p2, index] = fromInputLog(replay, index, {
         p1: choices(control, 'p1', 'move 0').map(engine.Choice.parse),
         p2: choices(control, 'p2', 'move 0').map(engine.Choice.parse),
       }, {
-        p1: control.p1.active[0].moves.map(toID),
-        p2: control.p2.active[0].moves.map(toID),
+        p1: {
+          moves: p1.moves.map(toID),
+          forced: !!p1.volatiles['partialtrappinglock'] || !!p1.volatiles['twoturnmove'],
+        },
+        p2: {
+          moves: p2.moves.map(toID),
+          forced: !!p2.volatiles['partialtrappinglock'] || !!p2.volatiles['twoturnmove'],
+        },
       });
     } else {
       for (const id of ['p1', 'p2'] as const) {
@@ -275,30 +283,31 @@ function play(
       partial.showdown = {};
       frames.pkmn.push(partial.pkmn as Frame['pkmn']);
       partial.pkmn = {};
+      // console.debug(battle.turn);
     } while (!control.ended);
 
     if (control.ended) assert.notEqual(result.type, undefined);
     assert.deepEqual(battle.prng.join(','), control.prng.getSeed());
   } catch (err: any) {
-    if (!replay) {
-      const num = toBigInt(seed);
-      const stack = err.stack.replace(ANSI, '');
-      errors?.seeds.push(num);
-      errors?.stacks.push(stack);
-      try {
-        console.error('');
-        dump(
-          gen,
-          stack,
-          num,
-          control.inputLog,
-          frames,
-          partial,
-        );
-      } catch (e) {
-        console.error(e);
-      }
+    // if (!replay) {
+    const num = toBigInt(seed);
+    const stack = err.stack.replace(ANSI, '');
+    errors?.seeds.push(num);
+    errors?.stacks.push(stack);
+    try {
+      console.error('');
+      dump(
+        gen,
+        stack,
+        num,
+        control.inputLog,
+        frames,
+        partial,
+      );
+    } catch (e) {
+      console.error(e);
     }
+    // }
     throw err;
   }
 }
@@ -704,7 +713,7 @@ function fromInputLog(
   input: string[],
   index: number,
   options: {p1: engine.Choice[]; p2: engine.Choice[]},
-  moves: {p1: ID[]; p2: ID[]},
+  pokemon: {p1: {moves: ID[]; forced: boolean}; p2: {moves: ID[]; forced: boolean}},
 ) {
   // Players don't usually send "pass" on wait requests (they just wait) so we
   // need to determine when the player would have been forced to pass and fill
@@ -742,7 +751,13 @@ function fromInputLog(
     const d = m[5] ?? m[8] ?? '0';
     const struggle = d === 'struggle';
 
-    const data = d === 'recharge' ? 1 : !isNaN(+d) ? +d : moves[player].indexOf(d as ID) + 1;
+    // console.debug(input[index], options[player], pokemon[player]);
+
+    // If a player is forced we need to just massage it to be "move 1" by
+    // convention - Pokémon Showdown will rewrite it to be a different move  but
+    // the pkmn engine is stricter and needs something consistent
+    const data = d === 'recharge' || (type === 'move' && pokemon[player].forced)
+      ? 1 : !isNaN(+d) ? +d : pokemon[player].moves.indexOf(d as ID) + 1;
     // BUG: a move could be [from] Metronome and wouldn't be possible to reverse
     if (type === 'move' && !data && !struggle) throw new Error(`Invalid choice data: '${d}'`);
 
@@ -784,6 +799,7 @@ function fromInputLog(
     throw new Error(`Unable to resolve choices for ${unresolved.join(', ')}`);
   }
 
+  // console.debug(choices);
   return [choices.p1!, choices.p2!, index] as const;
 }
 

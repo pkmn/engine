@@ -178,8 +178,12 @@ export const patch = {
     (gen.dex.data as any).Rulesets['freezeclausemod'].onSetStatusPriority = -998;
 
     const conditions = {
-      // Add priority to avoid speed ties with Bide's onDisableMove handler
-      1: {'disable': {onDisableMovePriority: 7}},
+      1: {
+        // Add priority to avoid speed ties with Bide's onDisableMove handler
+        'disable': {onDisableMovePriority: 7},
+        // TODO
+        'partiallytrapped': {onLockMovePriority: 1},
+      },
       2: {
         // Type-boosting items need an onBasePowerPriority... for their nop handler
         'item: Pink Bow': {onBasePowerPriority: 15},
@@ -283,7 +287,8 @@ export const Choices = new class {
         }
       }
 
-      if (active.volatiles['partialtrappinglock']) {
+      // FIXME
+      if (active.volatiles['partialtrappinglock'] || active.volatiles['twoturnmove']) {
         // Pokémon Showdown's partialtrappinglock uses onOverrideAction to
         // ignore the input - we simply must use a valid move slot index and
         // since every Pokémon is guaranteed to have at least one move 'move 1'

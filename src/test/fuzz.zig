@@ -3,6 +3,7 @@ const pkmn = @import("pkmn");
 const std = @import("std");
 
 const writergate = @hasDecl(std.fs.File, "stdout");
+const ArrayList = if (@hasDecl(std, "array_list")) std.array_list.Managed else std.ArrayList;
 
 pub const pkmn_options = pkmn.Options{ .internal = true };
 
@@ -18,8 +19,8 @@ const Frame = struct {
 var gen: u8 = 0;
 var last: ?u64 = null;
 var initial: []u8 = &.{};
-var buf: ?std.ArrayList(u8) = null;
-var frames: ?std.ArrayList(Frame) = null;
+var buf: ?ArrayList(u8) = null;
+var frames: ?ArrayList(Frame) = null;
 
 const transitions = true; // DEBUG
 
@@ -145,13 +146,13 @@ pub fn fuzz(allocator: std.mem.Allocator, seed: u64, duration: usize) !void {
             else => unreachable,
         };
 
-        var log: ?pkmn.protocol.Log(std.ArrayList(u8).Writer) = null;
+        var log: ?pkmn.protocol.Log(ArrayList(u8).Writer) = null;
         if (save) {
             if (frames != null) deinit(allocator);
             initial = try allocator.dupe(u8, std.mem.toBytes(battle)[0..]);
-            frames = std.ArrayList(Frame).init(allocator);
-            buf = std.ArrayList(u8).init(allocator);
-            log = pkmn.protocol.Log(std.ArrayList(u8).Writer){ .writer = buf.?.writer() };
+            frames = ArrayList(Frame).init(allocator);
+            buf = ArrayList(u8).init(allocator);
+            log = pkmn.protocol.Log(ArrayList(u8).Writer){ .writer = buf.?.writer() };
         }
 
         std.debug.assert(!showdown or battle.side(.P1).get(1).hp > 0);

@@ -13,6 +13,7 @@ const util = @import("../common/util.zig");
 
 const Action = chance.Action;
 const Actions = chance.Actions;
+const ArrayList = if (@hasDecl(std, "array_list")) std.array_list.Managed else std.ArrayList;
 const assert = std.debug.assert;
 const Chance = chance.Chance;
 const Choice = common.Choice;
@@ -198,7 +199,7 @@ pub fn transitions(
 
     var seen = std.AutoHashMap(Actions, void).init(allocator);
     defer seen.deinit();
-    var frontier = std.ArrayList(Actions).init(allocator);
+    var frontier = ArrayList(Actions).init(allocator);
     defer frontier.deinit();
 
     const d = options.durations;
