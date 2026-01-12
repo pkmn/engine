@@ -3,6 +3,7 @@ const data = @import("data.zig");
 const options = @import("options.zig");
 const pkmn = @import("../pkmn.zig");
 const std = @import("std");
+const util = @import("util.zig");
 
 const assert = std.debug.assert;
 const enabled = options.log;
@@ -313,10 +314,9 @@ pub const Weather = enum(u8) {
     Upkeep,
 };
 
-/// Null object pattern implementation of `Log` backed by a `std.io.null_writer`.
-/// Ignores anything sent to it, though protocol logging should additionally be turned off
-/// entirely with `options.log`.
-pub const NULL = Log(@TypeOf(std.io.null_writer)){ .writer = std.io.null_writer };
+/// Null object pattern implementation of `Log` backed by a null writer. Ignores anything sent to
+//it, though protocol logging should additionally be turned off entirely with `options.log`.
+pub const NULL = Log(@TypeOf(util.null_writer)){ .writer = util.null_writer };
 
 /// Logs protocol information to its `Writer` during a battle update when `options.log` is enabled.
 pub fn Log(comptime Writer: type) type {
@@ -1209,7 +1209,7 @@ pub fn expectLog(
     if (!enabled) return;
 
     const stderr =
-        if (@hasDecl(std.io, "getStdErr")) std.io.getStdErr() else std.fs.File.stderr();
+        if (@hasDecl(std.fs.File, "stderr")) std.fs.File.stderr() else std.io.getStdErr();
     const color = if (std.process.hasEnvVarConstant("ZIG_DEBUG_COLOR"))
         true
     else switch (std.io.tty.detectConfig(stderr)) {

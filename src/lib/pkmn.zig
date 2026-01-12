@@ -202,6 +202,7 @@ pub const gen2 = struct {
 
 // Internal APIs used by other pkmn libraries, not actually part of the public API.
 pub const js = if (options.internal) @import("common/js.zig") else {};
+pub const util = if (options.internal) @import("common/util.zig") else {};
 pub const bindings = if (options.internal) struct {
     pub const c = @import("bindings/c.zig");
     pub const node = @import("bindings/node.zig");

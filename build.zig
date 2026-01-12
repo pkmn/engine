@@ -461,7 +461,7 @@ fn buildWasm(
 
         var file = try std.fs.cwd().openFile(root_src_file, .{});
         defer file.close();
-        const bytes = try file.readToEndAlloc(b.allocator, std.math.maxInt(usize));
+        const bytes = try readToEndAlloc(b, file);
         (if (root_module) exe.root_module else exe).export_symbol_names = try exports(b, bytes);
         exe.entry = .disabled;
         break :bin exe;
@@ -526,6 +526,14 @@ fn maybeStrip(
     const sh = b.addSystemCommand(&.{ cmd.?, if (mac) "-x" else "-s" });
     sh.addArtifactArg(artifact);
     step.dependOn(&sh.step);
+}
+
+fn readToEndAlloc(b: *std.Build, file: std.fs.File) ![]const u8 {
+    if (@hasDecl(std.fs.File, "readToEndAlloc")) {
+        return file.readToEndAlloc(b.allocator, std.math.maxInt(usize));
+    }
+    var reader = file.reader(&.{});
+    return reader.interface.allocRemaining(b.allocator, .unlimited);
 }
 
 const Config = struct {

@@ -83,3 +83,31 @@ pub fn repeat(comptime T: type, t: T, comptime n: usize) [n]T {
     }
     return ts;
 }
+
+/// TODO
+pub const null_writer: NullWriter = .{};
+
+const NullWriter = struct {
+    pub const Error = error{};
+
+    pub inline fn print(writer: NullWriter, comptime format: []const u8, args: anytype) !void {
+        _ = .{ writer, format, args };
+    }
+
+    pub fn writeAll(writer: NullWriter, bytes: []const u8) !void {
+        _ = .{ writer, bytes };
+    }
+
+    pub fn writeInt(
+        writer: NullWriter,
+        comptime T: type,
+        value: T,
+        endian: std.builtin.Endian,
+    ) !void {
+        _ = .{ writer, T, value, endian };
+    }
+
+    pub fn writeByte(writer: NullWriter, byte: u8) !void {
+        _ = .{ writer, byte };
+    }
+};

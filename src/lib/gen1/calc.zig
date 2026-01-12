@@ -577,9 +577,15 @@ fn format(writer: anytype, actions: Actions, p1: u9, p2: u9) !void {
     var input: [1024]u8 = undefined;
     var output: [1024]u8 = undefined;
 
-    var stream = std.io.fixedBufferStream(&input);
-    try actions.fmt(&stream.writer(), false);
-    var len = stream.getWritten().len;
+    var len = if (@hasDecl(std, "io")) old: {
+        var stream = std.io.fixedBufferStream(&input);
+        try actions.fmt(&stream.writer(), false);
+        break :old stream.getWritten().len;
+    } else new: {
+        var w = std.Io.Writer.fixed(&input);
+        try actions.fmt(&w, false);
+        break :new w.buffered().len;
+    };
     @memcpy(output[0..len], input[0..len]);
 
     var find: [16]u8 = undefined;
