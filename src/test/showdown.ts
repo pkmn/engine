@@ -17,7 +17,7 @@ export const MIN = 0;
 export const MAX = 0xFFFFFFFF;
 export const NOP = 42;
 
-const tie = 'sim/battle-queue.ts:416:15';
+const tie = 'sim/battle-queue.ts:422:15';
 
 export const ROLLS = {
   basic(keys: {hit: string; crit: string; dmg: string}) {
@@ -30,7 +30,7 @@ export const ROLLS = {
       MAX_DMG: {key: keys.dmg, value: MAX},
       TIE: (n: 1 | 2) => ({key: tie, value: ranged(n, 2) - 1}),
       DRAG: (m: number, n = 5) =>
-        ({key: 'sim/battle.ts:1512:36', value: ranged(m - 1, n)}),
+        ({key: 'sim/battle.ts:1545:36', value: ranged(m - 1, n)}),
     };
   },
   metronome(gen: Generation, exclude: string[]) {
@@ -41,7 +41,7 @@ export const ROLLS = {
     return (move: string, skip: string[] = []) => {
       const moves = all.filter(m => !skip.includes(m));
       const value = ranged(moves.indexOf(move) + 1, moves.length) - 1;
-      return {key: 'data/mods/gen4/moves.ts:1068:23', value};
+      return {key: 'data/mods/gen4/moves.ts:1099:23', value};
     };
   },
 };
@@ -437,7 +437,7 @@ export class FixedRNG extends PRNG {
 
 export const FILTER = new Set([
   '', 't:', 'gametype', 'player', 'teamsize', 'gen', 'message', 'done', 'error',
-  'bigerror', 'tier', 'rule', 'start', 'upkeep', '-message', '-hint', 'debug',
+  'bigerror', 'tier', 'rule', 'start', 'upkeep', '-message', '-hint', 'debug', 'raw',
 ]);
 
 function filter(raw: string[]) {
