@@ -686,10 +686,8 @@ the correct control flow):
 
 - **Wrap**: Binding moves like Wrap are implemented on Pokémon Showdown with an artificial
   `partialtrappinglock` volatile as opposed to how it works on the cartridge which simply relies on
-  the `Binding` volatile of the opponent. This mistake results in choice locking not being reported
-  properly when the binding move was initiated via another move such as Metronome or Mirror Move.
-  Binding moves also have some local implementation issues - on Pokémon Showdown a bound Pokémon
-  still gets a turn under the [trapping sleep
+  the `Binding` volatile of the opponent. Binding moves also have some local implementation issues -
+  on Pokémon Showdown a bound Pokémon still gets a turn under the [trapping sleep
   glitch](https://glitchcity.wiki/Trapping_move_and_sleep_glitch), Wrap does 0 damage against
   Ghost-type Pokémon instead of properly respecting immunity, and binding effects are handled in the
   wrong order in the code which results in either out of order messaging or, more consequentially,

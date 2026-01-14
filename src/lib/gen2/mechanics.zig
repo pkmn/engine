@@ -1193,7 +1193,7 @@ fn updateSideCondition(
 fn endTurn(battle: anytype, options: anytype) @TypeOf(options.log).Error!Result {
     battle.turn += 1;
 
-    if (pkmn.options.mod and battle.turn >= 1000) {
+    if (pkmn.options.mod and battle.turn > 1000) {
         try options.log.tie(.{});
         return Result.Tie;
     } else if (battle.turn >= 65535) {
