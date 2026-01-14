@@ -575,8 +575,6 @@ engine, but the following moves have their broken behavior preserved in `-Dshowd
   registered) can erroneously cause Counter to trigger Desync Clause Mod behavior. Additionally,
   because Pokémon Showdown neglects to zero the last battle damage if a move misses due to immunity
   or invulnerability Counter occasionally works on Pokémon Showdown when it should fail.
-- **Leech Seed**: Leech Seed fails to heal its source side if a seeded target faints due to
-  recoil/crash damage on Pokémon Showdown.
 - **Pay Day**: Pay Day should still scatter coins if it hits (but doesn't break) and opponent's
   Substitute but doesn't on Pokémon Showdown.
 - **Flinch**: Flinching doesn't get cleared during move selection on Pokémon Showdown and is

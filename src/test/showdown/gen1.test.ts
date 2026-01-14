@@ -12,20 +12,20 @@ const choices = Choices.get(gen);
 const startBattle = createStartBattle(gen);
 
 const {HIT, MISS, CRIT, NO_CRIT, MIN_DMG, MAX_DMG, TIE} = ROLLS.basic({
-  hit: 'data/mods/gen1/scripts.ts:436:42',
-  crit: 'data/mods/gen1/scripts.ts:835:27',
-  dmg: 'data/mods/gen1/scripts.ts:956:27',
+  hit: 'data/mods/gen1/scripts.ts:391:42',
+  crit: 'data/mods/gen1/scripts.ts:773:27',
+  dmg: 'data/mods/gen1/scripts.ts:894:27',
 });
 
-const SECONDARY = (value: number) => ({key: 'data/mods/gen1/scripts.ts:724:25', value});
+const SECONDARY = (value: number) => ({key: 'data/mods/gen1/scripts.ts:664:25', value});
 const SLP = (n: number) =>
   ({key: 'data/mods/gen1/conditions.ts:63:38', value: ranged(n, 8 - 1)});
 const DISABLE_MOVE = (m: number, n = 4) =>
-  ({key: 'data/mods/gen1/moves.ts:260:27', value: ranged(m, n) - 1});
+  ({key: 'data/mods/gen1/moves.ts:232:27', value: ranged(m, n) - 1});
 const DISABLE_DURATION = (n: number) =>
-  ({key: 'data/mods/gen1/moves.ts:264:34', value: ranged(n, 9 - 1) - 1});
+  ({key: 'data/mods/gen1/moves.ts:236:34', value: ranged(n, 9 - 1) - 1});
 const MIMIC = (m: number, n = 4) =>
-  ({key: 'data/mods/gen1/moves.ts:510:24', value: ranged(m, n) - 1});
+  ({key: 'data/mods/gen1/moves.ts:468:24', value: ranged(m, n) - 1});
 const BIDE = (n: 2 | 3) =>
   ({key: 'data/mods/gen1/moves.ts:40:34', value: ranged(n - 2, 4 - 2)});
 const NO_PAR = SECONDARY(MAX);
@@ -37,10 +37,9 @@ const CFZ = (n: number) =>
 const CFZ_CAN = {key: 'data/mods/gen1/conditions.ts:146:14', value: ranged(128, 256) - 1};
 const CFZ_CANT = {...CFZ_CAN, value: CFZ_CAN.value + 1};
 const THRASH = (n: 3 | 4) =>
-  ({key: 'data/mods/gen1/conditions.ts:226:33', value: ranged(n - 2, 4 - 2) - 1});
-const MIN_WRAP = {key: 'data/mods/gen1/conditions.ts:198:26', value: MIN};
+  ({key: 'data/mods/gen1/conditions.ts:286:33', value: ranged(n - 2, 4 - 2) - 1});
+const MIN_WRAP = {key: 'data/mods/gen1/conditions.ts:225:16', value: MIN};
 const MAX_WRAP = {...MIN_WRAP, value: MAX};
-const REWRAP = {key: 'data/mods/gen1/scripts.ts:250:38', value: MIN};
 const METRONOME = ROLLS.metronome(gen, ['Metronome', 'Struggle']);
 
 const evs = {hp: 255, atk: 255, def: 255, spa: 255, spd: 255, spe: 255};
@@ -348,26 +347,26 @@ describe('Gen 1', () => {
 
       verify(battle, [
         '|move|p2a: Clefable|Metronome|p2a: Clefable',
-        '|move|p2a: Clefable|Fly||[from]Metronome|[still]',
+        '|move|p2a: Clefable|Fly||[from] Metronome|[still]',
         '|-prepare|p2a: Clefable|Fly',
         '|move|p1a: Clefable|Metronome|p1a: Clefable',
-        '|move|p1a: Clefable|Dig||[from]Metronome|[still]',
+        '|move|p1a: Clefable|Dig||[from] Metronome|[still]',
         '|-prepare|p1a: Clefable|Dig',
         '|turn|2',
-        '|move|p1a: Clefable|Dig|p2a: Clefable|[from]Dig|[miss]',
+        '|move|p1a: Clefable|Dig|p2a: Clefable|[from] Dig|[miss]',
         '|-miss|p1a: Clefable',
-        '|move|p2a: Clefable|Fly|p1a: Clefable|[from]Fly',
+        '|move|p2a: Clefable|Fly|p1a: Clefable|[from] Fly',
         '|-damage|p1a: Clefable|343/393',
         '|turn|3',
         '|move|p1a: Clefable|Quick Attack|p2a: Clefable',
         '|-damage|p2a: Clefable|350/393',
         '|move|p2a: Clefable|Metronome|p2a: Clefable',
-        '|move|p2a: Clefable|Swift|p1a: Clefable|[from]Metronome',
+        '|move|p2a: Clefable|Swift|p1a: Clefable|[from] Metronome',
         '|-damage|p1a: Clefable|279/393',
         '|turn|4',
         '|switch|p2a: Farfetch’d|Farfetch’d|307/307',
         '|move|p1a: Clefable|Metronome|p1a: Clefable',
-        '|move|p1a: Clefable|Petal Dance|p2a: Farfetch’d|[from]Metronome',
+        '|move|p1a: Clefable|Petal Dance|p2a: Farfetch’d|[from] Metronome',
         '|-resisted|p2a: Farfetch’d',
         '|-damage|p2a: Farfetch’d|275/307',
         '|turn|5',
@@ -747,19 +746,19 @@ describe('Gen 1', () => {
       {species: 'Pikachu', evs, moves: ['Thunder Shock']},
     ]);
 
-    for (let i = 0; i < 998; i++) {
+    for (let i = 0; i < 999; i++) {
       battle.makeChoices('switch 2', 'switch 2');
     }
     expect(battle.ended).toBe(false);
-    expect(battle.turn).toBe(999);
+    expect(battle.turn).toBe(1000);
     (battle as any).log = [];
 
     battle.makeChoices('switch 2', 'switch 2');
     expect(battle.ended).toBe(true);
 
     verify(battle, [
-      '|switch|p1a: Charmander|Charmander|281/281',
-      '|switch|p2a: Pikachu|Pikachu|273/273',
+      '|switch|p2a: Squirtle|Squirtle|291/291',
+      '|switch|p1a: Bulbasaur|Bulbasaur|293/293',
       '|tie',
     ]);
   });
@@ -904,7 +903,7 @@ describe('Gen 1', () => {
   });
 
   test('MultiHit effect', () => {
-    const hit3 = {key: 'data/mods/gen1/scripts.ts:451:27', value: 0x60000000};
+    const hit3 = {key: 'data/mods/gen1/scripts.ts:406:27', value: 0x60000000};
     const hit5 = {...hit3, value: MAX};
     const battle = startBattle([HIT, hit3, NO_CRIT, MAX_DMG, HIT, hit5, NO_CRIT, MAX_DMG], [
       {species: 'Kangaskhan', evs, moves: ['Comet Punch']},
@@ -1389,7 +1388,7 @@ describe('Gen 1', () => {
       '|-resisted|p1a: Magmar',
       '|-damage|p1a: Magmar|188/333 frz',
       '|turn|7',
-      '|move|p2a: Jynx|Fire Spin|p1a: Magmar|[from]Fire Spin',
+      '|move|p2a: Jynx|Fire Spin|p1a: Magmar|[from] Fire Spin',
       '|-damage|p1a: Magmar|183/333 frz',
       '|cant|p1a: Magmar|frz',
       '|turn|8',
@@ -1681,7 +1680,7 @@ describe('Gen 1', () => {
   });
 
   test('ConfusionChance effect', () => {
-    const sub_proc = {key: 'data/mods/gen1/moves.ts:889:50', value: ranged(25, 256) - 1};
+    const sub_proc = {key: 'data/mods/gen1/moves.ts:845:50', value: ranged(25, 256) - 1};
     const no_proc = SECONDARY(sub_proc.value + 1);
     const battle = startBattle([
       HIT, NO_CRIT, MAX_DMG, sub_proc, CFZ(2), CFZ_CAN,
@@ -2082,7 +2081,7 @@ describe('Gen 1', () => {
       '|move|p2a: Psyduck|Scratch|p1a: Wartortle',
       '|-damage|p1a: Wartortle|298/321',
       '|turn|2',
-      '|move|p1a: Wartortle|Skull Bash|p2a: Psyduck|[from]Skull Bash',
+      '|move|p1a: Wartortle|Skull Bash|p2a: Psyduck|[from] Skull Bash',
       '|-damage|p2a: Psyduck|220/303',
       '|move|p2a: Psyduck|Scratch|p1a: Wartortle',
       '|-damage|p1a: Wartortle|275/321',
@@ -2136,7 +2135,7 @@ describe('Gen 1', () => {
         '|move|p2a: Lickitung|Strength|p1a: Pidgeot|[miss]',
         '|-miss|p2a: Lickitung',
         '|turn|2',
-        '|move|p1a: Pidgeot|Fly|p2a: Lickitung|[from]Fly',
+        '|move|p1a: Pidgeot|Fly|p2a: Lickitung|[from] Fly',
         '|-damage|p2a: Lickitung|304/383',
         '|move|p2a: Lickitung|Strength|p1a: Pidgeot',
         '|-damage|p1a: Pidgeot|295/369',
@@ -2192,7 +2191,7 @@ describe('Gen 1', () => {
         '|faint|p2a: Shellder',
         '|switch|p2a: Arcanine|Arcanine|383/383',
         '|turn|5',
-        '|move|p1a: Ninetales|Dig|p2a: Arcanine|[from]Dig',
+        '|move|p1a: Ninetales|Dig|p2a: Arcanine|[from] Dig',
         '|-supereffective|p2a: Arcanine',
         '|-damage|p2a: Arcanine|242/383',
         '|move|p2a: Arcanine|Splash|p2a: Arcanine',
@@ -2242,9 +2241,10 @@ describe('Gen 1', () => {
   test('Binding effect', () => {
     const battle = startBattle([
       HIT, NO_CRIT, MIN_DMG, MIN_WRAP,
-      HIT, NO_CRIT, MAX_DMG, REWRAP,
+      HIT, NO_CRIT, MAX_DMG, MIN_WRAP,
       HIT,
-      PAR_CAN, HIT, MAX_WRAP, PAR_CAN,
+      PAR_CAN, HIT, MAX_WRAP,
+      PAR_CAN,
       PAR_CANT, PAR_CAN,
       HIT, MIN_WRAP,
     ], [
@@ -2319,7 +2319,7 @@ describe('Gen 1', () => {
       '|move|p1a: Dragonite|Wrap|p2a: Tangela',
       '|-damage|p2a: Tangela|318/333',
       '|turn|3',
-      '|move|p1a: Dragonite|Wrap|p2a: Tangela|[from]Wrap',
+      '|move|p1a: Dragonite|Wrap|p2a: Tangela|[from] Wrap',
       '|-damage|p2a: Tangela|303/333',
       '|cant|p2a: Tangela|partiallytrapped',
       '|turn|4',
@@ -2333,7 +2333,7 @@ describe('Gen 1', () => {
       '|-damage|p2a: Gengar|323/323',
       '|turn|6',
       '|cant|p2a: Gengar|partiallytrapped',
-      '|move|p1a: Dragonite|Wrap|p2a: Gengar|[from]Wrap',
+      '|move|p1a: Dragonite|Wrap|p2a: Gengar|[from] Wrap',
       '|-damage|p2a: Gengar|323/323',
       '|turn|7',
       '|cant|p2a: Gengar|partiallytrapped',
@@ -2595,16 +2595,16 @@ describe('Gen 1', () => {
         '|-start|p1a: Nidoking|confusion',
         '|turn|2',
         '|-activate|p1a: Nidoking|confusion',
-        '|move|p1a: Nidoking|Thrash|p2a: Vileplume|[from]Thrash|[miss]',
+        '|move|p1a: Nidoking|Thrash|p2a: Vileplume|[from] Thrash|[miss]',
         '|-miss|p1a: Nidoking',
         '|move|p2a: Vileplume|Petal Dance|p1a: Nidoking|[miss]',
         '|-miss|p2a: Vileplume',
         '|turn|3',
         '|-activate|p1a: Nidoking|confusion',
-        '|move|p1a: Nidoking|Thrash|p2a: Vileplume|[from]Thrash',
+        '|move|p1a: Nidoking|Thrash|p2a: Vileplume|[from] Thrash',
         '|-start|p1a: Nidoking|confusion|[silent]',
         '|-damage|p2a: Vileplume|217/353',
-        '|move|p2a: Vileplume|Petal Dance|p1a: Nidoking|[from]Petal Dance',
+        '|move|p2a: Vileplume|Petal Dance|p1a: Nidoking|[from] Petal Dance',
         '|-damage|p1a: Nidoking|274/365',
         '|turn|4',
         '|-activate|p1a: Nidoking|confusion',
@@ -2649,12 +2649,12 @@ describe('Gen 1', () => {
         '|-damage|p2a: Goldeen|216/293',
         '|turn|2',
         '|switch|p2a: Gastly|Gastly|263/263',
-        '|move|p1a: Mankey|Thrash|p2a: Gastly|[from]Thrash',
+        '|move|p1a: Mankey|Thrash|p2a: Gastly|[from] Thrash',
         '|-immune|p2a: Gastly',
         '|turn|3',
         '|move|p2a: Gastly|Splash|p2a: Gastly',
         '|-nothing',
-        '|move|p1a: Mankey|Thrash|p2a: Gastly|[from]Thrash',
+        '|move|p1a: Mankey|Thrash|p2a: Gastly|[from] Thrash',
         '|-start|p1a: Mankey|confusion|[silent]',
         '|-immune|p2a: Gastly',
         '|turn|4',
@@ -2719,7 +2719,7 @@ describe('Gen 1', () => {
   });
 
   test('Psywave effect', () => {
-    const PSY_MAX = {key: 'data/mods/gen1/moves.ts:591:32', value: MAX};
+    const PSY_MAX = {key: 'data/mods/gen1/moves.ts:549:32', value: MAX};
     const PSY_MIN = {...PSY_MAX, value: MIN};
     const battle = startBattle([HIT, PSY_MAX, HIT, PSY_MIN], [
       {species: 'Gengar', evs, level: 59, moves: ['Psywave']},
@@ -3022,7 +3022,7 @@ describe('Gen 1', () => {
   });
 
   test('Counter effect', () => {
-    const hit2 = {key: 'data/mods/gen1/scripts.ts:451:27', value: MIN};
+    const hit2 = {key: 'data/mods/gen1/scripts.ts:406:27', value: MIN};
     const battle = startBattle([
       HIT, NO_CRIT, MIN_DMG, NO_PAR, HIT,
       HIT, hit2, NO_CRIT, MIN_DMG, HIT,
@@ -3595,13 +3595,13 @@ describe('Gen 1', () => {
       '|-damage|p1a: Charmeleon|284/319',
       '|-boost|p1a: Charmeleon|atk|1|[from] Rage',
       '|turn|2',
-      '|move|p1a: Charmeleon|Rage|p2a: Grimer|[from]Rage',
+      '|move|p1a: Charmeleon|Rage|p2a: Grimer|[from] Rage',
       '|-damage|p2a: Grimer|321/363',
       '|move|p2a: Grimer|Disable|p1a: Charmeleon|[miss]',
       '|-miss|p2a: Grimer',
       '|-boost|p1a: Charmeleon|atk|1|[from] Rage',
       '|turn|3',
-      '|move|p1a: Charmeleon|Rage|p2a: Grimer|[from]Rage',
+      '|move|p1a: Charmeleon|Rage|p2a: Grimer|[from] Rage',
       '|-damage|p2a: Grimer|287/363',
       '|move|p2a: Grimer|Disable|p1a: Charmeleon',
       '|-start|p1a: Charmeleon|Disable|Rage',
@@ -3867,7 +3867,7 @@ describe('Gen 1', () => {
       '|-nothing',
       '|-damage|p2a: Exeggutor|197/393 tox|[from] psn',
       '|move|p1a: Golbat|Metronome|p1a: Golbat',
-      '|move|p1a: Golbat|Haze|p1a: Golbat|[from]Metronome',
+      '|move|p1a: Golbat|Haze|p1a: Golbat|[from] Metronome',
       '|-activate|p1a: Golbat|move: Haze',
       '|-clearallboost|[silent]',
       '|-end|p1a: Golbat|move: Leech Seed|[silent]',
@@ -3876,7 +3876,7 @@ describe('Gen 1', () => {
       '|-end|p2a: Exeggutor|Toxic counter|[silent]',
       '|turn|5',
       '|move|p1a: Golbat|Metronome|p1a: Golbat',
-      '|move|p1a: Golbat|Ember|p2a: Exeggutor|[from]Metronome',
+      '|move|p1a: Golbat|Ember|p2a: Exeggutor|[from] Metronome',
       '|-supereffective|p2a: Exeggutor',
       '|-damage|p2a: Exeggutor|155/393',
       '|-status|p2a: Exeggutor|brn',
@@ -3956,7 +3956,7 @@ describe('Gen 1', () => {
         '|-end|p1a: Chansey|Bide',
         '|-damage|p2a: Dugtrio|153/273',
         '|turn|5',
-        '|move|p2a: Dugtrio|Dig|p1a: Chansey|[from]Dig',
+        '|move|p2a: Dugtrio|Dig|p1a: Chansey|[from] Dig',
         '|-damage|p1a: Chansey|407/703',
         '|move|p1a: Chansey|Bide|p1a: Chansey',
         '|-start|p1a: Chansey|Bide',
@@ -4017,7 +4017,6 @@ describe('Gen 1', () => {
   test('Metronome effect', () => {
     const battle = startBattle([
       METRONOME('Wrap'), HIT, NO_CRIT, MIN_DMG, MIN_WRAP,
-      METRONOME('Tackle'), HIT,
       METRONOME('Petal Dance'), THRASH(3), HIT, NO_CRIT, MIN_DMG,
       MISS, CFZ(2), MISS,
       CFZ_CAN, METRONOME('Mimic'), HIT, MIMIC(2, 2), METRONOME('Disable'),
@@ -4033,11 +4032,9 @@ describe('Gen 1', () => {
     let p1hp = battle.p1.pokemon[0].hp;
     let p2hp = battle.p2.pokemon[0].hp;
 
-    // Pokémon Showdown partial trapping lock doesn't work with Metronome...
     battle.makeChoices('move 1', 'move 1');
     expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 14);
-    // expect(choices(battle, 'p2')).toEqual(['move 1']);
-    expect(choices(battle, 'p2')).toEqual(['move 1', 'move 2', 'move 3']);
+    expect(choices(battle, 'p2')).toEqual(['move 1']);
 
     battle.makeChoices('move 1', 'move 1');
     expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 14);
@@ -4062,27 +4059,26 @@ describe('Gen 1', () => {
 
     verify(battle, [
       '|move|p2a: Primeape|Metronome|p2a: Primeape',
-      '|move|p2a: Primeape|Wrap|p1a: Clefable|[from]Metronome',
+      '|move|p2a: Primeape|Wrap|p1a: Clefable|[from] Metronome',
       '|-damage|p1a: Clefable|379/393',
       '|cant|p1a: Clefable|partiallytrapped',
       '|turn|2',
-      '|move|p2a: Primeape|Metronome|p2a: Primeape',
-      '|move|p2a: Primeape|Tackle|p1a: Clefable|[from]Metronome',
+      '|move|p2a: Primeape|Wrap|p1a: Clefable|[from] Wrap',
       '|-damage|p1a: Clefable|365/393',
       '|cant|p1a: Clefable|partiallytrapped',
       '|turn|3',
       '|move|p2a: Primeape|Metronome|p2a: Primeape',
-      '|move|p2a: Primeape|Petal Dance|p1a: Clefable|[from]Metronome',
+      '|move|p2a: Primeape|Petal Dance|p1a: Clefable|[from] Metronome',
       '|-damage|p1a: Clefable|324/393',
       '|move|p1a: Clefable|Splash|p1a: Clefable',
       '|-nothing',
       '|turn|4',
-      '|move|p2a: Primeape|Petal Dance|p1a: Clefable|[from]Petal Dance|[miss]',
+      '|move|p2a: Primeape|Petal Dance|p1a: Clefable|[from] Petal Dance|[miss]',
       '|-miss|p2a: Primeape',
       '|move|p1a: Clefable|Splash|p1a: Clefable',
       '|-nothing',
       '|turn|5',
-      '|move|p2a: Primeape|Petal Dance|p1a: Clefable|[from]Petal Dance|[miss]',
+      '|move|p2a: Primeape|Petal Dance|p1a: Clefable|[from] Petal Dance|[miss]',
       '|-start|p2a: Primeape|confusion|[silent]',
       '|-miss|p2a: Primeape',
       '|move|p1a: Clefable|Splash|p1a: Clefable',
@@ -4090,18 +4086,18 @@ describe('Gen 1', () => {
       '|turn|6',
       '|-activate|p2a: Primeape|confusion',
       '|move|p2a: Primeape|Metronome|p2a: Primeape',
-      '|move|p2a: Primeape|Mimic|p1a: Clefable|[from]Metronome',
+      '|move|p2a: Primeape|Mimic|p1a: Clefable|[from] Metronome',
       '|-start|p2a: Primeape|Mimic|Splash',
       '|move|p1a: Clefable|Metronome|p1a: Clefable',
-      '|move|p1a: Clefable|Disable|p2a: Primeape|[from]Metronome',
+      '|move|p1a: Clefable|Disable|p2a: Primeape|[from] Metronome',
       '|-start|p2a: Primeape|Disable|Splash',
       '|turn|7',
       '|-end|p2a: Primeape|confusion',
       '|move|p2a: Primeape|Metronome|p2a: Primeape',
-      '|move|p2a: Primeape|Rage|p1a: Clefable|[from]Metronome',
+      '|move|p2a: Primeape|Rage|p1a: Clefable|[from] Metronome',
       '|-damage|p1a: Clefable|305/393',
       '|move|p1a: Clefable|Metronome|p1a: Clefable',
-      '|move|p1a: Clefable|Quick Attack|p2a: Primeape|[from]Metronome',
+      '|move|p1a: Clefable|Quick Attack|p2a: Primeape|[from] Metronome',
       '|-damage|p2a: Primeape|285/333',
       '|-boost|p2a: Primeape|atk|1|[from] Rage',
       '|turn|8',
@@ -4189,37 +4185,37 @@ describe('Gen 1', () => {
       '|move|p1a: Fearow|Peck|p2a: Pidgeot',
       '|-damage|p2a: Pidgeot|326/369',
       '|move|p2a: Pidgeot|Mirror Move|p2a: Pidgeot',
-      '|move|p2a: Pidgeot|Peck|p1a: Fearow|[from]Mirror Move',
+      '|move|p2a: Pidgeot|Peck|p1a: Fearow|[from] Mirror Move',
       '|-damage|p1a: Fearow|289/333',
       '|turn|3',
       '|move|p1a: Fearow|Mirror Move|p1a: Fearow',
-      '|move|p1a: Fearow|Peck|p2a: Pidgeot|[from]Mirror Move',
+      '|move|p1a: Fearow|Peck|p2a: Pidgeot|[from] Mirror Move',
       '|-damage|p2a: Pidgeot|283/369',
       '|move|p2a: Pidgeot|Swift|p1a: Fearow',
       '|-damage|p1a: Fearow|215/333',
       '|turn|4',
       '|move|p1a: Fearow|Mirror Move|p1a: Fearow',
-      '|move|p1a: Fearow|Swift|p2a: Pidgeot|[from]Mirror Move',
+      '|move|p1a: Fearow|Swift|p2a: Pidgeot|[from] Mirror Move',
       '|-damage|p2a: Pidgeot|209/369',
       '|move|p2a: Pidgeot|Mirror Move|p2a: Pidgeot',
-      '|move|p2a: Pidgeot|Swift|p1a: Fearow|[from]Mirror Move',
+      '|move|p2a: Pidgeot|Swift|p1a: Fearow|[from] Mirror Move',
       '|-damage|p1a: Fearow|141/333',
       '|turn|5',
       '|move|p1a: Fearow|Fly||[still]',
       '|-prepare|p1a: Fearow|Fly',
       '|move|p2a: Pidgeot|Mirror Move|p2a: Pidgeot',
-      '|move|p2a: Pidgeot|Swift|p1a: Fearow|[from]Mirror Move',
+      '|move|p2a: Pidgeot|Swift|p1a: Fearow|[from] Mirror Move',
       '|-damage|p1a: Fearow|67/333',
       '|turn|6',
-      '|move|p1a: Fearow|Fly|p2a: Pidgeot|[from]Fly|[miss]',
+      '|move|p1a: Fearow|Fly|p2a: Pidgeot|[from] Fly|[miss]',
       '|-miss|p1a: Fearow',
       '|move|p2a: Pidgeot|Mirror Move|p2a: Pidgeot',
-      '|move|p2a: Pidgeot|Fly||[from]Mirror Move|[still]',
+      '|move|p2a: Pidgeot|Fly||[from] Mirror Move|[still]',
       '|-prepare|p2a: Pidgeot|Fly',
       '|turn|7',
       '|move|p1a: Fearow|Peck|p2a: Pidgeot|[miss]',
       '|-miss|p1a: Fearow',
-      '|move|p2a: Pidgeot|Fly|p1a: Fearow|[from]Fly|[miss]',
+      '|move|p2a: Pidgeot|Fly|p1a: Fearow|[from] Fly|[miss]',
       '|-miss|p2a: Pidgeot',
       '|turn|8',
       '|switch|p2a: Pidgeotto|Pidgeotto|329/329',
@@ -4387,7 +4383,7 @@ describe('Gen 1', () => {
       '|turn|3',
       '|move|p1a: Mew|Peck|p2a: Articuno|[miss]',
       '|-miss|p1a: Mew',
-      '|move|p2a: Articuno|Fly|p1a: Mew|[from]Fly|[miss]',
+      '|move|p2a: Articuno|Fly|p1a: Mew|[from] Fly|[miss]',
       '|-miss|p2a: Articuno',
       '|turn|4',
       '|move|p2a: Articuno|Peck|p1a: Mew',
@@ -4752,7 +4748,7 @@ describe('Gen 1', () => {
       '|move|p2a: Snorlax|Splash|p2a: Snorlax',
       '|-nothing',
       '|turn|3',
-      '|move|p1a: Venusaur|Solar Beam|p2a: Snorlax|[from]Solar Beam',
+      '|move|p1a: Venusaur|Solar Beam|p2a: Snorlax|[from] Solar Beam',
       '|-damage|p2a: Snorlax|355/523',
       '|move|p2a: Snorlax|Splash|p2a: Snorlax',
       '|-nothing',
@@ -4985,7 +4981,7 @@ describe('Gen 1', () => {
         '|-damage|p2a: Chansey|603/703',
         '|turn|2',
         '|move|p2a: Chansey|Metronome|p2a: Chansey',
-        '|move|p2a: Chansey|Counter|p1a: Snorlax|[from]Metronome',
+        '|move|p2a: Chansey|Counter|p1a: Snorlax|[from] Metronome',
         '|-fail|p2a: Chansey',
         '|move|p1a: Snorlax|Seismic Toss|p2a: Chansey',
         '|-damage|p2a: Chansey|503/703',
@@ -5011,7 +5007,7 @@ describe('Gen 1', () => {
         '|move|p1a: Alakazam|Seismic Toss|p2a: Chansey',
         '|-damage|p2a: Chansey|603/703',
         '|move|p2a: Chansey|Metronome|p2a: Chansey',
-        '|move|p2a: Chansey|Counter|p1a: Alakazam|[from]Metronome',
+        '|move|p2a: Chansey|Counter|p1a: Alakazam|[from] Metronome',
         '|-fail|p2a: Chansey',
         '|turn|2',
       ]);
@@ -5043,19 +5039,19 @@ describe('Gen 1', () => {
 
       verify(battle, [
         '|move|p2a: Clefable|Metronome|p2a: Clefable',
-        '|move|p2a: Clefable|Skull Bash||[from]Metronome|[still]',
+        '|move|p2a: Clefable|Skull Bash||[from] Metronome|[still]',
         '|-prepare|p2a: Clefable|Skull Bash',
         '|move|p1a: Clefairy|Metronome|p1a: Clefairy',
-        '|move|p1a: Clefairy|Mirror Move|p1a: Clefairy|[from]Metronome',
-        '|move|p1a: Clefairy|Metronome|p1a: Clefairy|[from]Mirror Move',
-        '|move|p1a: Clefairy|Mirror Move|p1a: Clefairy|[from]Metronome',
-        '|move|p1a: Clefairy|Metronome|p1a: Clefairy|[from]Mirror Move',
-        '|move|p1a: Clefairy|Fly||[from]Metronome|[still]',
+        '|move|p1a: Clefairy|Mirror Move|p1a: Clefairy|[from] Metronome',
+        '|move|p1a: Clefairy|Metronome|p1a: Clefairy|[from] Mirror Move',
+        '|move|p1a: Clefairy|Mirror Move|p1a: Clefairy|[from] Metronome',
+        '|move|p1a: Clefairy|Metronome|p1a: Clefairy|[from] Mirror Move',
+        '|move|p1a: Clefairy|Fly||[from] Metronome|[still]',
         '|-prepare|p1a: Clefairy|Fly',
         '|turn|2',
-        '|move|p2a: Clefable|Skull Bash|p1a: Clefairy|[from]Skull Bash|[miss]',
+        '|move|p2a: Clefable|Skull Bash|p1a: Clefairy|[from] Skull Bash|[miss]',
         '|-miss|p2a: Clefable',
-        '|move|p1a: Clefairy|Fly|p2a: Clefable|[from]Fly|[miss]',
+        '|move|p1a: Clefairy|Fly|p2a: Clefable|[from] Fly|[miss]',
         '|-miss|p1a: Clefairy',
         '|turn|3',
       ]);
@@ -5074,11 +5070,11 @@ describe('Gen 1', () => {
 
       verify(battle, [
         '|move|p1a: Clefable|Metronome|p1a: Clefable',
-        '|move|p1a: Clefable|Pound|p2a: Clefairy|[from]Metronome',
+        '|move|p1a: Clefable|Pound|p2a: Clefairy|[from] Metronome',
         '|-damage|p2a: Clefairy|289/343',
         '|move|p2a: Clefairy|Metronome|p2a: Clefairy',
-        '|move|p2a: Clefairy|Mirror Move|p2a: Clefairy|[from]Metronome',
-        '|move|p2a: Clefairy|Pound|p1a: Clefable|[from]Mirror Move',
+        '|move|p2a: Clefairy|Mirror Move|p2a: Clefairy|[from] Metronome',
+        '|move|p2a: Clefairy|Pound|p1a: Clefable|[from] Mirror Move',
         '|-damage|p1a: Clefable|359/393',
         '|turn|2',
       ]);
@@ -5107,13 +5103,13 @@ describe('Gen 1', () => {
       '|-start|p2a: Kadabra|Substitute',
       '|-damage|p2a: Kadabra|213/283',
       '|move|p1a: Hitmonchan|Metronome|p1a: Hitmonchan',
-      '|move|p1a: Hitmonchan|Seismic Toss|p2a: Kadabra|[from]Metronome',
+      '|move|p1a: Hitmonchan|Seismic Toss|p2a: Kadabra|[from] Metronome',
       '|-end|p2a: Kadabra|Substitute',
       '|turn|2',
       '|move|p2a: Kadabra|Sludge|p1a: Hitmonchan|[miss]',
       '|-miss|p2a: Kadabra',
       '|move|p1a: Hitmonchan|Metronome|p1a: Hitmonchan',
-      '|move|p1a: Hitmonchan|Bonemerang|p2a: Kadabra|[from]Metronome',
+      '|move|p1a: Hitmonchan|Bonemerang|p2a: Kadabra|[from] Metronome',
       '|-damage|p2a: Kadabra|142/283',
       '|-hitcount|p2a: Kadabra|1',
       '|turn|3',
@@ -5173,14 +5169,14 @@ describe('Gen 1', () => {
       for (let i = 0; i < 18; i++) {
         battle.makeChoices('move 1', 'move 1');
       }
-      expect(battle.p2.pokemon[0].moveSlots[0].pp).toBe(-3);
+      expect(battle.p2.pokemon[0].moveSlots[0].pp).toBe(61);
       expect(battle.p2.pokemon[0].baseMoveSlots[0].pp).toBe(15);
       expect(battle.p2.pokemon[0].moveSlots[1].pp).toBe(8);
       expect(battle.p2.pokemon[0].baseMoveSlots[1].pp).toBe(8);
 
       battle.makeChoices('move 1', 'switch 2');
-      expect(battle.p2.pokemon[1].moveSlots[0].pp).toBe(-3);
-      expect(battle.p2.pokemon[1].baseMoveSlots[0].pp).toBe(-3);
+      expect(battle.p2.pokemon[1].moveSlots[0].pp).toBe(61);
+      expect(battle.p2.pokemon[1].baseMoveSlots[0].pp).toBe(61);
       expect(battle.p2.pokemon[1].moveSlots[1].pp).toBe(8);
       expect(battle.p2.pokemon[1].baseMoveSlots[1].pp).toBe(8);
 
@@ -5204,14 +5200,14 @@ describe('Gen 1', () => {
       for (let i = 0; i < 18; i++) {
         battle.makeChoices('move 1', 'move 2');
       }
-      expect(battle.p2.pokemon[0].moveSlots[0].pp).toBe(-10);
-      expect(battle.p2.pokemon[0].baseMoveSlots[0].pp).toBe(-10);
+      expect(battle.p2.pokemon[0].moveSlots[0].pp).toBe(54);
+      expect(battle.p2.pokemon[0].baseMoveSlots[0].pp).toBe(54);
       expect(battle.p2.pokemon[0].moveSlots[1].pp).toBe(15);
       expect(battle.p2.pokemon[0].baseMoveSlots[1].pp).toBe(15);
 
       battle.makeChoices('move 1', 'switch 2');
-      expect(battle.p2.pokemon[1].moveSlots[0].pp).toBe(-10);
-      expect(battle.p2.pokemon[1].baseMoveSlots[0].pp).toBe(-10);
+      expect(battle.p2.pokemon[1].moveSlots[0].pp).toBe(54);
+      expect(battle.p2.pokemon[1].baseMoveSlots[0].pp).toBe(54);
       expect(battle.p2.pokemon[1].moveSlots[1].pp).toBe(15);
       expect(battle.p2.pokemon[1].baseMoveSlots[1].pp).toBe(15);
 
@@ -5220,7 +5216,7 @@ describe('Gen 1', () => {
   });
 
   test('Mirror Move + Wrap bug', () => {
-    const battle = startBattle([MISS, HIT, NO_CRIT, MIN_DMG, MIN_WRAP, HIT], [
+    const battle = startBattle([MISS, HIT, NO_CRIT, MIN_DMG, MIN_WRAP], [
       {species: 'Tentacruel', evs, moves: ['Wrap', 'Surf']},
     ], [
       {species: 'Pidgeot', evs, moves: ['Mirror Move', 'Gust']},
@@ -5233,8 +5229,7 @@ describe('Gen 1', () => {
 
     // Should be locked into Wrap...
     expect(choices(battle, 'p1')).toEqual(['move 1', 'move 2']);
-    // expect(choices(battle, 'p2')).toEqual(['move 1']);
-    expect(choices(battle, 'p2')).toEqual(['move 1', 'move 2']);
+    expect(choices(battle, 'p2')).toEqual(['move 1']);
 
     battle.makeChoices('move 2', 'move 2');
     expect(battle.p1.pokemon[0].hp).toBe(p1hp -= 20);
@@ -5243,11 +5238,11 @@ describe('Gen 1', () => {
       '|move|p1a: Tentacruel|Wrap|p2a: Pidgeot|[miss]',
       '|-miss|p1a: Tentacruel',
       '|move|p2a: Pidgeot|Mirror Move|p2a: Pidgeot',
-      '|move|p2a: Pidgeot|Wrap|p1a: Tentacruel|[from]Mirror Move',
+      '|move|p2a: Pidgeot|Wrap|p1a: Tentacruel|[from] Mirror Move',
       '|-damage|p1a: Tentacruel|343/363',
       '|turn|2',
       '|cant|p1a: Tentacruel|partiallytrapped',
-      '|move|p2a: Pidgeot|Gust|p1a: Tentacruel|[from]Gust',
+      '|move|p2a: Pidgeot|Wrap|p1a: Tentacruel|[from] Wrap',
       '|-damage|p1a: Tentacruel|323/363',
       '|turn|3',
     ]);
@@ -5282,7 +5277,7 @@ describe('Gen 1', () => {
       '|-damage|p2a: Pidgeot|295/369',
       '|-mustrecharge|p1a: Kadabra',
       '|move|p2a: Pidgeot|Mirror Move|p2a: Pidgeot',
-      '|move|p2a: Pidgeot|Hyper Beam|p1a: Kadabra|[from]Mirror Move',
+      '|move|p2a: Pidgeot|Hyper Beam|p1a: Kadabra|[from] Mirror Move',
       '|-damage|p1a: Kadabra|0 fnt',
       '|faint|p1a: Kadabra',
       '|switch|p1a: Haunter|Haunter|293/293',
@@ -5290,7 +5285,7 @@ describe('Gen 1', () => {
       '|move|p1a: Haunter|Splash|p1a: Haunter',
       '|-nothing',
       '|move|p2a: Pidgeot|Mirror Move|p2a: Pidgeot',
-      '|move|p2a: Pidgeot|Splash|p2a: Pidgeot|[from]Mirror Move',
+      '|move|p2a: Pidgeot|Splash|p2a: Pidgeot|[from] Mirror Move',
       '|-nothing',
       '|turn|3',
     ]);
@@ -5410,7 +5405,7 @@ describe('Gen 1', () => {
         '|turn|2',
         '|move|p2a: Vileplume|Splash|p2a: Vileplume',
         '|-nothing',
-        '|move|p1a: Nidoking|Thrash|p2a: Vileplume|[from]Thrash',
+        '|move|p1a: Nidoking|Thrash|p2a: Vileplume|[from] Thrash',
         '|-activate|p2a: Vileplume|Substitute|[damage]',
         '|turn|3',
       ]);
@@ -5443,7 +5438,7 @@ describe('Gen 1', () => {
         '|turn|2',
         '|move|p2a: Abra|Splash|p2a: Abra',
         '|-nothing',
-        '|move|p1a: Nidoking|Thrash|p2a: Abra|[from]Thrash',
+        '|move|p1a: Nidoking|Thrash|p2a: Abra|[from] Thrash',
         '|-damage|p2a: Abra|48/253',
         '|turn|3',
       ]);
@@ -5476,7 +5471,7 @@ describe('Gen 1', () => {
       '|turn|2',
       '|move|p2a: Vileplume|Splash|p2a: Vileplume',
       '|-nothing',
-      '|move|p1a: Dratini|Thrash|p2a: Vileplume|[from]Thrash',
+      '|move|p1a: Dratini|Thrash|p2a: Vileplume|[from] Thrash',
       '|-damage|p2a: Vileplume|243/353',
       '|turn|3',
     ]);
@@ -5961,7 +5956,7 @@ describe('Gen 1', () => {
       expect(battle.p2.pokemon[0].status).toBe('tox');
 
       battle.makeChoices('move 2', 'move 2');
-      expect(battle.p1.pokemon[0].hp).toBe(1);
+      expect(battle.p1.pokemon[0].hp).toBe(91);
       expect(battle.p2.pokemon[0].hp).toBe(0);
 
       verify(battle, [
@@ -5976,6 +5971,7 @@ describe('Gen 1', () => {
         '|move|p2a: Wigglytuff|Double-Edge|p1a: Ivysaur',
         '|-damage|p1a: Ivysaur|1/323',
         '|-damage|p2a: Wigglytuff|0 fnt|[from] Recoil|[of] p1a: Ivysaur',
+        '|-heal|p1a: Ivysaur|91/323|[silent]',
         '|faint|p2a: Wigglytuff',
       ]);
     }
@@ -5998,7 +5994,7 @@ describe('Gen 1', () => {
       expect(battle.p2.pokemon[0].status).toBe('tox');
 
       battle.makeChoices('move 2', 'move 2');
-      expect(battle.p1.pokemon[0].hp).toBe(1);
+      expect(battle.p1.pokemon[0].hp).toBe(91);
       expect(battle.p2.pokemon[0].hp).toBe(0);
 
       verify(battle, [
@@ -6013,6 +6009,7 @@ describe('Gen 1', () => {
         '|move|p2a: Wigglytuff|Jump Kick|p1a: Ivysaur|[miss]',
         '|-miss|p2a: Wigglytuff',
         '|-damage|p2a: Wigglytuff|0 fnt',
+        '|-heal|p1a: Ivysaur|91/323|[silent]',
         '|faint|p2a: Wigglytuff',
       ]);
     }
@@ -6491,7 +6488,7 @@ describe('Gen 1', () => {
         '|move|p2a: Tentacool|Wrap|p1a: Chansey|[miss]',
         '|-miss|p2a: Tentacool',
         '|move|p1a: Chansey|Metronome|p1a: Chansey',
-        '|move|p1a: Chansey|Hyper Beam|p2a: Tentacool|[from]Metronome',
+        '|move|p1a: Chansey|Hyper Beam|p2a: Tentacool|[from] Metronome',
         '|-damage|p2a: Tentacool|178/283',
         '|-mustrecharge|p1a: Chansey',
         '|turn|2',
@@ -6568,7 +6565,7 @@ describe('Gen 1', () => {
       '|move|p2a: Pikachu|Thunder Shock|p1a: Fearow|[miss]',
       '|-miss|p2a: Pikachu',
       '|turn|6',
-      '|move|p1a: Fearow|Fly|p2a: Pikachu|[from]Fly',
+      '|move|p1a: Fearow|Fly|p2a: Pikachu|[from] Fly',
       '|-resisted|p2a: Pikachu',
       '|-damage|p2a: Pikachu|11/141',
       '|move|p2a: Pikachu|Thunder Shock|p1a: Fearow',
@@ -6820,7 +6817,7 @@ describe('Gen 1', () => {
   });
 
   test('Struggle bypassing / Switch PP underflow', () => {
-    const battle = startBattle([HIT, NO_CRIT, MIN_DMG, MIN_WRAP, HIT, NO_CRIT, MIN_DMG, REWRAP], [
+    const battle = startBattle([HIT, NO_CRIT, MIN_DMG, MIN_WRAP, HIT, NO_CRIT, MIN_DMG, MIN_WRAP], [
       {species: 'Victreebel', evs, moves: ['Wrap', 'Vine Whip']},
       {species: 'Seel', evs, moves: ['Bubble']},
     ], [
@@ -6898,7 +6895,7 @@ describe('Gen 1', () => {
       '|-damage|p2a: Sandshrew|292/303',
       '|cant|p2a: Sandshrew|partiallytrapped',
       '|turn|2',
-      '|move|p1a: Weepinbell|Wrap|p2a: Sandshrew|[from]Wrap',
+      '|move|p1a: Weepinbell|Wrap|p2a: Sandshrew|[from] Wrap',
       '|-damage|p2a: Sandshrew|281/303',
       '|cant|p2a: Sandshrew|partiallytrapped',
       '|turn|3',
@@ -6914,7 +6911,7 @@ describe('Gen 1', () => {
   });
 
   test('Partial trapping move Mirror Move glitch', () => {
-    const battle = startBattle([MISS, HIT, NO_CRIT, MAX_DMG, MIN_WRAP],
+    const battle = startBattle([MISS, HIT, NO_CRIT, MAX_DMG, MIN_WRAP, MISS],
       [{species: 'Pidgeot', evs, moves: ['Agility', 'Mirror Move']}],
       [{species: 'Moltres', evs, moves: ['Leer', 'Fire Spin']},
         {species: 'Drowzee', evs, moves: ['Pound']}]);
@@ -6936,14 +6933,14 @@ describe('Gen 1', () => {
       '|-miss|p2a: Moltres',
       '|turn|2',
       '|move|p1a: Pidgeot|Mirror Move|p1a: Pidgeot',
-      '|move|p1a: Pidgeot|Fire Spin|p2a: Moltres|[from]Mirror Move',
+      '|move|p1a: Pidgeot|Fire Spin|p2a: Moltres|[from] Mirror Move',
       '|-resisted|p2a: Moltres',
       '|-damage|p2a: Moltres|378/383',
       '|cant|p2a: Moltres|partiallytrapped',
       '|turn|3',
       '|switch|p2a: Drowzee|Drowzee|323/323',
-      '|move|p1a: Pidgeot|Mirror Move|p1a: Pidgeot',
-      '|-fail|p1a: Pidgeot',
+      '|move|p1a: Pidgeot|Fire Spin|p2a: Drowzee|[miss]',
+      '|-miss|p1a: Pidgeot',
       '|turn|4',
     ]);
   });
@@ -6988,7 +6985,7 @@ describe('Gen 1', () => {
       '|move|p1a: Jigglypuff|Tackle|p2a: Electabuzz',
       '|-activate|p2a: Electabuzz|Substitute|[damage]',
       '|turn|3',
-      '|move|p2a: Electabuzz|Rage|p1a: Jigglypuff|[from]Rage',
+      '|move|p2a: Electabuzz|Rage|p1a: Jigglypuff|[from] Rage',
       '|-damage|p1a: Jigglypuff|377/433',
       '|move|p1a: Jigglypuff|Tackle|p2a: Electabuzz',
       '|-crit|p2a: Electabuzz',
@@ -7069,13 +7066,13 @@ describe('Gen 1', () => {
       '|move|p2a: Onix|Double Team|p2a: Onix',
       '|-boost|p2a: Onix|evasion|1',
       '|turn|2',
-      '|move|p1a: Nidoking|Thrash|p2a: Onix|[from]Thrash',
+      '|move|p1a: Nidoking|Thrash|p2a: Onix|[from] Thrash',
       '|-resisted|p2a: Onix',
       '|-damage|p2a: Onix|229/273',
       '|move|p2a: Onix|Double Team|p2a: Onix',
       '|-boost|p2a: Onix|evasion|1',
       '|turn|3',
-      '|move|p1a: Nidoking|Thrash|p2a: Onix|[from]Thrash|[miss]',
+      '|move|p1a: Nidoking|Thrash|p2a: Onix|[from] Thrash|[miss]',
       '|-miss|p1a: Nidoking',
       '|move|p2a: Onix|Double Team|p2a: Onix',
       '|-boost|p2a: Onix|evasion|1',
@@ -7292,7 +7289,7 @@ describe('Gen 1', () => {
   });
 
   test('Psywave infinite loop', () => {
-    const PSY_MAX = {key: 'data/mods/gen1/moves.ts:591:32', value: MAX};
+    const PSY_MAX = {key: 'data/mods/gen1/moves.ts:549:32', value: MAX};
     const battle = startBattle([HIT, HIT, PSY_MAX], [
       {species: 'Charmander', evs, level: 1, moves: ['Psywave']},
     ], [
@@ -7338,7 +7335,7 @@ describe('Gen 1', () => {
         '|move|p2a: Spearow|Growl|p1a: Mew',
         '|-unboost|p1a: Mew|atk|1',
         '|move|p1a: Mew|Mirror Move|p1a: Mew',
-        '|move|p1a: Mew|Growl|p2a: Spearow|[from]Mirror Move',
+        '|move|p1a: Mew|Growl|p2a: Spearow|[from] Mirror Move',
         '|-unboost|p2a: Spearow|atk|1',
         '|turn|3',
       ]);
@@ -7377,7 +7374,7 @@ describe('Gen 1', () => {
         '|-unboost|p1a: Ditto|atk|1',
         '|turn|2',
         '|move|p1a: Ditto|Mirror Move|p1a: Ditto',
-        '|move|p1a: Ditto|Growl|p2a: Spearow|[from]Mirror Move',
+        '|move|p1a: Ditto|Growl|p2a: Spearow|[from] Mirror Move',
         '|-unboost|p2a: Spearow|atk|1',
         '|move|p2a: Spearow|Growl|p1a: Ditto',
         '|-unboost|p1a: Ditto|atk|1',
@@ -7426,7 +7423,7 @@ describe('Gen 1', () => {
         '|-unboost|p1a: Ditto|atk|1',
         '|turn|2',
         '|move|p1a: Ditto|Mirror Move|p1a: Ditto',
-        '|move|p1a: Ditto|Growl|p2a: Spearow|[from]Mirror Move',
+        '|move|p1a: Ditto|Growl|p2a: Spearow|[from] Mirror Move',
         '|-unboost|p2a: Spearow|atk|1',
         '|move|p2a: Spearow|Growl|p1a: Ditto',
         '|-unboost|p1a: Ditto|atk|1',

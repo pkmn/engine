@@ -283,14 +283,20 @@ export const Choices = new class {
         }
       }
 
-      const binding = active.volatiles['partialtrappinglock'];
+      if (active.volatiles['partialtrappinglock']) { // FIXME:  || active.volatiles['twoturnmove']
+        // Pokémon Showdown's partialtrappinglock uses onOverrideAction to
+        // ignore the input - we simply must use a valid move slot index and
+        // since every Pokémon is guaranteed to have at least one move 'move 1'
+        // should always be legal
+        options.push('move 1');
+        return options;
+      }
+
       const before = options.length;
       let slot = 0;
       for (const move of active.moveSlots) {
         slot++;
-        // Pokémon Showdown expect us to select 0 PP moves when binding as it disables
-        // everything but the move we are to use (and forced trapping moves underflow)
-        if ((move.pp === 0 && !binding) || move.disabled) continue;
+        if (move.pp === 0 || move.disabled) continue;
         options.push(`move ${slot}`);
       }
       if (options.length === before) {
