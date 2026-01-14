@@ -994,7 +994,7 @@ test "end turn (turn limit)" {
     if (!showdown) try expected.switched(.{ P1.ident(1), t.expected.p1.get(1) });
     try expected.switched(.{ P2.ident(1), t.expected.p2.get(1) });
     if (showdown) {
-        try expected.switched(.{ P1.ident(1), t.expected.p1.get(1)});
+        try expected.switched(.{ P1.ident(1), t.expected.p1.get(1) });
         try expected.tie(.{});
     }
 
@@ -6880,16 +6880,24 @@ test "Mimic infinite PP bug" {
         try expectEqual(@as(u8, 8), battle.side(.P2).active.move(2).pp);
         try expectEqual(@as(u8, 8), battle.side(.P2).get(1).move(2).pp);
 
-        // BUG: can't implement Pokémon Showdown's negative PP so need to stop iterating early
-        for (1..16) |_| try expectEqual(Result.Default, try battle.update(move(1), move(1), &NULL));
-        try expectEqual(@as(u8, 0), battle.side(.P2).active.move(1).pp);
-        try expectEqual(@as(u8, 0), battle.side(.P2).get(1).move(1).pp);
+        for (0..(if (showdown) 18 else 15)) |_| {
+            try expectEqual(Result.Default, try battle.update(move(1), move(1), &NULL));
+        }
+        if (showdown) {
+            try expectEqual(@as(u8, 61), battle.side(.P2).active.move(1).pp);
+            // BUG: not implementing Pokémon Showdown's Mimic rollover issues
+            // try expectEqual(@as(u8, 15), battle.side(.P2).get(1).move(1).pp);
+            try expectEqual(@as(u8, 61), battle.side(.P2).get(1).move(1).pp);
+        } else {
+            try expectEqual(@as(u8, 0), battle.side(.P2).active.move(1).pp);
+            try expectEqual(@as(u8, 0), battle.side(.P2).get(1).move(1).pp);
+        }
         try expectEqual(@as(u8, 8), battle.side(.P2).active.move(2).pp);
         try expectEqual(@as(u8, 8), battle.side(.P2).get(1).move(2).pp);
 
         try expectEqual(Result.Default, try battle.update(move(1), swtch(2), &NULL));
 
-        try expectEqual(@as(u8, 0), battle.side(.P2).get(2).move(1).pp);
+        try expectEqual(@as(u8, if (showdown) 61 else 0), battle.side(.P2).get(2).move(1).pp);
         try expectEqual(@as(u8, 8), battle.side(.P2).get(2).move(2).pp);
 
         try expect(battle.rng.exhausted());
@@ -6915,18 +6923,30 @@ test "Mimic infinite PP bug" {
         try expectEqual(@as(u8, 15), battle.side(.P2).active.move(2).pp);
         try expectEqual(@as(u8, 15), battle.side(.P2).get(1).move(2).pp);
 
-        // BUG: can't implement Pokémon Showdown's negative PP so need to stop iterating early
-        for (1..16) |_| try expectEqual(Result.Default, try battle.update(move(1), move(2), &NULL));
+        for (0..(if (showdown) 18 else 15)) |_| {
+            try expectEqual(Result.Default, try battle.update(move(1), move(2), &NULL));
+        }
         // BUG: Pokémon Showdown decrements the wrong slot here
-        try expectEqual(@as(u8, 8), battle.side(.P2).active.move(1).pp);
-        try expectEqual(@as(u8, 8), battle.side(.P2).get(1).move(1).pp);
-        try expectEqual(@as(u8, 0), battle.side(.P2).active.move(2).pp);
-        try expectEqual(@as(u8, 0), battle.side(.P2).get(1).move(2).pp);
+        if (showdown) {
+            // try expectEqual(@as(u8, 54), battle.side(.P2).active.move(1).pp);
+            // try expectEqual(@as(u8, 54), battle.side(.P2).get(1).move(1).pp);
+            // try expectEqual(@as(u8, 15), battle.side(.P2).active.move(2).pp);
+            // try expectEqual(@as(u8, 15), battle.side(.P2).get(1).move(2).pp);
+            try expectEqual(@as(u8, 8), battle.side(.P2).active.move(1).pp);
+            try expectEqual(@as(u8, 8), battle.side(.P2).get(1).move(1).pp);
+        } else {
+            try expectEqual(@as(u8, 8), battle.side(.P2).active.move(1).pp);
+            try expectEqual(@as(u8, 8), battle.side(.P2).get(1).move(1).pp);
+            try expectEqual(@as(u8, 0), battle.side(.P2).active.move(2).pp);
+            try expectEqual(@as(u8, 0), battle.side(.P2).get(1).move(2).pp);
+        }
 
         try expectEqual(Result.Default, try battle.update(move(1), swtch(2), &NULL));
 
+        // try expectEqual(@as(u8, 54), battle.side(.P2).get(2).move(1).pp);
+        // try expectEqual(@as(u8, 15), battle.side(.P2).get(2).move(1).pp);
         try expectEqual(@as(u8, 8), battle.side(.P2).get(2).move(1).pp);
-        try expectEqual(@as(u8, 0), battle.side(.P2).get(2).move(2).pp);
+        try expectEqual(@as(u8, if (showdown) 61 else 0), battle.side(.P2).get(2).move(2).pp);
 
         try expect(battle.rng.exhausted());
     }
