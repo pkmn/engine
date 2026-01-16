@@ -20,6 +20,9 @@
 > [`old`](https://github.com/pkmn/engine/releases/tag/old) tag can also be used to experiment with a
 > more stable version of the codebase).
 
+> [!IMPORTANT]  
+> While this project aims to support every Zig version since v0.11.0, **the most recent Zig version
+> currently supported is v0.14.0**.
 <hr />
 
 A minimal, complete, Pokémon battle simulation engine optimized for performance and
@@ -58,13 +61,16 @@ $ zig build --prefix /usr/local -Doptimize=ReleaseFast
 
 The Zig website has [installation instructions](https://ziglang.org/learn/getting-started/) which
 walk through how to install Zig on each platform - the engine code should work on Zig v0.11.0,
-though tracks Zig's master branch so this may change in the future if breaking language changes are
-introduced. Note that **due to a [bug in the Zig
-compiler](https://github.com/ziglang/zig/issues/17768), compiling with a version of Zig before
-`0.12.0-dev.876+aaf46187a` is recommended for performance**. Alternatively, building a version of
-[Zig from source](https://github.com/ziglang/zig/wiki/Building-Zig-From-Source) after having applied
-a [patch](zig.patch) to revert [ziglang/zig#17391](https://github.com/ziglang/zig/pull/17391) will
-restore performance while allowing modern Zig features to be used.
+~~though tracks Zig's master branch so this may change in the future if breaking language changes
+are introduced~~ and currently supports Zig version up to and including v0.14.0. The engine usually
+aims to support every tagged release and Zig's master branch, but the engine codebase has not been
+updated to account for recent breaking changes to the Zig compiler yet. Note that **due to a [bug in
+the Zig compiler](https://github.com/ziglang/zig/issues/17768), compiling with a version of Zig
+before `0.12.0-dev.876+aaf46187a` is recommended for performance**. Alternatively, building a
+version of [Zig from source](https://github.com/ziglang/zig/wiki/Building-Zig-From-Source) after
+having applied a [patch](zig.patch) to revert
+[ziglang/zig#17391](https://github.com/ziglang/zig/pull/17391) will restore performance while
+allowing modern Zig features to be used.
 
 `libpkmn` can be built with `-Dshowdown` to instead produce the Pokémon Showdown compatible
 `libpkmn-showdown` library. Furthermore, protocol message logging can be enabled through `-Dlog`.

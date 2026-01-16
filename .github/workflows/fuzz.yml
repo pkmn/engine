@@ -20,10 +20,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: scheibo/build-zig@main
-        with:
-          patch-file: zig.patch
-      - run: npm install --ignore-scripts
+      - run: npm install
       - run: zig build -Doptimize=ReleaseSafe -Dlog -Dchance -Dcalc ${{matrix.options}} fuzz -- ${{matrix.gen}} 15m | tee seed.txt
         shell: bash
       - run: |

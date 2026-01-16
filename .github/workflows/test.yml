@@ -16,7 +16,7 @@ jobs:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
         options: ['', '-Dlog -Dchance -Dcalc', '-Dshowdown', '-Dshowdown -Dlog -Dchance -Dcalc']
-        zig: [local, 0.14.0, master] # local = 0.11.0
+        zig: [local, 0.14.0] # local = 0.11.0
         exclude:
           - os: windows-latest
             zig: local
