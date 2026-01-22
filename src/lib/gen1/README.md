@@ -575,8 +575,6 @@ engine, but the following moves have their broken behavior preserved in `-Dshowd
   registered) can erroneously cause Counter to trigger Desync Clause Mod behavior. Additionally,
   because Pokémon Showdown neglects to zero the last battle damage if a move misses due to immunity
   or invulnerability Counter occasionally works on Pokémon Showdown when it should fail.
-- **Leech Seed**: Leech Seed fails to heal its source side if a seeded target faints due to
-  recoil/crash damage on Pokémon Showdown.
 - **Pay Day**: Pay Day should still scatter coins if it hits (but doesn't break) and opponent's
   Substitute but doesn't on Pokémon Showdown.
 - **Flinch**: Flinching doesn't get cleared during move selection on Pokémon Showdown and is
@@ -688,10 +686,8 @@ the correct control flow):
 
 - **Wrap**: Binding moves like Wrap are implemented on Pokémon Showdown with an artificial
   `partialtrappinglock` volatile as opposed to how it works on the cartridge which simply relies on
-  the `Binding` volatile of the opponent. This mistake results in choice locking not being reported
-  properly when the binding move was initiated via another move such as Metronome or Mirror Move.
-  Binding moves also have some local implementation issues - on Pokémon Showdown a bound Pokémon
-  still gets a turn under the [trapping sleep
+  the `Binding` volatile of the opponent. Binding moves also have some local implementation issues -
+  on Pokémon Showdown a bound Pokémon still gets a turn under the [trapping sleep
   glitch](https://glitchcity.wiki/Trapping_move_and_sleep_glitch), Wrap does 0 damage against
   Ghost-type Pokémon instead of properly respecting immunity, and binding effects are handled in the
   wrong order in the code which results in either out of order messaging or, more consequentially,

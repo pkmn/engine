@@ -327,3 +327,4 @@ TODO
 - Foresight ignoring accuracy/evasiveness stages
 - Disable duration?
 - type effectiveness precedence
+- Conversion/Conversion 2?

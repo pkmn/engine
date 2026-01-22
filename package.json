@@ -95,25 +95,25 @@
   },
   "publishConfig": {"access": "public"},
   "dependencies": {
-    "@pkmn/data": "0.9.35",
+    "@pkmn/data": "^0.10.5",
     "@pkmn/protocol": "^0.7.2"
   },
   "devDependencies": {
-    "@pkmn/dex-types": "0.9.35",
+    "@pkmn/dex-types": "^0.10.5",
     "@pkmn/eslint-config": "^9.21.0",
     "@pkmn/img": "^0.3.3",
     "@pkmn/sets": "^5.2.0",
-    "@pkmn/sim": "0.9.31",
-    "@pkmn/smogon": "0.5.21",
+    "@pkmn/sim": "^0.10.5",
+    "@pkmn/smogon": "^0.5.27",
     "@types/html-minifier": "^4.0.6",
     "@types/jest": "^30.0.0",
     "@types/minimist": "^1.2.5",
     "@types/mustache": "^4.2.6",
-    "@types/node": "^25.0.6",
+    "@types/node": "^25.0.10",
     "@types/react": "<=18",
     "@types/semver": "^7.7.1",
     "@types/vscode": "^1.108.1",
-    "@vitest/coverage-v8": "^4.0.17",
+    "@vitest/coverage-v8": "^4.0.18",
     "@vscode/vsce": "^3.7.1",
     "binaryen": "^125.0.0",
     "esbuild": "^0.27.2",
@@ -127,7 +127,7 @@
     "table": "^6.9.0",
     "trakr": "^0.2.0",
     "typescript": "^5.9.3",
-    "vitest": "^4.0.17"
+    "vitest": "^4.0.18"
   },
   "scripts": {
     "lint": "eslint --cache src",

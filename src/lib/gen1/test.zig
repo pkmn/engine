@@ -973,7 +973,7 @@ test "end turn (turn limit)" {
     );
     defer t.deinit();
 
-    const max: u16 = if (showdown) 1000 else 65535;
+    const max: u16 = if (showdown) 1001 else 65535;
     for (0..(max - 1)) |_| {
         try expectEqual(Result.Default, try t.battle.actual.update(swtch(2), swtch(2), &NULL));
     }
@@ -989,10 +989,12 @@ test "end turn (turn limit)" {
     const expected: FixedLog = .{ .writer = &expected_writer };
     const actual: FixedLog = .{ .writer = &actual_writer };
 
-    const slot = if (showdown) 2 else 1;
-    try expected.switched(.{ P1.ident(slot), t.expected.p1.get(slot) });
-    try expected.switched(.{ P2.ident(slot), t.expected.p2.get(slot) });
-    if (showdown) try expected.tie(.{});
+    if (!showdown) try expected.switched(.{ P1.ident(1), t.expected.p1.get(1) });
+    try expected.switched(.{ P2.ident(1), t.expected.p2.get(1) });
+    if (showdown) {
+        try expected.switched(.{ P1.ident(1), t.expected.p1.get(1) });
+        try expected.tie(.{});
+    }
 
     const result = if (showdown) Result.Tie else Result.Error;
     var options = pkmn.battle.options(actual, chance.NULL, calc.NULL);
@@ -3021,7 +3023,8 @@ test "Binding effect" {
             HIT, ~CRIT, MIN_DMG, MIN_WRAP,
             HIT, ~CRIT, MAX_DMG, MIN_WRAP,
             HIT,
-            PAR_CAN, HIT, MAX_WRAP, PAR_CAN,
+            PAR_CAN, HIT, MAX_WRAP,
+            PAR_CAN,
             PAR_CANT, PAR_CAN,
             HIT, MIN_WRAP,
         } else .{
@@ -5394,20 +5397,9 @@ test "Metronome effect" {
     try t.expectProbability(1881, 17358848); // (1/163) * (216/256) * (209/256) * (1/39)
 
     var n = t.battle.actual.choices(.P2, .Move, &choices);
-    try expectEqualSlices(
-        Choice,
-        if (showdown) &[_]Choice{ move(1), move(2), move(3) } else &[_]Choice{forced},
-        choices[0..n],
-    );
+    try expectEqualSlices(Choice, &[_]Choice{forced}, choices[0..n]);
 
-    if (showdown) {
-        // try t.log.expected.move(.{ P2.ident(1), Move.Metronome, P2.ident(1) });
-        // try t.log.expected.move(.{ P2.ident(1), Move.Tackle, P1.ident(1), Move.Metronome });
-        // BUG: can't implement Pokémon Showdown's broken partialtrappinglock mechanics
-        try t.log.expected.move(.{ P2.ident(1), Move.Metronome, P1.ident(1) });
-    } else {
-        try t.log.expected.move(.{ P2.ident(1), Move.Wrap, P1.ident(1) });
-    }
+    try t.log.expected.move(.{ P2.ident(1), Move.Wrap, P1.ident(1) });
     t.expected.p1.get(1).hp -= 14;
     try t.log.expected.damage(.{ P1.ident(1), t.expected.p1.get(1), .None });
     try t.log.expected.cant(.{ P1.ident(1), .Bound });
@@ -6886,16 +6878,24 @@ test "Mimic infinite PP bug" {
         try expectEqual(@as(u8, 8), battle.side(.P2).active.move(2).pp);
         try expectEqual(@as(u8, 8), battle.side(.P2).get(1).move(2).pp);
 
-        // BUG: can't implement Pokémon Showdown's negative PP so need to stop iterating early
-        for (1..16) |_| try expectEqual(Result.Default, try battle.update(move(1), move(1), &NULL));
-        try expectEqual(@as(u8, 0), battle.side(.P2).active.move(1).pp);
-        try expectEqual(@as(u8, 0), battle.side(.P2).get(1).move(1).pp);
+        for (0..(if (showdown) 18 else 15)) |_| {
+            try expectEqual(Result.Default, try battle.update(move(1), move(1), &NULL));
+        }
+        if (showdown) {
+            try expectEqual(@as(u8, 61), battle.side(.P2).active.move(1).pp);
+            // BUG: not implementing Pokémon Showdown's Mimic rollover issues
+            // try expectEqual(@as(u8, 15), battle.side(.P2).get(1).move(1).pp);
+            try expectEqual(@as(u8, 61), battle.side(.P2).get(1).move(1).pp);
+        } else {
+            try expectEqual(@as(u8, 0), battle.side(.P2).active.move(1).pp);
+            try expectEqual(@as(u8, 0), battle.side(.P2).get(1).move(1).pp);
+        }
         try expectEqual(@as(u8, 8), battle.side(.P2).active.move(2).pp);
         try expectEqual(@as(u8, 8), battle.side(.P2).get(1).move(2).pp);
 
         try expectEqual(Result.Default, try battle.update(move(1), swtch(2), &NULL));
 
-        try expectEqual(@as(u8, 0), battle.side(.P2).get(2).move(1).pp);
+        try expectEqual(@as(u8, if (showdown) 61 else 0), battle.side(.P2).get(2).move(1).pp);
         try expectEqual(@as(u8, 8), battle.side(.P2).get(2).move(2).pp);
 
         try expect(battle.rng.exhausted());
@@ -6921,29 +6921,41 @@ test "Mimic infinite PP bug" {
         try expectEqual(@as(u8, 15), battle.side(.P2).active.move(2).pp);
         try expectEqual(@as(u8, 15), battle.side(.P2).get(1).move(2).pp);
 
-        // BUG: can't implement Pokémon Showdown's negative PP so need to stop iterating early
-        for (1..16) |_| try expectEqual(Result.Default, try battle.update(move(1), move(2), &NULL));
+        for (0..(if (showdown) 18 else 15)) |_| {
+            try expectEqual(Result.Default, try battle.update(move(1), move(2), &NULL));
+        }
         // BUG: Pokémon Showdown decrements the wrong slot here
-        try expectEqual(@as(u8, 8), battle.side(.P2).active.move(1).pp);
-        try expectEqual(@as(u8, 8), battle.side(.P2).get(1).move(1).pp);
-        try expectEqual(@as(u8, 0), battle.side(.P2).active.move(2).pp);
-        try expectEqual(@as(u8, 0), battle.side(.P2).get(1).move(2).pp);
+        if (showdown) {
+            // try expectEqual(@as(u8, 54), battle.side(.P2).active.move(1).pp);
+            // try expectEqual(@as(u8, 54), battle.side(.P2).get(1).move(1).pp);
+            // try expectEqual(@as(u8, 15), battle.side(.P2).active.move(2).pp);
+            // try expectEqual(@as(u8, 15), battle.side(.P2).get(1).move(2).pp);
+            try expectEqual(@as(u8, 8), battle.side(.P2).active.move(1).pp);
+            try expectEqual(@as(u8, 8), battle.side(.P2).get(1).move(1).pp);
+        } else {
+            try expectEqual(@as(u8, 8), battle.side(.P2).active.move(1).pp);
+            try expectEqual(@as(u8, 8), battle.side(.P2).get(1).move(1).pp);
+            try expectEqual(@as(u8, 0), battle.side(.P2).active.move(2).pp);
+            try expectEqual(@as(u8, 0), battle.side(.P2).get(1).move(2).pp);
+        }
 
         try expectEqual(Result.Default, try battle.update(move(1), swtch(2), &NULL));
 
+        // try expectEqual(@as(u8, 54), battle.side(.P2).get(2).move(1).pp);
+        // try expectEqual(@as(u8, 15), battle.side(.P2).get(2).move(1).pp);
         try expectEqual(@as(u8, 8), battle.side(.P2).get(2).move(1).pp);
-        try expectEqual(@as(u8, 0), battle.side(.P2).get(2).move(2).pp);
+        try expectEqual(@as(u8, if (showdown) 61 else 0), battle.side(.P2).get(2).move(2).pp);
 
         try expect(battle.rng.exhausted());
     }
 }
 
+// Fixed by smogon/pokemon-showdown#11189
 test "Mirror Move + Wrap bug" {
     const MIN_WRAP = MIN;
 
     var t = Test((if (showdown)
         .{ ~HIT, HIT, ~CRIT, MIN_DMG, MIN_WRAP }
-        // BUG: .{ ~HIT, HIT, ~CRIT, MIN_DMG, MIN_WRAP, HIT }
     else
         .{ MIN_WRAP, ~CRIT, MIN_DMG, ~HIT, ~CRIT, MIN_WRAP, ~CRIT, MIN_DMG, HIT })).init(
         &.{.{ .species = .Tentacruel, .moves = &.{ .Wrap, .Surf } }},
@@ -6967,14 +6979,10 @@ test "Mirror Move + Wrap bug" {
     const expected = if (showdown) &[_]Choice{ move(1), move(2) } else &[_]Choice{move(0)};
     try expectEqualSlices(Choice, expected, choices[0..n]);
     n = t.battle.actual.choices(.P2, .Move, &choices);
-    try expectEqualSlices(Choice, expected, choices[0..n]);
+    try expectEqualSlices(Choice, &[_]Choice{forced}, choices[0..n]);
 
     try t.log.expected.cant(.{ P1.ident(1), .Bound });
-    if (showdown) {
-        try t.log.expected.move(.{ P2.ident(1), Move.Gust, P1.ident(1) });
-    } else {
-        try t.log.expected.move(.{ P2.ident(1), Move.Wrap, P1.ident(1) });
-    }
+    try t.log.expected.move(.{ P2.ident(1), Move.Wrap, P1.ident(1) });
     t.expected.p1.get(1).hp -= 20;
     try t.log.expected.damage(.{ P1.ident(1), t.expected.p1.get(1), .None });
     try t.log.expected.turn(.{3});
@@ -7900,6 +7908,7 @@ test "Toxic counter glitches" {
 
 test "Poison/Burn animation with 0 HP" {
     // https://pkmn.cc/bulba/List_of_graphical_quirks_(Generation_I)
+    // https://glitchcity.wiki/wiki/Poison/Burn_animation_with_0_HP_glitch
 
     // Faint from Recoil (no healing on Pokémon Showdown)
     {
@@ -7938,11 +7947,9 @@ test "Poison/Burn animation with 0 HP" {
         try t.log.expected.damage(.{ P1.ident(1), t.expected.p1.get(1), .None });
         t.expected.p2.get(1).hp -= 30;
         try t.log.expected.damage(.{ P2.ident(1), t.expected.p2.get(1), .RecoilOf, P1.ident(1) });
-        if (!showdown) {
-            try t.log.expected.damage(.{ P2.ident(1), t.expected.p2.get(1), .Poison });
-            t.expected.p1.get(1).hp += 90;
-            try t.log.expected.heal(.{ P1.ident(1), t.expected.p1.get(1), .Silent });
-        }
+        if (!showdown) try t.log.expected.damage(.{ P2.ident(1), t.expected.p2.get(1), .Poison });
+        t.expected.p1.get(1).hp += 90;
+        try t.log.expected.heal(.{ P1.ident(1), t.expected.p1.get(1), .Silent });
         try t.log.expected.faint(.{ P2.ident(1), true });
 
         try expectEqual(Result{ .p1 = .Pass, .p2 = .Switch }, try t.update(move(2), move(2)));
@@ -7986,11 +7993,9 @@ test "Poison/Burn animation with 0 HP" {
         try t.log.expected.miss(.{P2.ident(1)});
         t.expected.p2.get(1).hp -= 1;
         try t.log.expected.damage(.{ P2.ident(1), t.expected.p2.get(1), .None });
-        if (!showdown) {
-            try t.log.expected.damage(.{ P2.ident(1), t.expected.p2.get(1), .Poison });
-            t.expected.p1.get(1).hp += 90;
-            try t.log.expected.heal(.{ P1.ident(1), t.expected.p1.get(1), .Silent });
-        }
+        if (!showdown) try t.log.expected.damage(.{ P2.ident(1), t.expected.p2.get(1), .Poison });
+        t.expected.p1.get(1).hp += 90;
+        try t.log.expected.heal(.{ P1.ident(1), t.expected.p1.get(1), .Silent });
         try t.log.expected.faint(.{ P2.ident(1), true });
 
         try expectEqual(Result{ .p1 = .Pass, .p2 = .Switch }, try t.update(move(2), move(2)));
@@ -9315,7 +9320,7 @@ test "Partial trapping move Mirror Move glitch" {
     const MIN_WRAP = MIN;
 
     var t = Test((if (showdown)
-        .{ ~HIT, HIT, ~CRIT, MAX_DMG, MIN_WRAP }
+        .{ ~HIT, HIT, ~CRIT, MAX_DMG, MIN_WRAP, ~HIT }
     else
         .{ ~CRIT, MIN_WRAP, ~CRIT, MAX_DMG, ~HIT, ~CRIT, MIN_WRAP, ~CRIT, MAX_DMG, HIT })).init(
         &.{.{ .species = .Pidgeot, .moves = &.{ .Agility, .MirrorMove } }},
@@ -9349,15 +9354,15 @@ test "Partial trapping move Mirror Move glitch" {
 
     if (showdown) {
         try t.log.expected.switched(.{ P2.ident(2), t.expected.p2.get(2) });
-        try t.log.expected.move(.{ P1.ident(1), Move.MirrorMove, P1.ident(1) });
-        try t.log.expected.fail(.{ P1.ident(1), .None });
+        try t.log.expected.move(.{ P1.ident(1), Move.FireSpin, P2.ident(2) });
+        try t.log.expected.lastmiss(.{});
+        try t.log.expected.miss(.{P1.ident(1)});
         try t.log.expected.turn(.{4});
     }
 
     const result = if (showdown) Result.Default else Result.Error;
     try expectEqual(result, try t.update(move(if (showdown) 2 else 0), swtch(2)));
-    try t.expectProbability(1, 1);
-
+    try if (showdown) t.expectProbability(39, 128) else t.expectProbability(1, 1); // (78/256)
     try t.verify();
 }
 
