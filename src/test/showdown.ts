@@ -178,8 +178,12 @@ export const patch = {
     (gen.dex.data as any).Rulesets['freezeclausemod'].onSetStatusPriority = -998;
 
     const conditions = {
-      // Add priority to avoid speed ties with Bide's onDisableMove handler
-      1: {'disable': {onDisableMovePriority: 7}},
+      1: {
+        // Add priority to avoid speed ties with Bide's onDisableMove handler
+        'disable': {onDisableMovePriority: 7},
+        // partiallytrapped conflicts with twoturnmove for no reason
+        'partiallytrapped': {onLockMovePriority: 1},
+      },
       2: {
         // Type-boosting items need an onBasePowerPriority... for their nop handler
         'item: Pink Bow': {onBasePowerPriority: 15},
@@ -271,10 +275,15 @@ export const Choices = new class {
       const side = battle[id]!;
       const active = side.active[0];
 
-      // Being "forced" on Pokémon Showdown sets "trapped"
+      // Being "forced" on Pokémon Showdown sets "trapped"...
       if (active.trapped) {
         const forced = active.trapped && request.active[0].moves.length === 1;
         if (forced) return ['move 1'];
+      // ...except if binding moves are involved due to a bungled "maybeLocked"
+      // implementation from smogon/pokemon-showdown#10936 meaning moves that
+      // *should* actually be locked aren't, which we need to correct for here :S
+      } else if (active.volatiles['twoturnmove']) {
+        return ['move 1'];
       } else {
         for (let slot = 2; slot <= 6; slot++) {
           const pokemon = side.pokemon[slot - 1];
