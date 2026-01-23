@@ -104,7 +104,7 @@ interface PlayerOptions {
 // confirms that the engine produces the same chunks of output given the same
 // input... only a lot of black magic and subterfuge is required to make this
 // happen. First, we support both replaying from a past input log (which
-// necessitates maintaing our own raw inout log to work around the fact that
+// necessitates maintaing our own raw input log to work around the fact that
 // Pokémon Showdown mutates the raw input by eliding "pass" choices and turning
 // move slot indexes into IDs) as well as playing out a battle from a seed. To
 // get the latter to work we have to jump through a number of hoops:
@@ -187,9 +187,15 @@ function play(
   let index = 0;
   const getChoices = (): [engine.Choice, engine.Choice] => {
     if (replay) {
+      // We need to plumb through information about whether a Pokémon is currently struggling or
+      // locked into a binding move so that we can massage the input logs data into something the
+      // engine can handle. Note we use lastSelectedMove for the slot since a trapping move could be
+      // proc-ed through Metronome / Mirror Move and thus the lastMove won't appear in a mov eslot
+      const binding = (p: 'p1' | 'p2') => (control[p].active[0].volatiles['partialtrappinglock']
+        ? control[p].active[0].moves.indexOf(control[p].lastSelectedMove) + 1 : 0);
       [chose.p1, chose.p2, index] = fromInputLog(replay, index, {
-        p1: choices(control, 'p1', 'move 0').includes('move 0'),
-        p2: choices(control, 'p2', 'move 0').includes('move 0'),
+        p1: {struggle: choices(control, 'p1', 'move 0').includes('move 0'), binding: binding('p1')},
+        p2: {struggle: choices(control, 'p2', 'move 0').includes('move 0'), binding: binding('p2')},
       });
     } else {
       for (const id of ['p1', 'p2'] as const) {
@@ -198,7 +204,9 @@ function play(
         if (!request || request.wait) {
           chose[id] = engine.Choice.pass;
         } else {
-          // TODO document or extract
+          // Previous versions of Pokémon Showdown used to disable all but the binding move - this
+          // accomplishes more or less the same thing but also ensures we choose "move 1" which is
+          // important to ahere to the engine's convention. See comment above re: lastSelectedMove
           if (control[id].active[0].volatiles['partialtrappinglock'] && 'active' in request) {
             request.active[0].moves =
               request.active[0].moves.filter(m => m.id === control[id].lastSelectedMove);
@@ -709,7 +717,11 @@ function problematic(battle: Battle) {
 const IGNORE = /^>(version(?:-origin)|start|player)/;
 const MATCH = /^>(p1|p2) (.*)/;
 
-function fromInputLog(input: string[], index: number, struggle: {p1: boolean; p2: boolean}) {
+function fromInputLog(
+  input: string[],
+  index: number,
+  pokemon: {p1: {struggle: boolean; binding: number}; p2: {struggle: boolean; binding: number}}
+) {
   const choices: {p1: engine.Choice | undefined; p2: engine.Choice | undefined} =
     {p1: undefined, p2: undefined};
 
@@ -728,7 +740,14 @@ function fromInputLog(input: string[], index: number, struggle: {p1: boolean; p2
     const choice = engine.Choice.parse(m[2]);
     // We still need to handle struggle specially as the engine expects 'move 0'
     // and Pokémon Showdown expects 'move 1'
-    if (choice.type === 'move' && choice.data === 1 && struggle[player]) choice.data = 0;
+    if (pokemon[player].struggle) {
+      if (choice.type === 'move' && choice.data === 1) choice.data = 0;
+    } else if (pokemon[player].binding && choice.type === 'move') {
+    // We need to map move selections of partialtrappinglock Pokémon to the new
+    // convention of "move 1" since old input logs selected the actual index of
+    // the binding move because Pokémon Showdown previously disabled every other slot
+      if (choice.data === pokemon[player].binding) choice.data = 1;
+    }
 
     if (choices[player]) {
       throw new Error(`Already have choice for ${player}: ` +
