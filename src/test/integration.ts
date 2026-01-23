@@ -201,7 +201,10 @@ function play(
         if (!request || request.wait) {
           chose[id] = engine.Choice.pass;
         } else {
-          // TODO document or extract
+          // Previous versions of Pokémon Showdown used to disable all but the binding move which
+          // forced the selection. Filtering out all of the other moves here forces the binding move
+          // to be selected while also ensuring we choose "move 1" which is important to adhere to
+          // the engine's convention.
           if (control[id].active[0].volatiles['partialtrappinglock'] && 'active' in request) {
             request.active[0].moves =
               request.active[0].moves.filter(m => m.id === control[id].lastSelectedMove);
