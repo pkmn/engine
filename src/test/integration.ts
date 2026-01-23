@@ -224,7 +224,6 @@ function play(
     return [chose.p1, chose.p2];
   };
 
-  let rawInputLog: string[] | undefined = undefined;
   try {
     const valid = (result: engine.Result, id: engine.Player, choice: engine.Choice) => {
       const buf = [];
@@ -249,12 +248,8 @@ function play(
       if (!control.started) {
         control.setPlayer('p1', p1options.spec);
         control.setPlayer('p2', p2options.spec);
-        rawInputLog = control.inputLog.slice(0);
       } else {
-        const choice1 = adjust(engine.Choice.format(c1));
-        const choice2 = adjust(engine.Choice.format(c2));
-        rawInputLog!.push(`>p1 ${choice1}`, `>p2 ${choice2}`);
-        control.makeChoices(choice1, choice2);
+        control.makeChoices(adjust(engine.Choice.format(c1)), adjust(engine.Choice.format(c2)));
         if (gen.num === 1 && problematic(control)) return;
       }
 
@@ -306,7 +301,7 @@ function play(
           gen,
           stack,
           num,
-          rawInputLog,
+          control.inputLog,
           frames,
           partial,
         );
@@ -332,7 +327,7 @@ function dump(
   gen: Generation,
   err: string,
   seed: bigint,
-  input: string[] | undefined,
+  input: string[],
   frames: {pkmn: Frame['pkmn'][]; showdown: Frame['showdown'][]},
   partial: {pkmn: Partial<Frame['pkmn']>; showdown: Partial<Frame['showdown']>}
 ) {
@@ -351,11 +346,9 @@ function dump(
   const hex = `0x${seed.toString(16).toUpperCase()}`;
   let file = path.join(dir, `${hex}.input.log`);
   let link = path.join(dir, 'input.log');
-  if (input) {
-    fs.writeFileSync(file, input.join('\n'));
-    symlink(file, link);
-    console.error(box(`npm run integration ${path.relative(CWD, file)}`));
-  }
+  fs.writeFileSync(file, input.join('\n'));
+  symlink(file, link);
+  console.error(box(`npm run integration ${path.relative(CWD, file)}`));
 
   file = path.join(dir, `${hex}.pkmn.html`);
   link = path.join(dir, 'pkmn.html');
