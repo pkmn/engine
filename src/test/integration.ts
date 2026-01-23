@@ -7,7 +7,7 @@ import * as tty from 'tty';
 
 import {Generation, GenerationNum, Generations} from '@pkmn/data';
 import {Protocol} from '@pkmn/protocol';
-import {Battle, BattleStreams, Dex, ID, PRNG, Streams, Teams, toID} from '@pkmn/sim';
+import {Battle, BattleStreams, Dex, ID, PRNG, Side, Streams, Teams, toID} from '@pkmn/sim';
 import * as sim from '@pkmn/sim/tools';
 import {minify} from 'html-minifier';
 import minimist from 'minimist';
@@ -186,13 +186,23 @@ function play(
 
   let index = 0;
   const getChoices = (): [engine.Choice, engine.Choice] => {
+    // TODO
+    const forced = (side: Side): number | undefined => {
+      const p = side.active[0];
+      if (!p.maybeLocked) return undefined;
+      if (p.volatiles['partialtrappinglock'] || p.volatiles['twoturnmove'] || p.volatiles['rage']) {
+        const slot = p.moves.indexOf(side.lastSelectedMove) + 1;
+        return p.volatiles['partialtrappinglock'] ? -slot : slot;
+      }
+      return undefined;
+    };
     if (replay) {
       [chose.p1, chose.p2, index] = fromInputLog(replay, index, {
         p1: choices(control, 'p1', 'move 0').map(engine.Choice.parse),
         p2: choices(control, 'p2', 'move 0').map(engine.Choice.parse),
       }, {
-        p1: control.p1.active[0].moves.map(toID),
-        p2: control.p2.active[0].moves.map(toID),
+        p1: {moves: control.p1.active[0].moves.map(toID), forced: forced(control.p1)},
+        p2: {moves: control.p2.active[0].moves.map(toID), forced: forced(control.p2)},
       });
     } else {
       for (const id of ['p1', 'p2'] as const) {
@@ -201,13 +211,10 @@ function play(
         if (!request || request.wait) {
           chose[id] = engine.Choice.pass;
         } else {
-          // Previous versions of Pokémon Showdown used to disable all but the binding move which
-          // forced the selection. Filtering out all of the other moves here forces the binding move
-          // to be selected while also ensuring we choose "move 1" which is important to adhere to
-          // the engine's convention.
-          if (control[id].active[0].volatiles['partialtrappinglock'] && 'active' in request) {
-            request.active[0].moves =
-              request.active[0].moves.filter(m => m.id === control[id].lastSelectedMove);
+          // TODO
+          const n = forced(control[id]);
+          if ('active' in request && n) {
+            request.active[0].moves = [request.active[0].moves[Math.abs(n) - 1]];
           }
           player.receiveRequest(request);
           const c = engine.Choice.format(chose[id]);
@@ -712,7 +719,7 @@ function fromInputLog(
   input: string[],
   index: number,
   options: {p1: engine.Choice[]; p2: engine.Choice[]},
-  moves: {p1: ID[]; p2: ID[]},
+  pokemon: {p1: {moves: ID[]; forced?: number}; p2: {moves: ID[]; forced?: number}},
 ) {
   // Players don't usually send "pass" on wait requests (they just wait) so we
   // need to determine when the player would have been forced to pass and fill
@@ -750,9 +757,16 @@ function fromInputLog(
     const d = m[5] ?? m[8] ?? '0';
     const struggle = d === 'struggle';
 
-    const data = d === 'recharge' ? 1 : !isNaN(+d) ? +d : moves[player].indexOf(d as ID) + 1;
-    // BUG: a move could be [from] Metronome and wouldn't be possible to reverse
-    if (type === 'move' && !data && !struggle) throw new Error(`Invalid choice data: '${d}'`);
+    let data =
+      d === 'recharge' ? 1 : !isNaN(+d) ? +d : pokemon[player].moves.indexOf(d as ID) + 1;
+    if (type === 'move') {
+      // BUG: a move could be [from] Metronome and wouldn't be possible to reverse
+      if (!data && !struggle) throw new Error(`Invalid choice data: '${d}'`);
+      // TODO
+      if (pokemon[player].forced && Math.abs(pokemon[player].forced) === data) {
+        data = 1;
+      }
+    }
 
     const choice = {type, data};
     if (choices[player]) {
