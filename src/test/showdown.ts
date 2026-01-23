@@ -183,6 +183,8 @@ export const patch = {
         'disable': {onDisableMovePriority: 7},
         // partiallytrapped is poorly implemented and conflicts with numerous other handlers
         'partiallytrapped': {onLockMovePriority: 1, onDisableMovePriority: 1},
+        // partiallytrapped turns into fakepartiallytrapped so needs the same modified priority
+        'fakepartiallytrapped': {onDisableMovePriority: 1},
       },
       2: {
         // Type-boosting items need an onBasePowerPriority... for their nop handler
