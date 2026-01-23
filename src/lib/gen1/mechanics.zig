@@ -513,7 +513,7 @@ fn beforeMove(
         return .done;
     }
 
-    if (!showdown and (skip or foe.active.volatiles.Binding)) {
+    if (skip or foe.active.volatiles.Binding) {
         try log.cant(.{ ident, .Bound });
         return .done;
     }
@@ -719,13 +719,6 @@ fn beforeMove(
                 try buildRage(battle, player.foe(), options);
             }
         }
-        return .done;
-    }
-
-    // Pokémon Showdown does this bizarre dance with volatiles and handles binding in
-    // its onAfterMove handler which incorrectly decreases the priority of this check
-    if (showdown and (skip or foe.active.volatiles.Binding)) {
-        try log.cant(.{ ident, .Bound });
         return .done;
     }
 
