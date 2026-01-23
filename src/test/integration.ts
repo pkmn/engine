@@ -104,10 +104,10 @@ interface PlayerOptions {
 // confirms that the engine produces the same chunks of output given the same
 // input... only a lot of black magic and subterfuge is required to make this
 // happen. First, we support both replaying from a past input log (which
-// necessitates a fromInputLog function that can deal with Pokémon Showdown
-// mutating the raw input by eliding "pass" choices and turning move slot
-// indexes into IDs) as well as playing out a battle from a seed. To get the
-// latter to work we have to jump through a number of hoops:
+// necessitates maintaing our own raw inout log to work around the fact that
+// Pokémon Showdown mutates the raw input by eliding "pass" choices and turning
+// move slot indexes into IDs) as well as playing out a battle from a seed. To
+// get the latter to work we have to jump through a number of hoops:
 //
 //   - we need to patch Pokémon Showdown to make its speed ties sane (patch)
 //   - we need to ensure the ExhaustiveRunner doesn't generate teams with moves
@@ -188,11 +188,8 @@ function play(
   const getChoices = (): [engine.Choice, engine.Choice] => {
     if (replay) {
       [chose.p1, chose.p2, index] = fromInputLog(replay, index, {
-        p1: choices(control, 'p1', 'move 0').map(engine.Choice.parse),
-        p2: choices(control, 'p2', 'move 0').map(engine.Choice.parse),
-      }, {
-        p1: control.p1.active[0].moves.map(toID),
-        p2: control.p2.active[0].moves.map(toID),
+        p1: choices(control, 'p1', 'move 0').includes('move 0'),
+        p2: choices(control, 'p2', 'move 0').includes('move 0'),
       });
     } else {
       for (const id of ['p1', 'p2'] as const) {
@@ -703,80 +700,34 @@ function problematic(battle: Battle) {
 }
 
 const IGNORE = /^>(version(?:-origin)|start|player)/;
-const MATCH = /^>(p1|p2) (?:(pass)|((move) (.*))|((switch) ([2-6])))/;
+const MATCH = /^>(p1|p2) (.*)/;
 
-function fromInputLog(
-  input: string[],
-  index: number,
-  options: {p1: engine.Choice[]; p2: engine.Choice[]},
-  moves: {p1: ID[]; p2: ID[]},
-) {
-  // Players don't usually send "pass" on wait requests (they just wait) so we
-  // need to determine when the player would have been forced to pass and fill
-  // that in. Otherwise we set the choice to undefined and determine what the
-  // choice was by processing the input log
-  const initial = (player: engine.Player) =>
-    (!options[player].length || options[player].length === 1 && options[player][0].type === 'pass')
-      ? engine.Choice.pass : undefined;
-
+function fromInputLog(input: string[], index: number, struggle: {p1: boolean; p2: boolean}) {
   const choices: {p1: engine.Choice | undefined; p2: engine.Choice | undefined} =
-    {p1: initial('p1'), p2: initial('p2')};
+    {p1: undefined, p2: undefined};
 
   // Iterate over the input log from where we last stopped while at least one
-  // player still needs a choice and try to parse out choices from the raw
-  // input. If we find a choice for a player that already has one assigned then
-  // the engine and Pokémon Showdown disagree on the possible options (the
-  // engine either thought the player was forced to "pass" and assigned a choice
-  // above, or we received two inputs for one player and zero for the other
-  // meaning the other player should have passed but didn't, or the player made
-  // an unavailable choice which we didn't skip as invalid)
+  // player still needs a choice and try to parse out choices from the raw input
   while (index < input.length && !(choices.p1 && choices.p2)) {
     if (IGNORE.test(input[index])) {
       index++;
       continue;
     }
 
-    // We can't simply call engine.Choice.parse on the choice because Pokémon
-    // Showdown oh so helpfully mutates the raw input and replaces move slot
-    // indexes with move IDs :/
     const m = MATCH.exec(input[index]);
     if (!m) throw new Error(`Unexpected input ${index}: '${input[index]}'`);
 
     const player = m[1] as engine.Player;
-    const type = (m[2] ?? m[4] ?? m[7]) as engine.Choice['type'];
-    const d = m[5] ?? m[8] ?? '0';
-    const struggle = d === 'struggle';
+    const choice = engine.Choice.parse(m[2]);
+    // We still need to handle struggle specially as the engine expects 'move 0'
+    // and Pokémon Showdown expects 'move 1'
+    if (choice.type === 'move' && choice.data === 1 && struggle[player]) choice.data = 0;
 
-    const data = d === 'recharge' ? 1 : !isNaN(+d) ? +d : moves[player].indexOf(d as ID) + 1;
-    // BUG: a move could be [from] Metronome and wouldn't be possible to reverse
-    if (type === 'move' && !data && !struggle) throw new Error(`Invalid choice data: '${d}'`);
-
-    const choice = {type, data};
     if (choices[player]) {
       throw new Error(`Already have choice for ${player}: ` +
         `'${engine.Choice.format(choices[player])}' vs. '${engine.Choice.format(choice)}'`);
     }
-
-    // Ensure the choice we parsed from the input log is actually valid for the
-    // player - its possible that the RandomPlayerAI made an "unavailable"
-    // choice, in which case we simply continue to the next input to determine
-    // what the *actual* choice should be. We also need to handle Pokémon Showdown's
-    // broken forced choice semantics where the move index in the input log gets
-    // translated to an illegal index
-    if (options[player].length === 1 && options[player][0].type === 'move') {
-      if (type !== 'move') {
-        throw new Error(`Invalid choice when move is forced: '${engine.Choice.format(choice)}'`);
-      }
-      choices[player] = options[player][0];
-    } else {
-      for (const option of options[player]) {
-        if (option.type === choice.type && option.data === choice.data) {
-          choices[player] = choice;
-          break;
-        }
-      }
-    }
-
+    choices[player] = choice;
     index++;
   }
 
