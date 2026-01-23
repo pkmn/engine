@@ -181,8 +181,8 @@ export const patch = {
       1: {
         // Add priority to avoid speed ties with Bide's onDisableMove handler
         'disable': {onDisableMovePriority: 7},
-        // partiallytrapped conflicts with twoturnmove for no reason
-        'partiallytrapped': {onLockMovePriority: 1},
+        // partiallytrapped is poorly implemented and conflicts with numerous other handlers
+        'partiallytrapped': {onLockMovePriority: 1, onDisableMovePriority: 1},
       },
       2: {
         // Type-boosting items need an onBasePowerPriority... for their nop handler
