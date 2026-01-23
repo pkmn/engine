@@ -201,6 +201,11 @@ function play(
         if (!request || request.wait) {
           chose[id] = engine.Choice.pass;
         } else {
+          // TODO document or extract
+          if (control[id].active[0].volatiles['partialtrappinglock'] && 'active' in request) {
+            request.active[0].moves =
+              request.active[0].moves.filter(m => m.id === control[id].lastSelectedMove);
+          }
           player.receiveRequest(request);
           const c = engine.Choice.format(chose[id]);
           while (!choices(control, id, 'move 0').includes(c)) {
