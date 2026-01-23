@@ -284,7 +284,7 @@ export const Choices = new class {
       // ...except if binding moves are involved due to a bungled "maybeLocked"
       // implementation from smogon/pokemon-showdown#10936 meaning moves that
       // *should* actually be locked aren't, which we need to correct for here :S
-      } else if (active.volatiles['twoturnmove'] || active.volatiles['rage']) {
+      } else if (active.volatiles['twoturnmove']) {
         return ['move 1'];
       } else {
         for (let slot = 2; slot <= 6; slot++) {
