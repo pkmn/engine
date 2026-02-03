@@ -243,7 +243,7 @@ pub const Action = packed struct(u64) {
         try fmt(a, w, false);
     }
 
-    const SYMBOLS = [_][]const u8{ "+", "", "-", "#" };
+    const SYMBOLS = [_][]const u8{ "+", "", "-", "#", "%+", "%", "%-", "%#" };
 
     pub fn fmt(self: Action, writer: *std.Io.Writer, shape: bool) !void {
         try writer.writeByte('(');
