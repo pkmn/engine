@@ -136,7 +136,8 @@ pub const Rolls = struct {
 +      DEBUG(@src());
  ```
 
- ## Testing `pkmn-debug`
+
+## Testing `pkmn-debug`
 
 The `pkmn-debug` script requires some additional work to test properly because of how it is
 packaged. First you must apply a patch to force a fuzz test failure (and to remove the embedded
