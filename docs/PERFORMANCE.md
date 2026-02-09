@@ -34,8 +34,8 @@ trade off performance for any other feature. This principle leads to the followi
   of the log [protocol](PROTOCOL.md), writing bytes in the fastest way possible. As a result, the
   engine's **protocol and API changes depending on the system**, as all integers are be written
   using **native-endianness** as that's guaranteed to be the fastest to read and write on any
-  particular system.
-    - TODO protocol avoids any redundant information that can't be recomputed later
+  particular system. Furthermore, the protocol has been designed to avoid including any redundant
+  information that can be efficiently recomputed, minimizing the number of bytes written.
 - **no strings** are used in the engine - strings are to be dealt with by higher levels (e.g. in
   driver code) and as a result the engine just has to deal with small and efficient primitive data
   types. All identifiers can be represented as small `enum` values which can be used to index
