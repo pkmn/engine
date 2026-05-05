@@ -2,8 +2,6 @@
   "exclude": ["vite.config.mts"],
   "compilerOptions": {
     "types": ["node"],
-    "ignoreDeprecations": "6.0",
-    "downlevelIteration": true,
     "outDir": "build",
     "rootDir": ".",
     "sourceMap": true,

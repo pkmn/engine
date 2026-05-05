@@ -3,11 +3,9 @@
   "compilerOptions": {
     "allowUnreachableCode": false,
     "allowUnusedLabels": false,
-    "baseUrl": ".",
     "declaration": true,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
-    "ignoreDeprecations": "6.0",
     "incremental": true,
     "isolatedModules": true,
     "jsx": "preserve",
@@ -29,7 +27,7 @@
     "tsBuildInfoFile": ".tsbuildinfo",
     "types": ["jest", "node"],
     "paths": {
-      "@pkmn/sim/*": ["node_modules/@pkmn/sim/build/types/sim/*"]
+      "@pkmn/sim/*": ["./node_modules/@pkmn/sim/build/types/sim/*"]
     }
   }
 }
