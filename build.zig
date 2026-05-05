@@ -177,7 +177,9 @@ pub fn build(b: *std.Build) !void {
         });
         lib.root_module.addOptions("build_options", options);
         lib.root_module.addIncludePath(b.path("src/include"));
-        lib.bundle_compiler_rt = true;
+        if (target.result.os.tag != .macos) {
+            lib.bundle_compiler_rt = true;
+        }
         maybeStrip(b, lib, b.getInstallStep(), strip, cmd);
         if (emit_asm) {
             b.getInstallStep().dependOn(&b.addInstallFileWithDir(
