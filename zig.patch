@@ -1,47 +1,49 @@
-diff --git a/src/codegen/llvm.zig b/src/codegen/llvm.zig
-index 358d4ac469..923db8ed85 100644
---- a/src/codegen/llvm.zig
-+++ b/src/codegen/llvm.zig
-@@ -6898,7 +6898,8 @@ pub const FuncGen = struct {
-                 const elem_alignment = elem_ty.abiAlignment(zcu).toLlvm();
-                 return self.loadByRef(elem_ptr, elem_ty, elem_alignment, .normal);
-             } else {
--                return self.loadTruncate(.normal, elem_ty, elem_ptr, .default);
-+                const elem_llvm_ty = try o.lowerType(pt, elem_ty);
-+                return self.wip.load(.normal, elem_llvm_ty, elem_ptr, .default, "");
-             }
+diff --git a/src/codegen/llvm/FuncGen.zig b/src/codegen/llvm/FuncGen.zig
+index 40fc1f56a8..3b9253142b 100644
+--- a/src/codegen/llvm/FuncGen.zig
++++ b/src/codegen/llvm/FuncGen.zig
+@@ -2127,7 +2127,7 @@ fn airSliceElemVal(self: *FuncGen, inst: Air.Inst.Index) Allocator.Error!Builder
+     if (isByRef(elem_ty, zcu)) {
+         return self.loadByRef(ptr, elem_ty, elem_align.toLlvm(), access_kind);
+     } else {
+-        return self.loadTruncate(access_kind, elem_ty, ptr, elem_align.toLlvm());
++        return self.wip.load(access_kind, try self.object.lowerType(elem_ty), ptr, elem_align.toLlvm(), "");
+     }
+ }
+ 
+@@ -2157,7 +2157,7 @@ fn airArrayElemVal(self: *FuncGen, inst: Air.Inst.Index) Allocator.Error!Builder
+             const elem_align = elem_ty.abiAlignment(zcu).toLlvm();
+             return self.loadByRef(elem_ptr, elem_ty, elem_align, .normal);
+         } else {
+-            return self.loadTruncate(.normal, elem_ty, elem_ptr, .default);
++            return self.wip.load(.normal, try self.object.lowerType(elem_ty), elem_ptr, .default, "");
          }
+     }
  
-@@ -7066,11 +7067,12 @@ pub const FuncGen = struct {
-                 const payload_index = @intFromBool(layout.tag_align.compare(.gte, layout.payload_align));
-                 const field_ptr =
-                     try self.wip.gepStruct(union_llvm_ty, struct_llvm_val, payload_index, "");
-+                const llvm_field_ty = try o.lowerType(pt, field_ty);
-                 const payload_alignment = layout.payload_align.toLlvm();
-                 if (isByRef(field_ty, zcu)) {
-                     return self.loadByRef(field_ptr, field_ty, payload_alignment, .normal);
-                 } else {
--                    return self.loadTruncate(.normal, field_ty, field_ptr, payload_alignment);
-+                    return self.wip.load(.normal, llvm_field_ty, field_ptr, payload_alignment, "");
-                 }
-             },
-             else => unreachable,
-@@ -11256,7 +11258,8 @@ pub const FuncGen = struct {
+@@ -2277,7 +2277,7 @@ fn airStructFieldVal(self: *FuncGen, inst: Air.Inst.Index) Allocator.Error!Build
+     if (isByRef(field_ty, zcu)) {
+         return self.loadByRef(field_ptr, field_ty, field_ptr_align.toLlvm(), .normal);
+     } else {
+-        return self.loadTruncate(.normal, field_ty, field_ptr, field_ptr_align.toLlvm());
++        return self.wip.load(.normal, try self.object.lowerType(field_ty), field_ptr, field_ptr_align.toLlvm(), "");
+     }
+ }
  
-                 return fg.loadByRef(payload_ptr, payload_ty, payload_alignment, .normal);
-             }
--            return fg.loadTruncate(.normal, payload_ty, payload_ptr, payload_alignment);
-+            const payload_llvm_ty = try fg.ng.object.lowerType(pt, payload_ty);
-+            return fg.wip.load(.normal, payload_llvm_ty, payload_ptr, payload_alignment, "");
-         }
+@@ -6172,7 +6172,7 @@ fn optPayloadHandle(
+         if (can_elide_load) return payload_ptr;
+         return fg.loadByRef(payload_ptr, payload_ty, payload_align, .normal);
+     } else {
+-        return fg.loadTruncate(.normal, payload_ty, payload_ptr, payload_align);
++        return fg.wip.load(.normal, try fg.object.lowerType(payload_ty), payload_ptr, payload_align, "");
+     }
+ }
  
-         assert(!isByRef(payload_ty, zcu));
-@@ -11452,7 +11455,7 @@ pub const FuncGen = struct {
-             if (isByRef(elem_ty, zcu)) {
-                 return self.loadByRef(ptr, elem_ty, ptr_alignment, access_kind);
-             }
--            return self.loadTruncate(access_kind, elem_ty, ptr, ptr_alignment);
-+            return self.wip.load(access_kind, try o.lowerType(pt, elem_ty), ptr, ptr_alignment, "");
-         }
+@@ -6269,7 +6269,7 @@ fn load(
+     if (isByRef(elem_ty, zcu)) {
+         return fg.loadByRef(ptr, elem_ty, ptr_alignment, access_kind);
+     } else {
+-        return fg.loadTruncate(access_kind, elem_ty, ptr, ptr_alignment);
++        return fg.wip.load(access_kind, try fg.object.lowerType(elem_ty), ptr, ptr_alignment, "");
+     }
+ }
  
-         const containing_int_ty = try o.builder.intType(@intCast(info.packed_offset.host_size * 8));
