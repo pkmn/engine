@@ -34,7 +34,7 @@ jobs:
           node src/bin/install-pkmn-engine --options="-Dshowdown -Dlog -Dchance -Dcalc"
           npm run integration -- --gen=${{matrix.gen}} --duration=15m --maxFailures=5 --debug=false
         if: ${{ matrix.options != '' }}
-      - uses: actions/upload-artifact@v6
+      - uses: actions/upload-artifact@v7
         if: failure()
         with:
           name: logs
