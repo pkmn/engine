@@ -97,7 +97,7 @@ class Runner {
       if (replayed.ended) assert.equal(lines.join('\n'), replayed.inputLog.join('\n'));
       return Promise.resolve();
     } catch (err: unknown) {
-      return Promise.reject(err as Error);
+      return Promise.reject(err instanceof Error ? err : new Error(String(err)));
     }
   }
 }
@@ -169,8 +169,8 @@ function play(
   patch.battle(control, true, debug);
 
   const players = replay ? undefined : {
-    p1: p1options.create!(null! as any),
-    p2: p2options.create!(null! as any),
+    p1: p1options.create!(null!),
+    p2: p2options.create!(null!),
   };
 
   // The engine requires we use the choice 'move 0' for Struggle but Pokémon
@@ -526,7 +526,7 @@ function compare(chunk: string, actual: engine.ParsedLine[]) {
       [actual[i], actual[i + 1]] = [actual[i + 1], actual[i]];
     }
     const a = args.slice() as Writeable<Protocol.ArgType>;
-    const kw = {...kwArgs} as Protocol.KWArgType;
+    const kw = {...kwArgs};
     switch (args[0]) {
       case 'move': {
         const keys = kwArgs as Protocol.KWArgs['|move|'];

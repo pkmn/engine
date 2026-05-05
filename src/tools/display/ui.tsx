@@ -193,7 +193,7 @@ export const Pokemon = ({pokemon, battle, active, gen, showdown, last}: {
     if (gen.num === 1 && stat === 'spd') continue;
     ths.push(<th>{DISPLAY[gen.num === 1 && stat === 'spa' ? 'spc' : stat]}</th>);
     const boost = active ? pokemon.boosts[stat as pkmn.BoostID] : 0;
-    tds.push(<td><Stat value={stats[stat as pkmn.StatID]} boost={boost} /></td>);
+    tds.push(<td><Stat value={stats[stat]} boost={boost} /></td>);
   }
 
   const boosts = active ? <div className='boosts'>

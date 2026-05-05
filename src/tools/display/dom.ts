@@ -76,12 +76,12 @@ export function h(
   if (typeof type !== 'string') {
     const element = type(attributes);
     addChildren(element, children);
-    return element as JSX.Element;
+    return element;
   }
 
   const element = document.createElement(type);
   addChildren(element, children);
-  if (!attributes) return element as JSX.Element;
+  if (!attributes) return element;
 
   for (let [name, value] of Object.entries(attributes)) {
     if (name === 'htmlFor') name = 'for';
@@ -101,7 +101,7 @@ export function h(
     }
   }
 
-  return element as JSX.Element;
+  return element;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars

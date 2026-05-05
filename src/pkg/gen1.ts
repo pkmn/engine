@@ -68,7 +68,7 @@ export class Battle implements Gen1.Battle {
   side(id: Player): Side {
     const i = id === 'p1' ? 0 : 1;
     const side = this.cache[i];
-    return side ?? (this.cache[i] = new Side(this, this.lookup, this.data, id as 'p1' | 'p2'));
+    return side ?? (this.cache[i] = new Side(this, this.lookup, this.data, id));
   }
 
   foe(side: Player): Side {
@@ -456,7 +456,7 @@ export class Pokemon implements Gen1.Pokemon {
       const boost = b as BoostID;
       boosts[boost] = this.boost(boost);
     }
-    return boosts as BoostsTable;
+    return boosts;
   }
 
   get species(): ID {

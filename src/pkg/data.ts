@@ -97,7 +97,7 @@ export class Lookup {
       this.itemsByID = {};
     } else {
       this.itemsByNum = IDS[gen.num - 1 as 1].items;
-      this.itemsByID = {} as {[id: string]: number};
+      this.itemsByID = {};
       for (let i = 0; i < this.itemsByNum.length; i++) {
         if (this.itemsByNum[i] === 'flowermail') {
           this.itemsByNum[i] = 'mail' as ID;

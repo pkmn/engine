@@ -7,6 +7,7 @@
     "declaration": true,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
+    "ignoreDeprecations": "6.0",
     "incremental": true,
     "isolatedModules": true,
     "jsx": "preserve",
@@ -20,11 +21,13 @@
     "noImplicitReturns": true,
     "outDir": "build",
     "resolveJsonModule": true,
+    "rootDir": ".",
     "skipLibCheck": true,
     "sourceMap": true,
     "strict": true,
     "target": "esnext",
     "tsBuildInfoFile": ".tsbuildinfo",
+    "types": ["jest", "node"],
     "paths": {
       "@pkmn/sim/*": ["node_modules/@pkmn/sim/build/types/sim/*"]
     }

@@ -77,7 +77,7 @@ export const Select = ({options, unmount, placeholder, render}: {
       for (const option of data) {
         children.push(<div className='select option' data-value={option}>
           {render(option, val)}
-        </div> as HTMLElement);
+        </div>);
       }
       container.replaceChildren(...children);
       console.debug('suggest');
