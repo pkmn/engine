@@ -1,10 +1,11 @@
 {
   "exclude": ["vite.config.mts"],
   "compilerOptions": {
-    "types": ["node"],
     "outDir": "build",
     "rootDir": ".",
     "sourceMap": true,
-    "strict": true
+    "strict": true,
+    "target": "es2025",
+    "types": ["node"],
   }
 }
