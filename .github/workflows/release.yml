@@ -20,8 +20,8 @@ jobs:
           registry-url: 'https://registry.npmjs.org'
           scope: '@pkmn'
       - uses: scheibo/build-zig@main
-        #with:
-        #  patch-file: zig.patch
+        with:
+          patch-file: zig.patch
       - run: npm install --ignore-scripts
       - run: npm run release
         env:

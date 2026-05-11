@@ -21,8 +21,9 @@ jobs:
     steps:
       - uses: actions/checkout@v6
       - uses: scheibo/build-zig@main
-        #with:
-        #  patch-file: zig.patch
+        with:
+          patch-file: zig.patch
+      - run: zig env # DEBUG
       - run: npm install --ignore-scripts
       - run: zig build -Doptimize=ReleaseSafe -Dlog -Dchance -Dcalc ${{matrix.options}} fuzz -- ${{matrix.gen}} 15m | tee seed.txt
         shell: bash
