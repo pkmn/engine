@@ -16,9 +16,7 @@
 > [!WARNING]  
 > **This project is under heavy development** and currently the `main` branch contains numerous breaking
 > changes which may not work and which are not fully documented. Please **wait for the forthcoming
-> initial v0.1 release** before depending on this project (code from the
-> [`old`](https://github.com/pkmn/engine/releases/tag/old) tag can also be used to experiment with a
-> more stable version of the codebase).
+> initial v0.1 release** before depending on this project.
 
 <hr />
 
