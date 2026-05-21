@@ -12,7 +12,12 @@ pub const Options = struct {
     calc: ?bool = null,
 };
 
-pub fn module(b: *std.Build, options: Options) *std.Build.Module {
+pub fn module(
+    b: *std.Build,
+    options: Options,
+    target: std.Build.ResolvedTarget,
+    optimize: std.builtin.OptimizeMode,
+) *std.Build.Module {
     const build_options = b.addOptions();
     build_options.addOption(?bool, "showdown", options.showdown);
     build_options.addOption(?bool, "log", options.log);
@@ -22,7 +27,12 @@ pub fn module(b: *std.Build, options: Options) *std.Build.Module {
     const root_source_file = b.path("src/lib/pkmn.zig");
     const imports: []const std.Build.Module.Import =
         &.{.{ .name = "build_options", .module = build_options.createModule() }};
-    return b.createModule(.{ .root_source_file = root_source_file, .imports = imports });
+    return b.createModule(.{
+        .root_source_file = root_source_file,
+        .target = target,
+        .optimize = optimize,
+        .imports = imports,
+    });
 }
 
 pub fn build(b: *std.Build) !void {
@@ -253,7 +263,6 @@ pub fn build(b: *std.Build) !void {
             .chance = chance,
             .calc = calc,
         },
-        .module = pkmn,
         .general = config,
         .tool = .{
             .tests = if (tests.build) tests else null,
@@ -436,7 +445,6 @@ const TestStep = struct {
 
 const ToolConfig = struct {
     options: Options,
-    module: ?*std.Build.Module,
     general: Config,
     tool: struct {
         tests: ?*TestStep,
@@ -463,7 +471,7 @@ fn tool(b: *std.Build, path: []const u8, config: ToolConfig) !?*std.Build.Step.R
         }),
     });
 
-    const import = if (config.module) |m| m else module(b, config.options);
+    const import = module(b, config.options, config.general.target, config.general.optimize);
     exe.root_module.addImport("pkmn", import);
     if (config.general.target.result.os.tag == .windows) {
         exe.root_module.linkSystemLibrary("advapi32", .{});
