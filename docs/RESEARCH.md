@@ -141,6 +141,7 @@ TODO
 - [Pokemon Battle Simulator](https://github.com/hiimvincent/poke-battle-sim)
 - [PokeSim](https://github.com/aed3/poke-sim)
 - [ninjax](https://github.com/ndarwin314/ninjax/tree/master)
+- [pokepy](https://github.com/sethkarten/pokepy-engine)
 
 ### RNG
 
