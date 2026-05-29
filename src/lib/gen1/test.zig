@@ -5826,11 +5826,19 @@ test "Transform effect" {
     try expectEqual(t.actual.p2.active.types, t.actual.p1.active.types);
     try expectEqual(@as(u8, 50), t.actual.p1.get(1).level);
 
-    inline for (@typeInfo(@TypeOf(t.actual.p1.get(1).stats)).@"struct".fields) |f| {
-        if (!std.mem.eql(u8, f.name, "hp")) {
+    inline for (if (@hasField(
+        @TypeOf(@typeInfo(@TypeOf(t.actual.p1.get(1).stats)).@"struct"),
+        "fields",
+    ))
+        @typeInfo(@TypeOf(t.actual.p1.get(1).stats)).@"struct".fields
+    else
+        @typeInfo(@TypeOf(t.actual.p1.get(1).stats)).@"struct".field_names) |field|
+    {
+        const field_name = if (@hasField(@TypeOf(field), "name")) field.name else field;
+        if (!std.mem.eql(u8, field_name, "hp")) {
             try expectEqual(
-                @field(t.actual.p2.active.stats, f.name),
-                @field(t.actual.p1.active.stats, f.name),
+                @field(t.actual.p2.active.stats, field_name),
+                @field(t.actual.p1.active.stats, field_name),
             );
         }
     }
@@ -5877,11 +5885,19 @@ test "Transform effect" {
     try expectEqual(Result.Default, try t.update(move(1), move(1)));
     try t.expectProbability(1, 2);
 
-    inline for (@typeInfo(@TypeOf(t.actual.p1.get(1).stats)).@"struct".fields) |f| {
-        if (!std.mem.eql(u8, f.name, "hp")) {
+    inline for (if (@hasField(
+        @TypeOf(@typeInfo(@TypeOf(t.actual.p1.get(1).stats)).@"struct"),
+        "fields",
+    ))
+        @typeInfo(@TypeOf(t.actual.p1.get(1).stats)).@"struct".fields
+    else
+        @typeInfo(@TypeOf(t.actual.p1.get(1).stats)).@"struct".field_names) |field|
+    {
+        const field_name = if (@hasField(@TypeOf(field), "name")) field.name else field;
+        if (!std.mem.eql(u8, field_name, "hp")) {
             try expectEqual(
-                @field(t.actual.p2.active.stats, f.name),
-                @field(t.actual.p1.active.stats, f.name),
+                @field(t.actual.p2.active.stats, field_name),
+                @field(t.actual.p1.active.stats, field_name),
             );
         }
     }
@@ -5908,11 +5924,19 @@ test "Transform effect" {
 
     try expectEqual(Result.Default, try t.update(move(1), move(1)));
     try t.expectProbability(1, 1);
-    inline for (@typeInfo(@TypeOf(t.actual.p1.get(1).stats)).@"struct".fields) |f| {
-        if (!std.mem.eql(u8, f.name, "hp")) {
+    inline for (if (@hasField(
+        @TypeOf(@typeInfo(@TypeOf(t.actual.p1.get(1).stats)).@"struct"),
+        "fields",
+    ))
+        @typeInfo(@TypeOf(t.actual.p1.get(1).stats)).@"struct".fields
+    else
+        @typeInfo(@TypeOf(t.actual.p1.get(1).stats)).@"struct".field_names) |field|
+    {
+        const field_name = if (@hasField(@TypeOf(field), "name")) field.name else field;
+        if (!std.mem.eql(u8, field_name, "hp")) {
             try expectEqual(
-                @field(t.actual.p2.active.stats, f.name),
-                @field(t.actual.p1.active.stats, f.name),
+                @field(t.actual.p2.active.stats, field_name),
+                @field(t.actual.p1.active.stats, field_name),
             );
         }
     }

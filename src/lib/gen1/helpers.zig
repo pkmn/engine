@@ -161,15 +161,20 @@ pub const Pokemon = struct {
         var pokemon = data.Pokemon{};
         pokemon.species = p.species;
         const species = Species.get(p.species);
-        inline for (@typeInfo(@TypeOf(pokemon.stats)).@"struct".fields) |field| {
-            const hp = comptime std.mem.eql(u8, field.name, "hp");
+        inline for (if (@hasField(@TypeOf(@typeInfo(@TypeOf(pokemon.stats)).@"struct"), "fields"))
+            @typeInfo(@TypeOf(pokemon.stats)).@"struct".fields
+        else
+            @typeInfo(@TypeOf(pokemon.stats)).@"struct".field_names) |field|
+        {
+            const field_name = if (@hasField(@TypeOf(field), "name")) field.name else field;
+            const hp = comptime std.mem.eql(u8, field_name, "hp");
             const spc =
-                comptime std.mem.eql(u8, field.name, "spa") or std.mem.eql(u8, field.name, "spd");
-            @field(pokemon.stats, field.name) = Stats(u16).calc(
-                field.name,
-                @field(species.stats, field.name),
-                if (hp) p.dvs.hp() else if (spc) p.dvs.spc else @field(p.dvs, field.name),
-                @field(p.stats, field.name),
+                comptime std.mem.eql(u8, field_name, "spa") or std.mem.eql(u8, field_name, "spd");
+            @field(pokemon.stats, field_name) = Stats(u16).calc(
+                field_name,
+                @field(species.stats, field_name),
+                if (hp) p.dvs.hp() else if (spc) p.dvs.spc else @field(p.dvs, field_name),
+                @field(p.stats, field_name),
                 p.level,
             );
         }
@@ -197,14 +202,19 @@ pub const Pokemon = struct {
         const lvl = if (rand.chance(u8, 1, 20)) rand.range(u8, 1, 99 + 1) else 100;
         var stats: Stats(u16) = .{};
         const dvs = DVs.random(rand);
-        inline for (@typeInfo(@TypeOf(stats)).@"struct".fields) |field| {
-            @field(stats, field.name) = Stats(u16).calc(
-                field.name,
-                @field(species.stats, field.name),
-                if (comptime std.mem.eql(u8, field.name, "hp"))
+        inline for (if (@hasField(@TypeOf(@typeInfo(@TypeOf(stats)).@"struct"), "fields"))
+            @typeInfo(@TypeOf(stats)).@"struct".fields
+        else
+            @typeInfo(@TypeOf(stats)).@"struct".field_names) |field|
+        {
+            const field_name = if (@hasField(@TypeOf(field), "name")) field.name else field;
+            @field(stats, field_name) = Stats(u16).calc(
+                field_name,
+                @field(species.stats, field_name),
+                if (comptime std.mem.eql(u8, field_name, "hp"))
                     dvs.hp()
                 else
-                    @field(dvs, field.name),
+                    @field(dvs, field_name),
                 if (rand.chance(u8, 1, 20)) rand.range(u16, 0, EXP + 1) else EXP,
                 lvl,
             );

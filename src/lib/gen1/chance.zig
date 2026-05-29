@@ -52,10 +52,23 @@ pub const Actions = extern struct {
     /// same shape if they have the same fields set (though those fields need not necessarily be
     /// set to the same value).
     pub fn matches(a: Actions, b: Actions) bool {
-        inline for (@typeInfo(Actions).@"struct".fields) |player| {
-            inline for (@typeInfo(Action).@"struct".fields) |field| {
-                const a_val = @field(@field(a, player.name), field.name);
-                const b_val = @field(@field(b, player.name), field.name);
+        inline for (if (@hasField(@TypeOf(@typeInfo(Actions).@"struct"), "fields"))
+            @typeInfo(Actions).@"struct".fields
+        else
+            @typeInfo(Actions).@"struct".field_names) |player|
+        {
+            const player_name = if (@hasField(@TypeOf(player), "name"))
+                player.name
+            else
+                player;
+            inline for (if (@hasField(@TypeOf(@typeInfo(Action).@"struct"), "fields"))
+                @typeInfo(Action).@"struct".fields
+            else
+                @typeInfo(Action).@"struct".field_names) |field|
+            {
+                const field_name = if (@hasField(@TypeOf(field), "name")) field.name else field;
+                const a_val = @field(@field(a, player_name), field_name);
+                const b_val = @field(@field(b, player_name), field_name);
 
                 switch (@typeInfo(@TypeOf(a_val))) {
                     .@"enum" => if ((@intFromEnum(a_val) > 0) != (@intFromEnum(b_val) > 0))
@@ -216,31 +229,36 @@ pub const Action = packed struct(u64) {
     pub fn fmt(self: Action, writer: *std.Io.Writer, shape: bool) !void {
         try writer.writeByte('(');
         var printed = false;
-        inline for (@typeInfo(Action).@"struct".fields) |field| {
-            const val = @field(self, field.name);
+        inline for (if (@hasField(@TypeOf(@typeInfo(Action).@"struct"), "fields"))
+            @typeInfo(Action).@"struct".fields
+        else
+            @typeInfo(Action).@"struct".field_names) |field|
+        {
+            const field_name = if (@hasField(@TypeOf(field), "name")) field.name else field;
+            const val = @field(self, field_name);
             switch (@typeInfo(@TypeOf(val))) {
                 .@"enum" => if (val != .None) {
                     if (printed) try writer.writeAll(", ");
                     if (shape) {
-                        try writer.print("{s}:?", .{field.name});
+                        try writer.print("{s}:?", .{field_name});
                     } else if (@TypeOf(val) == Optional(bool)) {
                         try writer.print("{s}{s}", .{
                             if (val == .false) "!" else "",
-                            field.name,
+                            field_name,
                         });
                     } else if (@TypeOf(val) != Move and @TypeOf(val) != Optional(Player)) {
-                        try writer.print("{s}{s}", .{ SYMBOLS[@intFromEnum(val) - 1], field.name });
+                        try writer.print("{s}{s}", .{ SYMBOLS[@intFromEnum(val) - 1], field_name });
                     } else {
-                        try writer.print("{s}:{s}", .{ field.name, @tagName(val) });
+                        try writer.print("{s}:{s}", .{ field_name, @tagName(val) });
                     }
                     printed = true;
                 },
                 .int => if (val != 0) {
                     if (printed) try writer.writeAll(", ");
                     if (shape) {
-                        try writer.print("{s}:?", .{field.name});
+                        try writer.print("{s}:?", .{field_name});
                     } else {
-                        try writer.print("{s}:{d}", .{ field.name, val });
+                        try writer.print("{s}:{d}", .{ field_name, val });
                     }
                     printed = true;
                 },
@@ -293,20 +311,25 @@ pub const Duration = packed struct(u32) {
     ) !void {
         try writer.writeByte('(');
         var printed = false;
-        inline for (@typeInfo(Duration).@"struct".fields) |field| {
-            const val = @field(self, field.name);
+        inline for (if (@hasField(@TypeOf(@typeInfo(Duration).@"struct"), "fields"))
+            @typeInfo(Duration).@"struct".fields
+        else
+            @typeInfo(Duration).@"struct".field_names) |field|
+        {
+            const field_name = if (@hasField(@TypeOf(field), "name")) field.name else field;
+            const val = @field(self, field_name);
             switch (@typeInfo(@TypeOf(val))) {
                 .int => if (val != 0) {
                     if (printed) try writer.writeAll(", ");
-                    if (comptime std.mem.eql(u8, field.name, "sleeps")) {
-                        try writer.print("{s}:[", .{field.name});
+                    if (comptime std.mem.eql(u8, field_name, "sleeps")) {
+                        try writer.print("{s}:[", .{field_name});
                         for (0..6) |i| {
                             if (i != 0) try writer.writeByte(',');
                             try writer.print("{d}", .{Sleeps.get(val, i)});
                         }
                         try writer.writeAll("]");
                     } else {
-                        try writer.print("{s}:{d}", .{ field.name, val });
+                        try writer.print("{s}:{d}", .{ field_name, val });
                     }
                     printed = true;
                 },

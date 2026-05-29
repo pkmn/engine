@@ -1,5 +1,6 @@
 const pkmn = @import("../pkmn.zig");
 const std = @import("std");
+const util = @import("../common/util.zig");
 
 const assert = std.debug.assert;
 
@@ -36,8 +37,8 @@ pub fn gen(comptime num: comptime_int) type {
             request: u8,
             buf: [*]u8,
         ) callconv(.c) u8 {
-            assert(player <= @typeInfo(pkmn.Player).@"enum".fields.len);
-            assert(request <= @typeInfo(pkmn.Choice.Type).@"enum".fields.len);
+            assert(player <= util.EnumFieldsLen(pkmn.Player));
+            assert(request <= util.EnumFieldsLen(pkmn.Choice.Type));
 
             const n = CHOICES_SIZE;
             return battle.choices(@enumFromInt(player), @enumFromInt(request), @ptrCast(buf[0..n]));
