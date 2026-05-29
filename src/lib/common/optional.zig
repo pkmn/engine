@@ -6,21 +6,31 @@ const assert = std.debug.assert;
 /// Optimized optional representation which stores the empty None value as a sentinel.
 /// NOTE: ziglang/zig#104
 pub fn Optional(comptime T: type) type {
-    const fields = std.meta.fields(switch (@typeInfo(T)) {
-        .bool => enum { false, true },
-        else => T,
-    });
+    const names = if (@hasDecl(std.meta, "fieldNames"))
+        std.meta.fieldNames(switch (@typeInfo(T)) {
+            .bool => enum { false, true },
+            else => T,
+        })
+    else blk: {
+        const fields = std.meta.fields(switch (@typeInfo(T)) {
+            .bool => enum { false, true },
+            else => T,
+        });
+        var ns: [fields.len][:0]const u8 = undefined;
+        inline for (fields, 0..) |f, i| ns[i] = f.name;
+        break :blk &ns;
+    };
 
-    const TagType = std.math.IntFittingRange(0, fields.len);
-    var fieldNames: [fields.len + 1][]const u8 = undefined;
-    var fieldValues: [fields.len + 1]TagType = undefined;
+    const TagType = std.math.IntFittingRange(0, names.len);
+    var fieldNames: [names.len + 1][]const u8 = undefined;
+    var fieldValues: [names.len + 1]TagType = undefined;
 
     fieldNames[0] = "None";
     fieldValues[0] = 0;
 
-    inline for (fields, 1..) |field, i| {
-        assert(!std.mem.eql(u8, field.name, "None"));
-        fieldNames[i] = field.name;
+    inline for (names, 1..) |name, i| {
+        assert(!std.mem.eql(u8, name, "None"));
+        fieldNames[i] = name;
         fieldValues[i] = i;
     }
 

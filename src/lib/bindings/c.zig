@@ -1,5 +1,6 @@
 const pkmn = @import("../pkmn.zig");
 const std = @import("std");
+const util = @import("../common/util.zig");
 
 const assert = std.debug.assert;
 
@@ -23,7 +24,7 @@ pub const MAX_LOGS = pkmn.MAX_LOGS;
 pub const LOGS_SIZE = pkmn.LOGS_SIZE;
 
 pub fn choice_init(choice: u8, data: u8) callconv(.c) u8 {
-    assert(choice <= @typeInfo(pkmn.Choice.Type).@"enum".fields.len);
+    assert(choice <= util.EnumFieldsLen(pkmn.Choice.Type));
     assert(data <= 6);
     return @bitCast(pkmn.Choice{ .type = @enumFromInt(choice), .data = @intCast(data) });
 }
@@ -190,8 +191,8 @@ pub fn gen(comptime num: comptime_int) type {
             out: [*]u8,
             n: usize,
         ) callconv(.c) u8 {
-            assert(player <= @typeInfo(pkmn.Player).@"enum".fields.len);
-            assert(request <= @typeInfo(pkmn.Choice.Type).@"enum".fields.len);
+            assert(player <= util.EnumFieldsLen(pkmn.Player));
+            assert(request <= util.EnumFieldsLen(pkmn.Choice.Type));
 
             assert(!pkmn.options.showdown or n > 0);
             return battle.choices(@enumFromInt(player), @enumFromInt(request), @ptrCast(out[0..n]));

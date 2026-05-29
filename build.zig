@@ -55,7 +55,10 @@ pub fn build(b: *std.Build) !void {
     const emit_asm = b.option(bool, "emit-asm", "Output .s (assembly code)") orelse false;
     const emit_ll = b.option(bool, "emit-ll", "Output .ll (LLVM IR)") orelse false;
 
-    const cmd = b.findProgram(&.{"strip"}, &.{}) catch null;
+    const cmd = if (@hasDecl(std.Build, "FindProgramOptions"))
+        b.findProgram(.{ .names = &.{"strip"} })
+    else
+        b.findProgram(&.{"strip"}, &.{}) catch null;
 
     const json = @embedFile("package.json");
     var parsed = try std.json.parseFromSlice(std.json.Value, b.allocator, json, .{});
@@ -214,34 +217,45 @@ pub fn build(b: *std.Build) !void {
         const header = b.addInstallFileWithDir(path, .header, "pkmn.h");
         b.getInstallStep().dependOn(&header.step);
 
-        const pc = b.fmt("lib{s}.pc", .{name});
-        const cwd = try std.process.currentPathAlloc(b.graph.io, b.allocator);
-        const file = try std.Io.Dir.path.relative(
-            b.allocator,
-            cwd,
-            &b.graph.environ_map,
-            cwd,
-            try b.cache_root.join(b.allocator, &.{pc}),
-        );
-        const pkgconfig_file = try std.Io.Dir.cwd().createFile(b.graph.io, file, .{});
-        defer pkgconfig_file.close(b.graph.io);
-
-        const dirname = comptime std.fs.path.dirname(@src().file) orelse ".";
-        var writer = pkgconfig_file.writer(b.graph.io, &.{});
-        try writer.interface.print(
-            \\prefix={0s}/{1s}
+        const content = try std.fmt.allocPrint(b.allocator,
+            \\prefix=${{pcfiledir}}/../..
             \\includedir=${{prefix}}/include
             \\libdir=${{prefix}}/lib
             \\
-            \\Name: lib{2s}
-            \\URL: https://github.com/{3s}
-            \\Description: {4s}
-            \\Version: {5s}
+            \\Name: lib{0s}
+            \\URL: https://github.com/{1s}
+            \\Description: {2s}
+            \\Version: {3s}
             \\Cflags: -I${{includedir}}
-            \\Libs: -L${{libdir}} -l{2s}
-        , .{ dirname, b.install_path, name, repository.next().?, description, version });
+            \\Libs: -L${{libdir}} -l{0s}
+        , .{ name, repository.next().?, description, version });
 
-        b.installFile(file, b.fmt("share/pkgconfig/{s}", .{pc}));
+        const pc = b.fmt("lib{s}.pc", .{name});
+        if (@hasDecl(std.Build, "FindProgramOptions")) {
+            const write_file = b.addWriteFiles();
+            const pkgconfig = write_file.add(pc, content);
+            b.getInstallStep().dependOn(&b.addInstallFileWithDir(
+                pkgconfig,
+                .prefix,
+                b.fmt("share/pkgconfig/{s}", .{pc}),
+            ).step);
+        } else {
+            const cwd = try std.process.currentPathAlloc(b.graph.io, b.allocator);
+            const file = try std.Io.Dir.path.relative(
+                b.allocator,
+                cwd,
+                &b.graph.environ_map,
+                cwd,
+                try b.cache_root.join(b.allocator, &.{pc}),
+            );
+            const pkgconfig = try std.Io.Dir.cwd().createFile(b.graph.io, file, .{});
+            defer pkgconfig.close(b.graph.io);
+
+            var writer = pkgconfig.writer(b.graph.io, &.{});
+            try writer.interface.writeAll(content);
+
+            b.installFile(file, b.fmt("share/pkgconfig/{s}", .{pc}));
+        }
     }
 
     const config: Config = .{
@@ -294,8 +308,8 @@ pub fn build(b: *std.Build) !void {
     if (dump) |t| b.step("dump", "Run protocol dump tool").dependOn(&t.step);
     if (fuzz) |t| b.step("fuzz", "Run fuzz tester").dependOn(&t.step);
     if (serde) |t| b.step("serde", "Run serialization/deserialization tool").dependOn(&t.step);
-    b.step("test", "Run all tests").dependOn(&tests.step);
-    b.step("tools", "Install tools").dependOn(&ToolsStep.create(b, &exes).step);
+    b.step("test", "Run all tests").dependOn(tests.step);
+    b.step("tools", "Install tools").dependOn(ToolsStep.create(b, &exes).step);
     if (transitions) |t| {
         b.step("transitions", "Visualize transitions algorithm search").dependOn(&t.step);
     }
@@ -365,7 +379,12 @@ fn buildWasm(
     exe.stack_size = wasm_stack_size;
     exe.root_module.addOptions("build_options", options);
 
-    const opt = b.findProgram(&.{"wasm-opt"}, &.{"./node_modules/.bin"}) catch null;
+    const opt = if (@hasDecl(std.Build, "FindProgramOptions")) blk: {
+        if (exists(b, "./node_modules/.bin/wasm-opt") catch false) {
+            break :blk "./node_modules/.bin/wasm-opt";
+        }
+        break :blk b.findProgram(.{ .names = &.{"wasm-opt"} });
+    } else b.findProgram(&.{"wasm-opt"}, &.{"./node_modules/.bin"}) catch null;
     if (optimize != .Debug and opt != null) {
         const out = b.fmt("build/lib/{s}.wasm", .{name});
         const sh = b.addSystemCommand(&.{ opt.?, "--enable-bulk-memory", "--enable-simd", "-O4" });
@@ -407,7 +426,7 @@ const Config = struct {
 };
 
 const TestStep = struct {
-    step: std.Build.Step,
+    step: *std.Build.Step,
     build: bool,
 
     pub fn create(b: *std.Build, options: *std.Build.Step.Options, config: Config) *TestStep {
@@ -416,8 +435,6 @@ const TestStep = struct {
             b.option([]const u8, "test-filter", "Skip tests that do not match filter");
 
         const self = b.allocator.create(TestStep) catch @panic("OOM");
-        const step = std.Build.Step.init(.{ .id = .custom, .name = "Run all tests", .owner = b });
-        self.* = .{ .step = step, .build = test_filter == null };
 
         const path = b.path("src/lib/test.zig");
         const tests = b.addTest(.{
@@ -437,7 +454,20 @@ const TestStep = struct {
         if (coverage) |c| {
             tests.setExecCmd(&.{ "kcov", "--include-pattern=src/lib", c, null });
         }
-        self.step.dependOn(&b.addRunArtifact(tests).step);
+
+        if (@hasDecl(std.Build, "FindProgramOptions")) {
+            const run_step = b.addRunArtifact(tests);
+            self.* = .{ .step = &run_step.step, .build = test_filter == null };
+        } else {
+            const custom_step = b.allocator.create(std.Build.Step) catch @panic("OOM");
+            custom_step.* = std.Build.Step.init(.{
+                .id = .custom,
+                .name = "Run all tests",
+                .owner = b,
+            });
+            custom_step.dependOn(&b.addRunArtifact(tests).step);
+            self.* = .{ .step = custom_step, .build = test_filter == null };
+        }
 
         return self;
     }
@@ -482,7 +512,11 @@ fn tool(b: *std.Build, path: []const u8, config: ToolConfig) !?*std.Build.Step.R
 
     const run = b.addRunArtifact(exe);
     maybeStrip(b, exe, &run.step, config.general.strip, config.general.cmd);
-    if (b.args) |args| run.addArgs(args);
+    if (@hasDecl(std.Build, "FindProgramOptions")) {
+        run.addPassthruArgs();
+    } else {
+        if (b.args) |args| run.addArgs(args);
+    }
 
     return run;
 }
@@ -496,13 +530,33 @@ fn exists(b: *std.Build, path: []const u8) !bool {
 }
 
 const ToolsStep = struct {
-    step: std.Build.Step,
+    step: *std.Build.Step,
 
     pub fn create(b: *std.Build, exes: *ArrayList(*std.Build.Step.Compile)) *ToolsStep {
         const self = b.allocator.create(ToolsStep) catch @panic("OOM");
-        const step = std.Build.Step.init(.{ .id = .custom, .name = "Install tools", .owner = b });
-        self.* = .{ .step = step };
+
+        if (@hasDecl(std.Build, "FindProgramOptions")) {
+            const step = b.allocator.create(std.Build.Step.TopLevel) catch @panic("OOM");
+            step.* = .{
+                .step = std.Build.Step.init(.{
+                    .tag = .top_level,
+                    .name = "Install tools",
+                    .owner = b,
+                }),
+                .description = "Install tools",
+            };
+            self.* = .{ .step = &step.step };
+        } else {
+            const step = b.allocator.create(std.Build.Step) catch @panic("OOM");
+            step.* = std.Build.Step.init(.{
+                .id = .custom,
+                .name = "Install tools",
+                .owner = b,
+            });
+            self.* = .{ .step = step };
+        }
         for (exes.items) |t| self.step.dependOn(&b.addInstallArtifact(t, .{}).step);
+
         return self;
     }
 };

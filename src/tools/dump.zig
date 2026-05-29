@@ -33,17 +33,34 @@ pub fn main(init: std.process.Init) !void {
 
     switch (tool) {
         .markdown => {
-            inline for (@typeInfo(protocol).@"struct".decls) |decl| {
-                if (@TypeOf(@field(protocol, decl.name)) == type) {
-                    switch (@typeInfo(@field(protocol, decl.name))) {
+            inline for (if (@hasField(@TypeOf(@typeInfo(protocol).@"struct"), "decls"))
+                @typeInfo(protocol).@"struct".decls
+            else
+                @typeInfo(protocol).@"struct".decl_names) |decl|
+            {
+                const decl_name = if (@hasField(@TypeOf(decl), "name")) decl.name else decl;
+                if (@TypeOf(@field(protocol, decl_name)) == type) {
+                    switch (@typeInfo(@field(protocol, decl_name))) {
                         .@"enum" => |e| {
                             try w.print(
                                 "## {s}\n\n<details><summary>Reason</summary>\n",
-                                .{decl.name},
+                                .{decl_name},
                             );
                             try w.writeAll("\n|Raw|Description|\n|--|--|\n");
-                            inline for (e.fields) |field| {
-                                try w.print("|`0x{X:0>2}`|`{s}`|\n", .{ field.value, field.name });
+                            if (@hasField(@TypeOf(e), "fields")) {
+                                inline for (e.fields) |field| {
+                                    try w.print(
+                                        "|`0x{X:0>2}`|`{s}`|\n",
+                                        .{ field.value, field.name },
+                                    );
+                                }
+                            } else {
+                                inline for (e.field_names, 0..) |name, i| {
+                                    try w.print(
+                                        "|`0x{X:0>2}`|`{s}`|\n",
+                                        .{ e.field_values[i], name },
+                                    );
+                                }
                             }
                             try w.writeAll("</details>\n\n");
                         },
@@ -55,21 +72,43 @@ pub fn main(init: std.process.Init) !void {
         .protocol => {
             var outer = false;
             try w.writeAll("{\n");
-            inline for (@typeInfo(protocol).@"struct".decls) |decl| {
-                if (@TypeOf(@field(protocol, decl.name)) == type) {
-                    if (comptime std.mem.eql(u8, decl.name, "Kind")) continue;
-                    switch (@typeInfo(@field(protocol, decl.name))) {
+            inline for (if (@hasField(@TypeOf(@typeInfo(protocol).@"struct"), "decls"))
+                @typeInfo(protocol).@"struct".decls
+            else
+                @typeInfo(protocol).@"struct".decl_names) |decl|
+            {
+                const decl_name = if (@hasField(@TypeOf(decl), "name")) decl.name else decl;
+                if (@TypeOf(@field(protocol, decl_name)) == type) {
+                    if (comptime std.mem.eql(u8, decl_name, "Kind")) continue;
+                    switch (@typeInfo(@field(protocol, decl_name))) {
                         .@"enum" => |e| {
                             if (outer) try w.writeAll(",\n");
-                            try w.print("  \"{s}\": [\n", .{decl.name});
+                            try w.print("  \"{s}\": [\n", .{decl_name});
                             var inner = false;
-                            inline for (e.fields) |field| {
-                                if (inner) try w.writeAll(",\n");
-                                // TODO: ziglang/zig#18888
-                                @setEvalBranchQuota(2018);
-                                try w.print("    \"{s}\"", .{field.name});
-                                inner = true;
+                            if (@hasField(@TypeOf(e), "fields")) {
+                                inline for (e.fields) |field| {
+                                    if (inner) try w.writeAll(",\n");
+                                    // TODO: ziglang/zig#18888
+                                    @setEvalBranchQuota(2018);
+                                    try w.print("    {{\"val\": {d}, \"name\": \"{s}\"}}", .{
+                                        field.value,
+                                        field.name,
+                                    });
+                                    inner = true;
+                                }
+                            } else {
+                                inline for (e.field_names, 0..) |name, i| {
+                                    if (inner) try w.writeAll(",\n");
+                                    // TODO: ziglang/zig#18888
+                                    @setEvalBranchQuota(2018);
+                                    try w.print("    {{\"val\": {d}, \"name\": \"{s}\"}}", .{
+                                        e.field_values[i],
+                                        name,
+                                    });
+                                    inner = true;
+                                }
                             }
+
                             try w.writeAll("\n  ]");
                             outer = true;
                         },
@@ -149,11 +188,16 @@ pub fn main(init: std.process.Init) !void {
 fn print(w: anytype, name: []const u8, comptime T: type, comptime bits: bool) !void {
     try w.print("      \"{s}\": {{\n", .{name});
     var inner = false;
-    inline for (@typeInfo(T).@"struct".fields) |field| {
-        if (field.name[0] != '_') {
+    inline for (if (@hasField(@TypeOf(@typeInfo(T).@"struct"), "fields"))
+        @typeInfo(T).@"struct".fields
+    else
+        @typeInfo(T).@"struct".field_names) |field|
+    {
+        const field_name = if (@hasField(@TypeOf(field), "name")) field.name else field;
+        if (field_name[0] != '_') {
             if (inner) try w.writeAll(",\n");
-            const offset = @bitOffsetOf(T, field.name);
-            try w.print("        \"{s}\": {d}", .{ field.name, if (bits) offset else offset / 8 });
+            const offset = @bitOffsetOf(T, field_name);
+            try w.print("        \"{s}\": {d}", .{ field_name, if (bits) offset else offset / 8 });
             inner = true;
         }
     }
