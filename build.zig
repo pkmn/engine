@@ -112,7 +112,8 @@ pub fn build(b: *std.Build) !void {
         const translate_c = b.addTranslateC(.{
             .root_source_file = b.path("src/lib/napi.h"),
             .target = target,
-            .optimize = optimize,
+            // TODO: workaround for ziglang/zig#35515
+            .optimize = .Debug,
         });
         translate_c.addSystemIncludePath(b.path(headers));
         const addon = b.fmt("{s}.node", .{name});
