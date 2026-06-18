@@ -13,7 +13,7 @@
   </a>
 </p>
 
-> [!WARNING]  
+> [!WARNING]
 > **This project is under heavy development** and currently the `main` branch contains numerous breaking
 > changes which may not work and which are not fully documented. Please **wait for the forthcoming
 > initial v0.1 release** before depending on this project.
@@ -84,8 +84,11 @@ lifecycle script](https://docs.npmjs.com/cli/v8/using-npm/scripts) runs
 it can't find one, as well as looking for (and downloading, if necessary) the required Node headers
 needed to successfully build the addons natively.
 
-**If you have configured `npm` to `--ignore-scripts` you must either run `npx install-pkmn-engine`
-directly or build the addons manually and place the artifacts in the expected paths.**
+> [!IMPORTANT]
+> If you have configured `npm` to `--ignore-scripts` (or are using [npm v12+ and have not
+> approved](https://github.blog/changelog/2026-06-09-upcoming-breaking-changes-for-npm-v12/)
+> `@pkmn/engine` via `npm approve-scripts @pkmn/engine`) **you must either run `npx install-pkmn-engine`
+> directly or build the addons manually and place the artifacts in the expected paths.**
 
 ### `pkmn`
 
