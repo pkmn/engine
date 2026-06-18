@@ -95,16 +95,16 @@
   },
   "publishConfig": {"access": "public"},
   "dependencies": {
-    "@pkmn/data": "0.9.35",
+    "@pkmn/data": "0.10.11",
     "@pkmn/protocol": "^0.7.3"
   },
   "devDependencies": {
-    "@pkmn/dex-types": "0.9.35",
+    "@pkmn/dex-types": "0.10.11",
     "@pkmn/eslint-config": "^9.28.0",
     "@pkmn/img": "^0.3.4",
     "@pkmn/sets": "^5.2.0",
-    "@pkmn/sim": "0.9.31",
-    "@pkmn/smogon": "0.5.21",
+    "@pkmn/sim": "0.10.11",
+    "@pkmn/smogon": "0.5.31",
     "@types/html-minifier": "^4.0.6",
     "@types/jest": "^30.0.0",
     "@types/minimist": "^1.2.5",

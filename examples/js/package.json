@@ -1,9 +1,9 @@
 {
   "type": "module",
   "dependencies": {
-    "@pkmn/data": "0.9.35",
-    "@pkmn/dex": "0.9.35",
-    "@pkmn/dex-types": "0.9.35",
+    "@pkmn/data": "0.10.11",
+    "@pkmn/dex": "0.10.11",
+    "@pkmn/dex-types": "0.10.11",
     "@pkmn/engine": "file:../..",
     "@pkmn/sets": "^5.2.0"
   },
