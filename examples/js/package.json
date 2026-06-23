@@ -11,7 +11,7 @@
     "parcel-reporter-static-files-copy": "^1.5.3",
     "parcel": "^2.16.4",
     "vite-plugin-commonjs": "^0.10.4",
-    "vite": "^8.0.16",
+    "vite": "^8.1.0",
     "typescript": "^6.0.3"
   },
   "scripts": {
