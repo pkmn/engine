@@ -209,7 +209,9 @@ pub fn build(b: *std.Build) !void {
                 b.fmt("{s}.ll", .{name}),
             ).step);
         }
-        b.installArtifact(lib);
+        const install = b.addInstallArtifact(lib, .{});
+        b.getInstallStep().dependOn(&install.step);
+        maybeRanlib(b, lib, &install.step);
         c = true;
     }
 
@@ -578,4 +580,22 @@ pub fn exports(b: *std.Build, bytes: []const u8) ![][]const u8 {
     }
 
     return symbols.items;
+}
+
+fn maybeRanlib(
+    b: *std.Build,
+    artifact: *std.Build.Step.Compile,
+    install_step: *std.Build.Step,
+) void {
+    if (builtin.os.tag != .macos) return;
+    if (artifact.linkage != .static) return;
+
+    const ranlib = if (comptime @hasDecl(std.Build, "FindProgramOptions"))
+        b.findProgram(.{ .names = &.{"ranlib"} }) orelse return
+    else
+        b.findProgram(&[_][]const u8{"ranlib"}, &[_][]const u8{}) catch return;
+
+    const sh = b.addSystemCommand(&[_][]const u8{ranlib});
+    sh.addFileArg(artifact.getEmittedBin());
+    install_step.dependOn(&sh.step);
 }
