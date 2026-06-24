@@ -45,7 +45,8 @@ pub const Actions = extern struct {
 
     /// Returns true if `a` is equal to `b`.
     pub fn eql(a: Actions, b: Actions) bool {
-        return @as(u128, @bitCast(a)) == @as(u128, @bitCast(b));
+        return @as(u64, @bitCast(a.p1)) == @as(u64, @bitCast(b.p1)) and
+            @as(u64, @bitCast(a.p2)) == @as(u64, @bitCast(b.p2));
     }
 
     /// Returns true if `a` has the same "shape" as `b`, where `Actions` are defined to have the
