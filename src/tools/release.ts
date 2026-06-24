@@ -44,13 +44,6 @@ const TARGETS = [
   {label: 'Linux - ARM64', triple: 'aarch64-linux-musl', mcpu: 'baseline'},
 ];
 
-let version: string = sh('zig', ['version'], {bypass: true}).trim();
-if (!version.endsWith('.patched')) {
-  // TODO: ziglang/zig#17768
-  console.error('Releases must be built with a patched compiler for performance.');
-  process.exit(1);
-}
-
 try {
   sh('gh', ['auth', 'token'], {stdio: 'ignore'});
 } catch {
@@ -95,7 +88,7 @@ const debug = (files: string[]) => {
 
 // eslint-disable-next-line
 const json = require(path.join(ROOT, 'package.json'));
-version = json.version;
+let version = json.version;
 if (argv.prod) {
   if (debug(json.files)) {
     console.error('Refusing to produce a release containing debug logic');
