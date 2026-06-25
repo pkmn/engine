@@ -304,7 +304,7 @@ fn turnOrder(battle: anytype, c1: Choice, c2: Choice, options: anytype) !Player 
     const spe2 = battle.side(.P2).active.stats.spe;
     if (spe1 == spe2) {
         // Pokémon Showdown's beforeTurnCallback shenanigans
-        if (showdown and !double_switch and hasCallback(m1) and hasCallback(m2)) {
+        if (showdown and !double_switch and m1 == .Pursuit and m2 == .Pursuit) {
             battle.rng.advance(1);
         }
 
@@ -325,13 +325,6 @@ fn turnOrder(battle: anytype, c1: Choice, c2: Choice, options: anytype) !Player 
     }
 
     return if (spe1 > spe2) .P1 else .P2;
-}
-
-fn hasCallback(m: Move) bool {
-    return switch (m) {
-        .Counter, .MirrorCoat, .Pursuit => true,
-        else => false,
-    };
 }
 
 fn doTurn(

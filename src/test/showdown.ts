@@ -17,7 +17,7 @@ export const MIN = 0;
 export const MAX = 0xFFFFFFFF;
 export const NOP = 42;
 
-const tie = 'sim/battle-queue.ts:416:15';
+const tie = 'sim/battle-queue.ts:417:15';
 
 export const ROLLS = {
   basic(keys: {hit: string; crit: string; dmg: string}) {
@@ -30,7 +30,7 @@ export const ROLLS = {
       MAX_DMG: {key: keys.dmg, value: MAX},
       TIE: (n: 1 | 2) => ({key: tie, value: ranged(n, 2) - 1}),
       DRAG: (m: number, n = 5) =>
-        ({key: 'sim/battle.ts:1512:36', value: ranged(m - 1, n)}),
+        ({key: 'sim/battle.ts:1588:36', value: ranged(m - 1, n)}),
     };
   },
   metronome(gen: Generation, exclude: string[]) {
@@ -41,7 +41,7 @@ export const ROLLS = {
     return (move: string, skip: string[] = []) => {
       const moves = all.filter(m => !skip.includes(m));
       const value = ranged(moves.indexOf(move) + 1, moves.length) - 1;
-      return {key: 'data/mods/gen4/moves.ts:1068:23', value};
+      return {key: 'data/mods/gen4/moves.ts:847:23', value};
     };
   },
 };
@@ -320,13 +320,7 @@ export const Choices = new class {
       const options: string[] = [];
 
       const side = battle[id]!;
-      const active = side.active[0];
-
-      // Being "forced" on Pokémon Showdown sets "trapped"
-      if (active.trapped) {
-        const forced = active.trapped && request.active[0].moves.length === 1;
-        if (forced) return ['move 1'];
-      } else {
+      if (!side.active[0].trapped) {
         for (let slot = 2; slot <= 6; slot++) {
           const pokemon = side.pokemon[slot - 1];
           if (!pokemon || pokemon.hp === 0) continue;
@@ -334,17 +328,12 @@ export const Choices = new class {
         }
       }
 
-      const before = options.length;
       let slot = 0;
-      for (const move of active.moveSlots) {
+      for (const move of request.active[0].moves) {
         slot++;
         if (move.pp === 0 || move.disabled) continue;
-        options.push(`move ${slot}`);
+        options.push(move.id === 'struggle' ? struggle : `move ${slot}`);
       }
-      if (options.length === before) {
-        options.push(struggle);
-      }
-
       return options;
     } else {
       throw new Error(`Unsupported request: ${JSON.stringify(request)}`);
@@ -437,7 +426,7 @@ export class FixedRNG extends PRNG {
 
 export const FILTER = new Set([
   '', 't:', 'gametype', 'player', 'teamsize', 'gen', 'message', 'done', 'error',
-  'bigerror', 'tier', 'rule', 'start', 'upkeep', '-message', '-hint', 'debug',
+  'bigerror', 'tier', 'rule', 'start', 'upkeep', '-message', '-hint', 'debug', 'raw',
 ]);
 
 function filter(raw: string[]) {
