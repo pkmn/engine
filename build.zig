@@ -455,21 +455,13 @@ const TestStep = struct {
 
         maybeStrip(b, tests, &tests.step, config.strip, config.cmd);
         if (coverage) |c| {
-            tests.setExecCmd(&.{ "kcov", "--include-pattern=src/lib", c, null });
-        }
-
-        if (@hasDecl(std.Build, "FindProgramOptions")) {
+            const kcov_run = b.addSystemCommand(&.{ "kcov", "--include-pattern=src/lib", c });
+            kcov_run.addArtifactArg(tests);
+            kcov_run.enableTestRunnerMode();
+            self.* = .{ .step = &kcov_run.step, .build = test_filter == null };
+        } else {
             const run_step = b.addRunArtifact(tests);
             self.* = .{ .step = &run_step.step, .build = test_filter == null };
-        } else {
-            const custom_step = b.allocator.create(std.Build.Step) catch @panic("OOM");
-            custom_step.* = std.Build.Step.init(.{
-                .id = .custom,
-                .name = "Run all tests",
-                .owner = b,
-            });
-            custom_step.dependOn(&b.addRunArtifact(tests).step);
-            self.* = .{ .step = custom_step, .build = test_filter == null };
         }
 
         return self;
