@@ -41,7 +41,10 @@ export const ROLLS = {
     return (move: string, skip: string[] = []) => {
       const moves = all.filter(m => !skip.includes(m));
       const value = ranged(moves.indexOf(move) + 1, moves.length) - 1;
-      return {key: 'data/mods/gen4/moves.ts:847:23', value};
+      const key = gen.num === 1
+        ? 'data/mods/gen1/moves.ts:445:23'
+        : 'data/mods/gen4/moves.ts:847:23';
+      return {key, value};
     };
   },
 };
@@ -269,13 +272,7 @@ export const Choices = new class {
       const options: string[] = [];
 
       const side = battle[id]!;
-      const active = side.active[0];
-
-      // Being "forced" on Pokémon Showdown sets "trapped"
-      if (active.trapped) {
-        const forced = active.trapped && request.active[0].moves.length === 1;
-        if (forced) return ['move 1'];
-      } else {
+      if (!side.active[0].trapped) {
         for (let slot = 2; slot <= 6; slot++) {
           const pokemon = side.pokemon[slot - 1];
           if (!pokemon || pokemon.hp === 0) continue;
@@ -283,18 +280,11 @@ export const Choices = new class {
         }
       }
 
-      const binding = active.volatiles['partialtrappinglock'];
-      const before = options.length;
       let slot = 0;
-      for (const move of active.moveSlots) {
+      for (const move of request.active[0].moves) {
         slot++;
-        // Pokémon Showdown expect us to select 0 PP moves when binding as it disables
-        // everything but the move we are to use (and forced trapping moves underflow)
-        if ((move.pp === 0 && !binding) || move.disabled) continue;
-        options.push(`move ${slot}`);
-      }
-      if (options.length === before) {
-        options.push(struggle);
+        if (move.pp === 0 || move.disabled) continue;
+        options.push(move.id === 'struggle' ? struggle : `move ${slot}`);
       }
 
       return options;

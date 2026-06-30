@@ -538,9 +538,9 @@ test "turn order (complex speed tie)" {
 
         try t.verify();
     }
-    // beforeTurnMove
+    // beforeTurnCallback (fixed by smogon/pokemon-showdown#11833)
     {
-        var t = Test(if (showdown) .{ NOP, TIE_1, HIT, HIT } else .{ TIE_1, ~CRIT, ~CRIT }).init(
+        var t = Test(if (showdown) .{ TIE_1, HIT, HIT } else .{ TIE_1, ~CRIT, ~CRIT }).init(
             &.{.{ .species = .Chansey, .moves = &.{.Counter} }},
             &.{.{ .species = .Chansey, .moves = &.{.Counter} }},
         );
@@ -2789,7 +2789,7 @@ test "Charge effect" {
 
     try t.log.expected.cant(.{ P1.ident(1), .Disable, Move.SkullBash });
     try t.log.expected.move(.{ P2.ident(1), Move.Disable, P1.ident(1) });
-    try t.log.expected.fail(.{ P1.ident(1), .None });
+    try t.log.expected.fail(.{ P1.ident(1), .None }); // FIXME
     try t.log.expected.turn(.{5});
 
     try expectEqual(Result.Default, try t.update(forced, move(3)));
@@ -3809,7 +3809,7 @@ test "Disable effect" {
     try expectEqualSlices(Choice, &[_]Choice{ swtch(2), move(1), move(2), move(3) }, choices[0..n]);
 
     try t.log.expected.move(.{ P1.ident(1), Move.Disable, P2.ident(1) });
-    try t.log.expected.fail(.{ P2.ident(1), .None });
+    try t.log.expected.fail(.{ P2.ident(1), .None }); // FIXME
     try t.log.expected.move(.{ P2.ident(1), Move.WaterGun, P1.ident(1) });
     try t.log.expected.resisted(.{P1.ident(1)});
     t.expected.p1.get(1).hp -= 27;
