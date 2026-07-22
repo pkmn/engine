@@ -81,7 +81,7 @@ typedef enum pkmn_player {
 /** A choice made by a player. */
 typedef uint8_t pkmn_choice;
 /** The type of choice. */
-typedef enum pkmn_choice_kind {
+typedef enum __attribute__((packed)) pkmn_choice_kind {
   PKMN_CHOICE_PASS = 0,
   PKMN_CHOICE_MOVE = 1,
   PKMN_CHOICE_SWITCH = 2,
@@ -97,7 +97,7 @@ uint8_t pkmn_choice_data(pkmn_choice choice);
 /** The result of updating a battle. */
 typedef uint8_t pkmn_result;
 /** The type of result. */
-typedef enum pkmn_result_kind {
+typedef enum __attribute__((packed)) pkmn_result_kind {
   PKMN_RESULT_NONE = 0,
   PKMN_RESULT_WIN = 1,
   PKMN_RESULT_LOSE = 2,
