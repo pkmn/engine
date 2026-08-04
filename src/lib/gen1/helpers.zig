@@ -289,9 +289,12 @@ pub fn swtch(slot: u4) Choice {
 /// Generation I battles.
 pub const MAX_DIFFS: usize = 120;
 
+const ReleaseSmall: std.builtin.OptimizeMode =
+    if (@hasDecl(std.builtin.OptimizeMode, "ReleaseSmall")) .small else .ReleaseSmall;
+
 /// The optimal size in bytes required to hold the diff between two Generation I battles.
 /// At least as large as MAX_DIFFS.
-pub const DIFFS_SIZE = if (builtin.mode == .ReleaseSmall)
+pub const DIFFS_SIZE = if (builtin.mode == ReleaseSmall)
     MAX_DIFFS
 else
     std.math.ceilPowerOfTwo(usize, MAX_DIFFS) catch unreachable;

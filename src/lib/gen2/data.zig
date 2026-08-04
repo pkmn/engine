@@ -23,11 +23,14 @@ const expect = std.testing.expect;
 pub const MAX_CHOICES: usize = 9; // move 1..4, switch 2..6
 pub const MAX_LOGS: usize = 180; // TODO
 
-pub const CHOICES_SIZE = if (builtin.mode == .ReleaseSmall)
+const ReleaseSmall: std.builtin.OptimizeMode =
+    if (@hasDecl(std.builtin.OptimizeMode, "ReleaseSmall")) .small else .ReleaseSmall;
+
+pub const CHOICES_SIZE = if (builtin.mode == ReleaseSmall)
     MAX_CHOICES
 else
     std.math.ceilPowerOfTwo(usize, MAX_CHOICES) catch unreachable;
-pub const LOGS_SIZE = if (builtin.mode == .ReleaseSmall)
+pub const LOGS_SIZE = if (builtin.mode == ReleaseSmall)
     MAX_LOGS
 else
     std.math.ceilPowerOfTwo(usize, MAX_LOGS) catch unreachable;

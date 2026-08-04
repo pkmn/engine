@@ -1,6 +1,15 @@
 const builtin = @import("builtin");
 const std = @import("std");
 
+const Debug: std.builtin.OptimizeMode =
+    if (@hasDecl(std.builtin.OptimizeMode, "Debug")) .debug else .Debug;
+const ReleaseSafe: std.builtin.OptimizeMode =
+    if (@hasDecl(std.builtin.OptimizeMode, "ReleaseSafe")) .safe else .ReleaseSafe;
+const ReleaseFast: std.builtin.OptimizeMode =
+    if (@hasDecl(std.builtin.OptimizeMode, "ReleaseFast")) .fast else .ReleaseFast;
+const ReleaseSmall: std.builtin.OptimizeMode =
+    if (@hasDecl(std.builtin.OptimizeMode, "ReleaseSmall")) .small else .ReleaseSmall;
+
 fn ArrayList(comptime T: type) type {
     return std.array_list.Aligned(T, null);
 }
@@ -113,7 +122,7 @@ pub fn build(b: *std.Build) !void {
             .root_source_file = b.path("src/lib/napi.h"),
             .target = target,
             // TODO: workaround for ziglang/zig#35515
-            .optimize = .Debug,
+            .optimize = Debug,
         });
         translate_c.addSystemIncludePath(b.path(headers));
         const addon = b.fmt("{s}.node", .{name});
@@ -288,7 +297,7 @@ pub fn build(b: *std.Build) !void {
     };
 
     var benchmark_config = tools;
-    benchmark_config.general.optimize = .ReleaseFast;
+    benchmark_config.general.optimize = ReleaseFast;
     benchmark_config.general.strip = true;
     const benchmark = try tool(b, "src/test/benchmark.zig", benchmark_config);
 
@@ -303,7 +312,7 @@ pub fn build(b: *std.Build) !void {
 
     // FIXME: serde randomly fails to build in some release configurations
     var hack = tools;
-    if (optimize != .Debug) hack.tool.tests = null;
+    if (optimize != Debug) hack.tool.tests = null;
     const serde = try tool(b, "src/tools/serde.zig", hack);
 
     if (analyze) |t| b.step("analyze", "Run LLVM analysis tool").dependOn(&t.step);
@@ -330,7 +339,7 @@ fn buildWasm(
     options: anytype,
 ) !void {
     const mode = switch (optimize) {
-        .ReleaseFast, .ReleaseSafe => .ReleaseSmall,
+        ReleaseFast, ReleaseSafe => ReleaseSmall,
         else => optimize,
     };
     // https://webassembly.org/features/
@@ -388,7 +397,7 @@ fn buildWasm(
         }
         break :blk b.findProgram(.{ .names = &.{"wasm-opt"} });
     } else b.findProgram(&.{"wasm-opt"}, &.{"./node_modules/.bin"}) catch null;
-    if (optimize != .Debug and opt != null) {
+    if (optimize != Debug and opt != null) {
         const out = b.fmt("build/lib/{s}.wasm", .{name});
         const sh = b.addSystemCommand(&.{ opt.?, "--enable-bulk-memory", "--enable-simd", "-O4" });
         sh.addArtifactArg(exe);
