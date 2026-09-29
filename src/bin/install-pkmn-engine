@@ -406,14 +406,9 @@ const downloadImportLib = async () => {
       const prefix = process.platform === 'win32' ? '' : 'lib';
       const ext = process.platform === 'darwin'
         ? 'dylib' : process.platform === 'win32' ? 'dll' : 'so';
-      try {
-        const actual = path.join(ROOT, 'build', 'lib', `${prefix}pkmn${suffix}.node.${ext}`);
-        fs.renameSync(actual, artifact);
-      } catch {
-        // ziglang/zig#19743 changed this path
-        const actual = path.join(ROOT, 'build', 'bin', `${prefix}pkmn${suffix}.node.${ext}`);
-        fs.renameSync(actual, artifact);
-      }
+      const dir = process.platform === 'win32' ? 'bin' : 'lib';
+      const actual = path.join(ROOT, 'build', dir, `${prefix}pkmn${suffix}.node.${ext}`);
+      fs.renameSync(actual, artifact);
     }
   }
 })().catch(e => {
