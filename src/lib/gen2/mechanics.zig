@@ -1,6 +1,5 @@
 const DEBUG = @import("../common/debug.zig").print;
 
-const builtin = @import("builtin");
 const common = @import("../common/data.zig");
 const data = @import("data.zig");
 const generated = @import("generated.zig");
@@ -1427,8 +1426,7 @@ pub const Effects = struct {
         if (move.type.special() != (last == .MirrorCoat)) return;
         if (state.damage == 0) return;
 
-        // NOTE: llvm/llvm-project#58557
-        state.damage = smul(state.damage, 2);
+        state.damage *|= 2;
         state.miss = false;
     }
 
@@ -1523,18 +1521,15 @@ pub const Effects = struct {
 
     pub const double = struct {
         pub fn flying(battle: anytype, player: Player, state: *State, _: anytype) !void {
-            if (!battle.foe(player).active.volatiles.Flying) return;
-            state.damage = smul(state.damage, 2);
+            if (battle.foe(player).active.volatiles.Flying) state.damage *|= 2;
         }
 
         pub fn underground(battle: anytype, player: Player, state: *State, _: anytype) !void {
-            if (!battle.foe(player).active.volatiles.Underground) return;
-            state.damage = smul(state.damage, 2);
+            if (battle.foe(player).active.volatiles.Underground) state.damage *|= 2;
         }
 
         pub fn minimize(battle: anytype, player: Player, state: *State, _: anytype) !void {
-            if (!battle.foe(player).active.volatiles.minimized) return;
-            state.damage = smul(state.damage, 2);
+            if (battle.foe(player).active.volatiles.minimized) state.damage *|= 2;
         }
     };
 
@@ -1732,7 +1727,7 @@ pub const Effects = struct {
             state.bp *= 2;
             assert(state.bp <= 160);
         } else {
-            state.damage = smul(state.damage, 2);
+            state.damage *|= 2;
         }
     }
 
@@ -2203,7 +2198,7 @@ pub const Effects = struct {
 
     pub fn pursuit(battle: anytype, player: Player, state: *State, _: anytype) !void {
         // TODO: remove switching variable and just look at Choice saved in Battle struct?
-        if (battle.foe(player).active.volatiles.switching) state.damage = smul(state.damage, 2);
+        if (battle.foe(player).active.volatiles.switching) state.damage *|= 2;
     }
 
     pub const rage = struct {
@@ -2216,7 +2211,7 @@ pub const Effects = struct {
             const side = battle.side(player);
 
             assert(side.active.volatiles.Rage);
-            state.damage = smul(state.damage, (side.active.volatiles.rage +| 1)); // TODO: |+
+            state.damage *|= (side.active.volatiles.rage +| 1);
         }
     };
 
@@ -2311,7 +2306,7 @@ pub const Effects = struct {
             side.active.volatiles.attacks += 1;
             side.active.volatiles.Rollout = side.active.volatiles.attacks != 5;
 
-            if (side.active.volatiles.DefenseCurl) state.damage = smul(state.damage, 2);
+            if (side.active.volatiles.DefenseCurl) state.damage *|= 2;
         }
     };
 
@@ -2837,12 +2832,6 @@ fn convertible(active: ActivePokemon, m: Move) bool {
     if (m == .None) return false;
     const t = Move.get(m).type;
     return t != .@"???" and !active.types.includes(t);
-}
-
-// NOTE: llvm/llvm-project#58557
-fn smul(a: anytype, b: @TypeOf(a)) @TypeOf(a) {
-    if (!comptime builtin.target.cpu.arch.isWasm()) return a *| b;
-    return @max(a *% b, std.math.maxInt(@TypeOf(a)));
 }
 
 pub const Rolls = struct {
