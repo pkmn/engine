@@ -327,8 +327,7 @@ pub fn patch(battle: *data.Battle(data.PRNG), buf: []u8) void {
     var i: usize = 0;
     while (i < buf.len) : (i += 3) {
         const off = @as(u16, @intCast(buf[i])) * 2;
-        const val = std.mem.readInt(u16, @as(*const [2]u8, @ptrCast(buf[i + 1 .. i + 3])), endian);
-        const bytes: *[2]u8 = @ptrCast(std.mem.asBytes(battle)[off .. off + 2]);
-        std.mem.writeInt(u16, bytes, val, endian);
+        const val = std.mem.readInt(u16, @ptrCast(buf[i + 1 .. i + 3]), endian);
+        std.mem.writeInt(u16, @ptrCast(std.mem.asBytes(battle)[off .. off + 2]), val, endian);
     }
 }

@@ -521,7 +521,7 @@ test "Chance.damage" {
     var chance: Chance(rational.Rational(u64)) = .{ .probability = .{} };
 
     try chance.damage(.P1, 0, 219);
-    try expectValue(@as(u8, 219), Damages.get(chance.actions.p1.damages, 0));
+    try expectValue(219, Damages.get(chance.actions.p1.damages, 0));
     try expectProbability(&chance.probability, 1, 39);
 }
 
@@ -646,7 +646,7 @@ test "Chance.present" {
     } else {
         try expectProbability(&chance.probability, 25, 256);
     }
-    try expectValue(@as(u3, 4), chance.actions.p2.present);
+    try expectValue(4, chance.actions.p2.present);
 
     chance.reset();
 
@@ -656,7 +656,7 @@ test "Chance.present" {
     } else {
         try expectProbability(&chance.probability, 51, 256);
     }
-    try expectValue(@as(u3, 1), chance.actions.p1.present);
+    try expectValue(1, chance.actions.p1.present);
 }
 
 test "Chance.magnitude" {
@@ -668,7 +668,7 @@ test "Chance.magnitude" {
     } else {
         try expectProbability(&chance.probability, 13, 256);
     }
-    try expectValue(@as(u3, 7), chance.actions.p2.magnitude);
+    try expectValue(7, chance.actions.p2.magnitude);
 
     chance.reset();
 
@@ -678,7 +678,7 @@ test "Chance.magnitude" {
     } else {
         try expectProbability(&chance.probability, 51, 256);
     }
-    try expectValue(@as(u3, 5), chance.actions.p1.magnitude);
+    try expectValue(5, chance.actions.p1.magnitude);
 }
 
 test "Chance.tripleKick" {
@@ -686,7 +686,7 @@ test "Chance.tripleKick" {
 
     try chance.tripleKick(.P1, 2);
     try expectProbability(&chance.probability, 1, 3);
-    try expectValue(@as(u2, 2), chance.actions.p1.triple_kick);
+    try expectValue(2, chance.actions.p1.triple_kick);
 }
 
 test "Chance.spite" {
@@ -694,7 +694,7 @@ test "Chance.spite" {
 
     try chance.spite(.P1, 3);
     try expectProbability(&chance.probability, 1, 4);
-    try expectValue(@as(u3, 3), chance.actions.p1.spite);
+    try expectValue(3, chance.actions.p1.spite);
 }
 
 test "Chance.conversion2" {
@@ -721,7 +721,7 @@ test "Chance.psywave" {
 
     try chance.psywave(.P2, 100, 150);
     try expectProbability(&chance.probability, 1, 150);
-    try expectValue(@as(u8, 100), chance.actions.p2.psywave);
+    try expectValue(100, chance.actions.p2.psywave);
 }
 
 test "Chance.metronome" {
@@ -737,19 +737,19 @@ test "Chance.moveSlot" {
 
     try chance.moveSlot(.P2, 2, 2);
     try expectProbability(&chance.probability, 1, 2);
-    try expectValue(@as(u3, 2), chance.actions.p2.move_slot);
+    try expectValue(2, chance.actions.p2.move_slot);
 
     chance.reset();
 
     try chance.moveSlot(.P1, 1, 3);
     try expectProbability(&chance.probability, 1, 3);
-    try expectValue(@as(u3, 1), chance.actions.p1.move_slot);
+    try expectValue(1, chance.actions.p1.move_slot);
 
     chance.reset();
 
     try chance.moveSlot(.P1, 4, 1);
     try expectProbability(&chance.probability, 1, 1);
-    try expectValue(@as(u3, 4), chance.actions.p1.move_slot);
+    try expectValue(4, chance.actions.p1.move_slot);
 }
 
 test "Chance.forceSwitch" {
@@ -757,19 +757,19 @@ test "Chance.forceSwitch" {
 
     try chance.forceSwitch(.P2, 2, 2);
     try expectProbability(&chance.probability, 1, 2);
-    try expectValue(@as(u3, 2), chance.actions.p2.force_switch);
+    try expectValue(2, chance.actions.p2.force_switch);
 
     chance.reset();
 
     try chance.forceSwitch(.P1, 1, 3);
     try expectProbability(&chance.probability, 1, 3);
-    try expectValue(@as(u3, 1), chance.actions.p1.force_switch);
+    try expectValue(1, chance.actions.p1.force_switch);
 
     chance.reset();
 
     try chance.forceSwitch(.P1, 4, 1);
     try expectProbability(&chance.probability, 1, 1);
-    try expectValue(@as(u3, 4), chance.actions.p1.force_switch);
+    try expectValue(4, chance.actions.p1.force_switch);
 }
 
 test "Chance.multiHit" {
@@ -777,20 +777,20 @@ test "Chance.multiHit" {
 
     try chance.multiHit(.P1, 3);
     try expectProbability(&chance.probability, 3, 8);
-    try expectValue(@as(u3, 3), chance.actions.p1.multi_hit);
+    try expectValue(3, chance.actions.p1.multi_hit);
 
     chance.reset();
 
     try chance.multiHit(.P2, 5);
     try expectProbability(&chance.probability, 1, 8);
-    try expectValue(@as(u3, 5), chance.actions.p2.multi_hit);
+    try expectValue(5, chance.actions.p2.multi_hit);
 }
 
 test "Chance.duration" {
     var chance: Chance(rational.Rational(u64)) = .{ .probability = .{} };
 
     chance.duration(.P1, 2);
-    try expectValue(@as(u3, 2), chance.actions.p1.duration);
+    try expectValue(2, chance.actions.p1.duration);
 }
 
 pub fn expectProbability(r: anytype, p: u64, q: u64) !void {

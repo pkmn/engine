@@ -45,9 +45,9 @@ test Array {
     try expectEqual(u40, @TypeOf(a));
 
     a = A.set(a, 4, 241);
-    try expectEqual(@as(u8, 241), A.get(a, 4));
+    try expectEqual(241, A.get(a, 4));
     a = A.set(a, 4, 1);
-    try expectEqual(@as(u8, 1), A.get(a, 4));
+    try expectEqual(1, A.get(a, 4));
 
     for (0..5) |i| a = A.set(a, i, @intCast(i));
     for (0..5) |i| try expectEqual(@as(u8, @intCast(i)), A.get(a, i));
@@ -61,10 +61,10 @@ test Array {
     b = B.set(b, 2, .true);
     try expectEqual(Optional(bool).None, B.get(b, 1));
     try expectEqual(Optional(bool).true, B.get(b, 2));
-    try expectEqual(@as(u8, 0b00100000), b);
+    try expectEqual(0b00100000, b);
     b = B.set(b, 2, .None);
     b = B.set(b, 0, .false);
     try expectEqual(Optional(bool).None, B.get(b, 2));
     try expectEqual(Optional(bool).false, B.get(b, 0));
-    try expectEqual(@as(u8, 0b0000001), b);
+    try expectEqual(0b0000001, b);
 }
