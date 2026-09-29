@@ -876,8 +876,8 @@ fn doMove(
     // calling moveHit early covers most of that but we also need to check type immunity first
     var miss = showdown and miss: {
         immune = move.target != .Self and !status and !counter and
-            (@backingInt(move.type.effectiveness(foe.active.types.type1)) == 0 or
-                @backingInt(move.type.effectiveness(foe.active.types.type2)) == 0);
+            (@intFromEnum(move.type.effectiveness(foe.active.types.type1)) == 0 or
+                @intFromEnum(move.type.effectiveness(foe.active.types.type2)) == 0);
         if (immune and move.effect != .Binding) break :miss true;
         if (move.effect == .OHKO and side.active.stats.spe < foe.active.stats.spe) {
             battle.last_damage = 0;
@@ -1202,9 +1202,9 @@ fn adjustDamage(battle: anytype, player: Player) u16 {
     var d = battle.last_damage;
     if (side.active.types.includes(move.type)) d +%= d / 2;
 
-    const neutral = @backingInt(Effectiveness.Neutral);
-    const eff1: u16 = @backingInt(move.type.effectiveness(types.type1));
-    const eff2: u16 = @backingInt(move.type.effectiveness(types.type2));
+    const neutral = @intFromEnum(Effectiveness.Neutral);
+    const eff1: u16 = @intFromEnum(move.type.effectiveness(types.type1));
+    const eff2: u16 = @intFromEnum(move.type.effectiveness(types.type2));
 
     // Type effectiveness matchup precedence only matters with (NVE, SE)
     if (!showdown and (eff1 + eff2) == Effectiveness.mismatch and
@@ -2050,7 +2050,7 @@ pub const Effects = struct {
         // Pokémon Showdown clears P1 then P2 instead of status -> side -> foe
         if (showdown) {
             for (&battle.sides, 0..) |*s, i| {
-                const p: Player = @fromBackingInt(@intCast(i));
+                const p: Player = @enumFromInt(i);
                 // Pokémon Showdown incorrectly does not prevent sleep/freeze from moving
                 if (p != player and Status.any(s.stored().status)) {
                     try log.curestatus(.{ foe_ident, foe_stored.status, .Silent });
@@ -2933,9 +2933,9 @@ pub const Rolls = struct {
         else move: {
             while (true) {
                 const r = battle.rng.next();
-                if (r == 0 or r == @backingInt(Move.Metronome)) continue;
-                if (r >= @backingInt(Move.Struggle)) continue;
-                break :move @fromBackingInt(@intCast(r));
+                if (r == 0 or r == @intFromEnum(Move.Metronome)) continue;
+                if (r >= @intFromEnum(Move.Struggle)) continue;
+                break :move @enumFromInt(r);
             }
         };
 
