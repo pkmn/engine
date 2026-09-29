@@ -66,11 +66,11 @@ fn inspect(w: anytype, value: anytype) void {
                         }
                         @compileError(err);
                     },
-                    .@"enum", .@"union", .@"struct" => return inspect(value.*),
+                    .@"enum", .@"union", .@"struct" => return inspect(w, value.*),
                     else => @compileError(err),
                 },
                 .many, .c => {
-                    if (ptr_info.sentinel) |_| return inspect(std.mem.span(value));
+                    if (ptr_info.sentinel_ptr) |_| return inspect(w, std.mem.span(value));
                     if (ptr_info.child == u8) {
                         return w.interface.print("{s}", .{std.mem.span(value)}) catch return;
                     }
