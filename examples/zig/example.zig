@@ -77,11 +77,8 @@ pub fn main(init: std.process.Init) !void {
         // battle contains Pokémon with a combination of Transform, Mirror Move/Metronome, and
         // Disable its possible that there are no available choices (softlock), though this is
         // impossible here given that our example battle involves none of these moves
-        // TODO: ziglang/zig#13415
-        const n1 = random.uintLessThan(u8, battle.choices(.P1, result.p1, &choices));
-        c1 = choices[n1];
-        const n2 = random.uintLessThan(u8, battle.choices(.P2, result.p2, &choices));
-        c2 = choices[n2];
+        c1 = choices[random.uintLessThan(u8, battle.choices(.P1, result.p1, &choices))];
+        c2 = choices[random.uintLessThan(u8, battle.choices(.P2, result.p2, &choices))];
 
         // Reset the stream to cause the buffer to get reused
         writer.reset();
