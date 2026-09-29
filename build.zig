@@ -505,9 +505,6 @@ fn tool(b: *std.Build, path: []const u8, config: ToolConfig) !?*std.Build.Step.R
 
     const import = module(b, config.options, config.general.target, config.general.optimize);
     exe.root_module.addImport("pkmn", import);
-    if (config.general.target.result.os.tag == .windows) {
-        exe.root_module.linkSystemLibrary("advapi32", .{});
-    }
 
     if (config.tool.tests) |ts| ts.step.dependOn(&exe.step);
     config.tool.exes.append(b.allocator, exe) catch @panic("OOM");
