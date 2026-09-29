@@ -6,20 +6,15 @@ const assert = std.debug.assert;
 /// Optimized optional representation which stores the empty None value as a sentinel.
 /// NOTE: ziglang/zig#104
 pub fn Optional(comptime T: type) type {
-    const names = if (@hasDecl(std.meta, "fieldNames"))
-        std.meta.fieldNames(switch (@typeInfo(T)) {
-            .bool => enum { false, true },
-            else => T,
-        })
-    else blk: {
-        const fields = std.meta.fields(switch (@typeInfo(T)) {
-            .bool => enum { false, true },
-            else => T,
-        });
-        var ns: [fields.len][:0]const u8 = undefined;
-        inline for (fields, 0..) |f, i| ns[i] = f.name;
+    const info = @typeInfo(switch (@typeInfo(T)) {
+        .bool => enum { false, true },
+        else => T,
+    }).@"enum";
+    const names = if (@hasField(@TypeOf(info), "fields")) blk: {
+        var ns: [info.fields.len][:0]const u8 = undefined;
+        inline for (info.fields, 0..) |f, i| ns[i] = f.name;
         break :blk &ns;
-    };
+    } else info.field_names;
 
     const TagType = std.math.IntFittingRange(0, names.len);
     var fieldNames: [names.len + 1][]const u8 = undefined;
