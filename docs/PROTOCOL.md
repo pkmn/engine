@@ -10,15 +10,14 @@ battle information is outlined in the respective documentation.
 
 More information about a battle can be generated via the `-Dlog` flag when building the engine.
 This flag enables the engine to write the wire protocol described in this document to a `Log`.
-Generally, this `Log` should be a
-[`FixedBufferStream`](https://ziglang.org/documentation/master/std/#root;io.FixedBufferStream)
-[`Writer`](https://ziglang.org/documentation/master/std/#root;io.Writer) backed by a statically
-allocated fixed-size array that gets `reset` after each `update` as the maximum number of bytes
-written by a single `update` call is bounded to a [relatively small number of bytes](#size) per
-generation, though since any `Writer` implementation is allowed this `Log` could instead write to
-standard output (note that in Zig the standard out writer isn't buffered by default - you must use
-a [`BufferedWriter`](https://zig.news/kristoff/how-to-add-buffering-to-a-writer-reader-in-zig-7jd)
-wrapper to achieve reasonable performance).
+Generally, this `Log` should be a `FixedLog` (or
+[`Writer.fixed`](https://ziglang.org/documentation/master/std/#std.Io.Writer.fixed)) backed by a
+statically allocated fixed-size array that gets `reset` after each `update` as the maximum number of
+bytes written by a single `update` call is bounded to a [relatively small number of bytes](#size)
+per generation, though since any
+[`Writer`](https://ziglang.org/documentation/master/std/#std.Io.Writer) implementation is allowed
+this `Log` could instead write to standard output (note that in Zig you must pass a buffer when
+creating the standard out writer and `flush` it to achieve reasonable performance).
 
 The engine's wire protocol essentially amounts to a stripped down binary translation of [Pokémon
 Showdown's simulator
@@ -943,13 +942,14 @@ lasting the duration of the turn.
 
 ## Size
 
-As mentioned earlier, any `Writer` can be used to back the protocol `Log`, and as such something like
-an [`ArrayList.Writer`](https://ziglang.org/documentation/master/std/#root;ArrayList) can be used to
-support arbitrary amounts of data being written to the log each update. For performance reasons it
-is desirable to be able to pre-allocate a fixed size buffer for this, where the recommended size is
-determined by `pkmn.LOGS_SIZE` which is guaranteed to be able to handle at least `pkmn.MAX_LOGS`
-bytes (these constants are defined to be the maximum of all generations - each generation also has
-its own parallel constants that can be used instead, e.g. `pkmn.gen1.LOGS_SIZE`).
+As mentioned earlier, any `Writer` can be used to back the protocol `Log`, and as such something
+like [`Writer.Allocating`](https://ziglang.org/documentation/master/std/#std.Io.Writer.Allocating)
+can be used to support arbitrary amounts of data being written to the log each update. For
+performance reasons it is desirable to be able to pre-allocate a fixed size buffer for this, where
+the recommended size is determined by `pkmn.LOGS_SIZE` which is guaranteed to be able to handle at
+least `pkmn.MAX_LOGS` bytes (these constants are defined to be the maximum of all generations - each
+generation also has its own parallel constants that can be used instead, e.g.
+`pkmn.gen1.LOGS_SIZE`).
 
 Determining the maximum amount of bytes in a single update (i.e. bytes logged by a call to `update`
 with each player's `Choice`) per generation is non-trivial and could vary greatly depending on the
