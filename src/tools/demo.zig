@@ -68,7 +68,7 @@ const gen1 = struct {
         c2: Choice,
         d: Durations,
         cap: bool,
-        seen: *std.AutoArrayHashMap(Actions, Rational(u128)),
+        seen: *std.array_hash_map.Auto(Actions, Rational(u128)),
     ) !void {
         var frontier: std.array_list.Aligned(Actions, null) = .empty;
         defer frontier.deinit(allocator);
@@ -166,7 +166,7 @@ const gen1 = struct {
                                 var acts = opts.chance.actions;
                                 acts.p1.damage = @intCast(p1d);
                                 acts.p2.damage = @intCast(p2d);
-                                const v = try seen.getOrPut(acts);
+                                const v = try seen.getOrPut(allocator, acts);
                                 assert(!v.found_existing);
                                 v.value_ptr.* = opts.chance.probability;
                             }
@@ -218,8 +218,8 @@ export fn GEN1_transitions(
     durations: gen1.Durations,
     cap: bool,
 ) Slice(gen1.Result) {
-    var seen = std.AutoArrayHashMap(gen1.Actions, Rational(u128)).init(allocator);
-    defer seen.deinit();
+    var seen: std.array_hash_map.Auto(gen1.Actions, Rational(u128)) = .empty;
+    defer seen.deinit(allocator);
 
     gen1.transitions(battle.*, c1, c2, durations, cap, &seen) catch |err| switch (err) {
         error.OutOfMemory => @panic("out of memory"),
