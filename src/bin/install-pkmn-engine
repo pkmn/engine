@@ -130,12 +130,12 @@ const parse = s => {
 const find = zig => {
   try {
     const {zig_exe, version} = parse(sh(zig, ['env']));
-    const [major, minor, patch, dev] = version.split('.').map(n => parseInt(n));
+    const [major, minor, patch, dev] = version.split('.').map(n => parseInt(n, 10));
 
     const compatible = major > ZIG_VERSION.major ||
       (major >= ZIG_VERSION.major && minor > ZIG_VERSION.minor) ||
       (major >= ZIG_VERSION.major && minor >= ZIG_VERSION.minor && patch >= ZIG_VERSION.patch &&
-        (!ZIG_VERSION.dev || (dev && dev >= parseInt(ZIG_VERSION.dev))));
+        (!ZIG_VERSION.dev || (dev && dev >= parseInt(ZIG_VERSION.dev, 10))));
 
     if (compatible) {
       log('Found existing compatible Zig executable:', zig_exe);

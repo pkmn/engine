@@ -48,7 +48,7 @@ export const Select = ({options, unmount, placeholder, render}: {
     onResize();
 
     container.style.display = 'block';
-    if (!maxHeight) maxHeight = parseInt((getComputedStyle(container, null)).maxHeight);
+    if (!maxHeight) maxHeight = parseInt((getComputedStyle(container, null)).maxHeight, 10);
     if (!offsetHeight) {
       offsetHeight = (container.querySelector('.option') as HTMLElement).offsetHeight;
     }

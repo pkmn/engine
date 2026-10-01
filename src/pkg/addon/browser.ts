@@ -16,7 +16,7 @@ export async function load(showdown: boolean, addon?: Argument) {
       wasm = (await WebAssembly.instantiate(addon));
     } catch (err) {
       if (!(err instanceof Error)) throw err;
-      throw new Error(`Could not instantiate WASM module!\n${err.message}`);
+      throw new Error(`Could not instantiate WASM module!\n${err.message}`, {cause: err});
     }
   } else {
     const name = `pkmn${showdown ? '-showdown' : ''}.wasm`;
@@ -31,7 +31,7 @@ export async function load(showdown: boolean, addon?: Argument) {
         : (addon as Promise<Response> | URL) instanceof URL
           ? `Could not fetch WASM module from '${(addon as URL).href}'!`
           : 'Could not instantiate WASM module!';
-      throw new Error(`${message}\n${err.message}`);
+      throw new Error(`${message}\n${err.message}`, {cause: err});
     }
   }
 

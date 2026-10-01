@@ -19,7 +19,7 @@ export async function load(showdown: boolean, addon?: Argument) {
     } catch (err) {
       if (!(err instanceof Error)) return err;
       if (addon && addon !== 'node') {
-        throw new Error(`Unable to load native addon: '${addon}'\n${err.message}`);
+        throw new Error(`Unable to load native addon: '${addon}'\n${err.message}`, {cause: err});
       } else {
         throw error(NODE[+showdown], err);
       }
@@ -40,7 +40,7 @@ export async function load(showdown: boolean, addon?: Argument) {
       wasm = (await WebAssembly.instantiate(addon));
     } catch (err) {
       if (!(err instanceof Error)) throw err;
-      throw new Error(`Could not instantiate WASM module!\n${err.message}`);
+      throw new Error(`Could not instantiate WASM module!\n${err.message}`, {cause: err});
     }
   } else {
     try {
@@ -48,7 +48,7 @@ export async function load(showdown: boolean, addon?: Argument) {
       wasm = (await WebAssembly.instantiateStreaming(response)).instance;
     } catch (err) {
       if (!(err instanceof Error)) throw err;
-      throw new Error(`Could not instantiate WASM module!\n${err.message}`);
+      throw new Error(`Could not instantiate WASM module!\n${err.message}`, {cause: err});
     }
   }
 

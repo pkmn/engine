@@ -5,6 +5,8 @@ export default [...pkmn, {
 }, {
   ignores: ["dist/", "node_modules/", "examples/zig", "build/", "src/tools/vscode/extension.js"],
 }, {
+  rules: {"no-useless-assignment": "off"},
+}, {
   files: ["src/pkg/common.ts", "src/pkg/index.ts", "src/test/integration.ts"],
   rules: {
     "no-control-regex": "off",

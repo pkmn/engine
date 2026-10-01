@@ -53,7 +53,7 @@ export async function run(
     const {stdout, stderr} = err as {stdout: Buffer; stderr: Buffer};
     const raw = stderr.toString('utf8');
     const panic = raw.indexOf('panic: ');
-    if (testing || !stdout.length) throw new Error(raw);
+    if (testing || !stdout.length) throw new Error(raw, {cause: err});
 
     console.error(raw);
 
