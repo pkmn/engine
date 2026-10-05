@@ -60,14 +60,10 @@ pub fn build(b: *std.Build) !void {
         b.option(u64, "wasm-stack-size", "The size of WASM stack") orelse std.wasm.page_size;
     const dynamic = b.option(bool, "dynamic", "Build a dynamic library") orelse false;
     const strip = b.option(bool, "strip", "Strip debugging symbols from binary");
+    const unwind_tables: ?std.builtin.UnwindTables = if (strip orelse false) .none else null;
     const pic = b.option(bool, "pic", "Force position independent code");
     const emit_asm = b.option(bool, "emit-asm", "Output .s (assembly code)") orelse false;
     const emit_ll = b.option(bool, "emit-ll", "Output .ll (LLVM IR)") orelse false;
-
-    const cmd = if (@hasDecl(std.Build, "FindProgramOptions"))
-        b.findProgram(.{ .names = &.{"strip"} })
-    else
-        b.findProgram(&.{"strip"}, &.{}) catch null;
 
     const json = @embedFile("package.json");
     var parsed = try std.json.parseFromSlice(std.json.Value, b.allocator, json, .{});
@@ -135,9 +131,11 @@ pub fn build(b: *std.Build) !void {
                 .optimize = optimize,
                 .target = target,
                 .strip = strip,
+                .unwind_tables = unwind_tables,
                 .pic = pic,
             }),
         });
+        lib.discard_local_symbols = strip orelse false;
         lib.root_module.addOptions("build_options", options);
         lib.root_module.addImport("napi", translate_c.createModule());
         lib.root_module.link_libc = true;
@@ -149,7 +147,6 @@ pub fn build(b: *std.Build) !void {
             std.process.exit(1);
         }
         lib.linker_allow_shlib_undefined = true;
-        maybeStrip(b, lib, b.getInstallStep(), strip, cmd);
         // Always emit to build/lib because this is where the driver code expects to find it
         // TODO: ziglang/zig#2231 - using the following used to work (though was hacky):
         //
@@ -177,12 +174,13 @@ pub fn build(b: *std.Build) !void {
                 .optimize = optimize,
                 .target = target,
                 .strip = strip,
+                .unwind_tables = unwind_tables,
                 .pic = pic,
             }),
         });
+        lib.discard_local_symbols = strip orelse false;
         lib.root_module.addOptions("build_options", options);
         lib.root_module.addIncludePath(b.path("src/include"));
-        maybeStrip(b, lib, b.getInstallStep(), strip, cmd);
         b.installArtifact(lib);
         c = true;
     } else {
@@ -195,15 +193,16 @@ pub fn build(b: *std.Build) !void {
                 .optimize = optimize,
                 .target = target,
                 .strip = strip,
+                .unwind_tables = unwind_tables,
                 .pic = pic,
             }),
         });
+        lib.discard_local_symbols = strip orelse false;
         lib.root_module.addOptions("build_options", options);
         lib.root_module.addIncludePath(b.path("src/include"));
         if (target.result.os.tag != .macos) {
             lib.bundle_compiler_rt = true;
         }
-        maybeStrip(b, lib, b.getInstallStep(), strip, cmd);
         if (emit_asm) {
             b.getInstallStep().dependOn(&b.addInstallFileWithDir(
                 lib.getEmittedAsm(),
@@ -275,7 +274,6 @@ pub fn build(b: *std.Build) !void {
         .optimize = optimize,
         .pic = pic,
         .strip = strip,
-        .cmd = cmd,
     };
 
     // TODO: tests can be run multiple times due to @imports
@@ -372,9 +370,11 @@ fn buildWasm(
             .optimize = mode,
             .target = freestanding,
             .strip = strip,
+            .unwind_tables = if (strip orelse false) .none else null,
             .pic = pic,
         }),
     });
+    exe.discard_local_symbols = strip orelse false;
 
     var file = try std.Io.Dir.cwd().openFile(b.graph.io, root_src_file, .{});
     defer file.close(b.graph.io);
@@ -409,30 +409,11 @@ fn buildWasm(
     }
 }
 
-fn maybeStrip(
-    b: *std.Build,
-    artifact: *std.Build.Step.Compile,
-    step: *std.Build.Step,
-    strip: ?bool,
-    cmd: ?[]const u8,
-) void {
-    if (!(strip orelse false) or cmd == null) return;
-    // Using `strip -r -u` for dynamic libraries is supposed to work on macOS but doesn't...
-    const mac = builtin.os.tag == .macos;
-    if (mac and artifact.isDynamicLibrary()) return;
-    // Assuming GNU strip, which complains "illegal pathname found in archive member"...
-    if (!mac and artifact.isStaticLibrary()) return;
-    const sh = b.addSystemCommand(&.{ cmd.?, if (mac) "-x" else "-s" });
-    sh.addArtifactArg(artifact);
-    step.dependOn(&sh.step);
-}
-
 const Config = struct {
     target: std.Build.ResolvedTarget,
     optimize: std.builtin.OptimizeMode,
     pic: ?bool,
     strip: ?bool,
-    cmd: ?[]const u8,
 };
 
 const TestStep = struct {
@@ -454,13 +435,14 @@ const TestStep = struct {
                 .target = config.target,
                 .single_threaded = true,
                 .strip = config.strip,
+                .unwind_tables = if (config.strip orelse false) .none else null,
                 .pic = config.pic,
             }),
             .filters = if (test_filter) |filter| &.{filter} else &.{},
         });
+        tests.discard_local_symbols = config.strip orelse false;
         tests.root_module.addOptions("build_options", options);
 
-        maybeStrip(b, tests, &tests.step, config.strip, config.cmd);
         if (coverage) |c| {
             const kcov_run = b.addSystemCommand(&.{ "kcov", "--include-pattern=src/lib", c });
             kcov_run.addArtifactArg(tests);
@@ -498,10 +480,13 @@ fn tool(b: *std.Build, path: []const u8, config: ToolConfig) !?*std.Build.Step.R
             .root_source_file = b.path(path),
             .target = config.general.target,
             .optimize = config.general.optimize,
+            .single_threaded = true,
             .strip = config.general.strip,
+            .unwind_tables = if (config.general.strip orelse false) .none else null,
             .pic = config.general.pic,
         }),
     });
+    exe.discard_local_symbols = config.general.strip orelse false;
 
     const import = module(b, config.options, config.general.target, config.general.optimize);
     exe.root_module.addImport("pkmn", import);
@@ -510,7 +495,6 @@ fn tool(b: *std.Build, path: []const u8, config: ToolConfig) !?*std.Build.Step.R
     config.tool.exes.append(b.allocator, exe) catch @panic("OOM");
 
     const run = b.addRunArtifact(exe);
-    maybeStrip(b, exe, &run.step, config.general.strip, config.general.cmd);
     if (@hasDecl(std.Build, "FindProgramOptions")) {
         run.addPassthruArgs();
     } else {
