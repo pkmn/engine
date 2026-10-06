@@ -401,15 +401,6 @@ const downloadImportLib = async () => {
     const artifact = path.join('build', 'lib', `pkmn${suffix}.${config.type}`);
     log(`Building ${artifact}${flags}`);
     sh(zig, args);
-    // TODO: ziglang/zig#14647 broke emit_to so we get to rename the file ourselves...
-    if (config.type === 'node') {
-      const prefix = process.platform === 'win32' ? '' : 'lib';
-      const ext = process.platform === 'darwin'
-        ? 'dylib' : process.platform === 'win32' ? 'dll' : 'so';
-      const dir = process.platform === 'win32' ? 'bin' : 'lib';
-      const actual = path.join(ROOT, 'build', dir, `${prefix}pkmn${suffix}.node.${ext}`);
-      fs.renameSync(actual, artifact);
-    }
   }
 })().catch(e => {
   console.error(e);
