@@ -25,7 +25,8 @@ pub fn build(b: *std.Build) !void {
         b.option(u64, "wasm-stack-size", "The size of WASM stack") orelse std.wasm.page_size;
     const dynamic = b.option(bool, "dynamic", "Build a dynamic library") orelse false;
     const strip = b.option(bool, "strip", "Strip debugging symbols from binary");
-    const unwind_tables: ?std.builtin.UnwindTables = if (strip orelse false) .none else null;
+    const unwind_tables: ?std.builtin.UnwindTables =
+        if ((strip orelse false) and target.result.os.tag != .windows) .none else null;
     const pic = b.option(bool, "pic", "Force position independent code");
     const emit_asm = b.option(bool, "emit-asm", "Output .s (assembly code)") orelse false;
     const emit_ll = b.option(bool, "emit-ll", "Output .ll (LLVM IR)") orelse false;
@@ -213,6 +214,7 @@ pub fn build(b: *std.Build) !void {
         .optimize = optimize,
         .pic = pic,
         .strip = strip,
+        .unwind_tables = unwind_tables,
     };
 
     // TODO: tests can be run multiple times due to @imports
@@ -232,10 +234,12 @@ pub fn build(b: *std.Build) !void {
     var benchmark_config = tools;
     benchmark_config.general.optimize = ReleaseFast;
     benchmark_config.general.strip = true;
+    benchmark_config.general.unwind_tables = if (target.result.os.tag != .windows) .none else null;
     const benchmark = try tool(b, "src/test/benchmark.zig", benchmark_config);
 
     var fuzz_config = tools;
     fuzz_config.general.strip = false;
+    fuzz_config.general.unwind_tables = null;
     fuzz_config.tool.name = "fuzz";
     const fuzz = try tool(b, "src/test/fuzz.zig", fuzz_config);
 
@@ -363,6 +367,7 @@ const Config = struct {
     optimize: std.builtin.OptimizeMode,
     pic: ?bool,
     strip: ?bool,
+    unwind_tables: ?std.builtin.UnwindTables,
 };
 
 const TestStep = struct {
@@ -382,7 +387,7 @@ const TestStep = struct {
                 .target = config.target,
                 .single_threaded = true,
                 .strip = config.strip,
-                .unwind_tables = if (config.strip orelse false) .none else null,
+                .unwind_tables = config.unwind_tables,
                 .pic = config.pic,
             }),
             .filters = if (test_filter) |filter| &.{filter} else &.{},
@@ -428,7 +433,7 @@ fn tool(b: *std.Build, path: []const u8, config: ToolConfig) !?*std.Build.Step.R
             .optimize = config.general.optimize,
             .single_threaded = true,
             .strip = config.general.strip,
-            .unwind_tables = if (config.general.strip orelse false) .none else null,
+            .unwind_tables = config.general.unwind_tables,
             .pic = config.general.pic,
         }),
     });
