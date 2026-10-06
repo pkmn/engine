@@ -373,6 +373,7 @@ fn buildWasm(
     });
     exe.discard_local_symbols = strip orelse false;
 
+    if (@hasDecl(std.Build, "FindProgramOptions")) b.dependOnFileContents(path);
     var file = try std.Io.Dir.cwd().openFile(b.graph.io, root_src_file, .{});
     defer file.close(b.graph.io);
     var reader = file.reader(b.graph.io, &.{});
@@ -386,19 +387,29 @@ fn buildWasm(
     exe.stack_size = wasm_stack_size;
     exe.root_module.addOptions("build_options", options);
 
-    const opt = if (@hasDecl(std.Build, "FindProgramOptions")) blk: {
+    const opt = if (optimize == Debug)
+        null
+    else if (@hasDecl(std.Build, "FindProgramOptions")) blk: {
         if (exists(b, "./node_modules/.bin/wasm-opt") catch false) {
             break :blk "./node_modules/.bin/wasm-opt";
         }
         break :blk b.findProgram(.{ .names = &.{"wasm-opt"} });
     } else b.findProgram(&.{"wasm-opt"}, &.{"./node_modules/.bin"}) catch null;
-    if (optimize != Debug and opt != null) {
-        const out = b.fmt("build/lib/{s}.wasm", .{name});
-        const sh = b.addSystemCommand(&.{ opt.?, "--enable-bulk-memory", "--enable-simd", "-O4" });
+    if (opt) |wasm_opt| {
+        const out = b.fmt("{s}.wasm", .{name});
+        const sh = b.addSystemCommand(&.{
+            wasm_opt,
+            "--enable-bulk-memory",
+            "--enable-simd",
+            "-O4",
+        });
         sh.addArtifactArg(exe);
         sh.addArg("-o");
-        sh.addFileArg(b.path(out));
-        b.getInstallStep().dependOn(&sh.step);
+        b.getInstallStep().dependOn(&b.addInstallFileWithDir(
+            sh.addOutputFileArg(out),
+            .lib,
+            out,
+        ).step);
     } else {
         b.getInstallStep().dependOn(&b.addInstallArtifact(exe, .{
             .dest_dir = .{ .override = std.Build.InstallDir{ .lib = {} } },
@@ -502,6 +513,7 @@ fn tool(b: *std.Build, path: []const u8, config: ToolConfig) !?*std.Build.Step.R
 }
 
 fn exists(b: *std.Build, path: []const u8) !bool {
+    if (@hasDecl(std.Build, "FindProgramOptions")) b.dependOnFileMetadata(b.path(path));
     std.Io.Dir.cwd().access(b.graph.io, path, .{}) catch |err| switch (err) {
         error.FileNotFound => return false,
         else => |e| return e,
