@@ -9,10 +9,6 @@ const ReleaseFast: std.builtin.OptimizeMode =
 const ReleaseSmall: std.builtin.OptimizeMode =
     if (@hasDecl(std.builtin.OptimizeMode, "ReleaseSmall")) .small else .ReleaseSmall;
 
-fn ArrayList(comptime T: type) type {
-    return std.array_list.Aligned(T, null);
-}
-
 pub fn build(b: *std.Build) !void {
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
@@ -222,13 +218,13 @@ pub fn build(b: *std.Build) !void {
     // TODO: tests can be run multiple times due to @imports
     const tests = TestStep.create(b, options, config);
 
-    var exes: ArrayList(*std.Build.Step.Compile) = .empty;
+    var exes: std.ArrayList(*std.Build.Step.Compile) = .empty;
     const tools: ToolConfig = .{
         .showdown = showdown,
         .module = pkmn,
         .general = config,
         .tool = .{
-            .tests = if (tests.build) tests else null,
+            .tests = if (tests.build) tests.step else null,
             .exes = &exes,
         },
     };
@@ -258,7 +254,8 @@ pub fn build(b: *std.Build) !void {
     if (fuzz) |t| b.step("fuzz", "Run fuzz tester").dependOn(&t.step);
     if (serde) |t| b.step("serde", "Run serialization/deserialization tool").dependOn(&t.step);
     b.step("test", "Run all tests").dependOn(tests.step);
-    b.step("tools", "Install tools").dependOn(ToolsStep.create(b, &exes).step);
+    const install_tools = b.step("tools", "Install tools");
+    for (exes.items) |t| install_tools.dependOn(&b.addInstallArtifact(t, .{}).step);
     if (transitions) |t| {
         b.step("transitions", "Visualize transitions algorithm search").dependOn(&t.step);
     }
@@ -273,7 +270,7 @@ fn buildWasm(
     pic: ?bool,
     wasm_stack_size: u64,
     import: ?*std.Build.Module,
-    options: anytype,
+    options: *std.Build.Step.Options,
 ) !void {
     const mode = switch (optimize) {
         ReleaseFast, ReleaseSafe => ReleaseSmall,
@@ -326,9 +323,10 @@ fn buildWasm(
 
     if (import) |i| {
         exe.root_module.addImport("pkmn", i);
+    } else {
+        exe.root_module.addOptions("build_options", options);
     }
     exe.stack_size = wasm_stack_size;
-    exe.root_module.addOptions("build_options", options);
 
     const opt = if (optimize == Debug)
         null
@@ -371,12 +369,10 @@ const TestStep = struct {
     step: *std.Build.Step,
     build: bool,
 
-    pub fn create(b: *std.Build, options: *std.Build.Step.Options, config: Config) *TestStep {
+    pub fn create(b: *std.Build, options: *std.Build.Step.Options, config: Config) TestStep {
         const coverage = b.option([]const u8, "test-coverage", "Generate test coverage");
         const test_filter =
             b.option([]const u8, "test-filter", "Skip tests that do not match filter");
-
-        const self = b.allocator.create(TestStep) catch @panic("OOM");
 
         const path = b.path("src/lib/test.zig");
         const tests = b.addTest(.{
@@ -398,13 +394,11 @@ const TestStep = struct {
             const kcov_run = b.addSystemCommand(&.{ "kcov", "--include-pattern=src/lib", c });
             kcov_run.addArtifactArg(tests);
             kcov_run.enableTestRunnerMode();
-            self.* = .{ .step = &kcov_run.step, .build = test_filter == null };
+            return .{ .step = &kcov_run.step, .build = test_filter == null };
         } else {
             const run_step = b.addRunArtifact(tests);
-            self.* = .{ .step = &run_step.step, .build = test_filter == null };
+            return .{ .step = &run_step.step, .build = test_filter == null };
         }
-
-        return self;
     }
 };
 
@@ -413,9 +407,9 @@ const ToolConfig = struct {
     module: *std.Build.Module,
     general: Config,
     tool: struct {
-        tests: ?*TestStep,
+        tests: ?*std.Build.Step,
         name: ?[]const u8 = null,
-        exes: *ArrayList(*std.Build.Step.Compile),
+        exes: *std.ArrayList(*std.Build.Step.Compile),
     },
 };
 
@@ -441,7 +435,7 @@ fn tool(b: *std.Build, path: []const u8, config: ToolConfig) !?*std.Build.Step.R
     exe.discard_local_symbols = config.general.strip orelse false;
     exe.root_module.addImport("pkmn", config.module);
 
-    if (config.tool.tests) |ts| ts.step.dependOn(&exe.step);
+    if (config.tool.tests) |ts| ts.dependOn(&exe.step);
     config.tool.exes.append(b.allocator, exe) catch @panic("OOM");
 
     const run = b.addRunArtifact(exe);
@@ -455,49 +449,17 @@ fn tool(b: *std.Build, path: []const u8, config: ToolConfig) !?*std.Build.Step.R
 }
 
 fn exists(b: *std.Build, path: []const u8) !bool {
-    if (@hasDecl(std.Build, "FindProgramOptions")) b.dependOnFileMetadata(b.path(path));
     const root = if (@hasField(std.Build, "root")) b.root.root_dir.handle else b.build_root.handle;
     root.access(b.graph.io, path, .{}) catch |err| switch (err) {
         error.FileNotFound => return false,
         else => |e| return e,
     };
+    if (@hasDecl(std.Build, "FindProgramOptions")) b.dependOnFileMetadata(b.path(path));
     return true;
 }
 
-const ToolsStep = struct {
-    step: *std.Build.Step,
-
-    pub fn create(b: *std.Build, exes: *ArrayList(*std.Build.Step.Compile)) *ToolsStep {
-        const self = b.allocator.create(ToolsStep) catch @panic("OOM");
-
-        if (@hasDecl(std.Build, "FindProgramOptions")) {
-            const step = b.allocator.create(std.Build.Step.TopLevel) catch @panic("OOM");
-            step.* = .{
-                .step = std.Build.Step.init(.{
-                    .tag = .top_level,
-                    .name = "Install tools",
-                    .owner = b,
-                }),
-                .description = "Install tools",
-            };
-            self.* = .{ .step = &step.step };
-        } else {
-            const step = b.allocator.create(std.Build.Step) catch @panic("OOM");
-            step.* = std.Build.Step.init(.{
-                .id = .custom,
-                .name = "Install tools",
-                .owner = b,
-            });
-            self.* = .{ .step = step };
-        }
-        for (exes.items) |t| self.step.dependOn(&b.addInstallArtifact(t, .{}).step);
-
-        return self;
-    }
-};
-
 pub fn exports(b: *std.Build, bytes: []const u8) ![][]const u8 {
-    var symbols: ArrayList([]const u8) = .empty;
+    var symbols: std.ArrayList([]const u8) = .empty;
 
     var it = std.mem.splitSequence(u8, bytes, "export ");
     _ = it.next();
