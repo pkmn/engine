@@ -126,8 +126,7 @@ pub fn build(b: *std.Build) !void {
     } else if (demo) {
         const path = "src/tools/demo.zig";
         const n = if (showdown) "demo-showdown" else "demo";
-        const mod = pkmn;
-        try buildWasm(b, n, path, optimize, strip, pic, wasm_stack_size, mod, options);
+        try buildWasm(b, n, path, optimize, strip, pic, wasm_stack_size, pkmn, options);
     } else if (dynamic) {
         const path = b.path("src/lib/c.zig");
         const lib = b.addLibrary(.{
@@ -204,31 +203,13 @@ pub fn build(b: *std.Build) !void {
         , .{ name, repository.next().?, description, version });
 
         const pc = b.fmt("lib{s}.pc", .{name});
-        if (@hasDecl(std.Build, "FindProgramOptions")) {
-            const write_file = b.addWriteFiles();
-            const pkgconfig = write_file.add(pc, content);
-            b.getInstallStep().dependOn(&b.addInstallFileWithDir(
-                pkgconfig,
-                .prefix,
-                b.fmt("share/pkgconfig/{s}", .{pc}),
-            ).step);
-        } else {
-            const cwd = try std.process.currentPathAlloc(b.graph.io, b.allocator);
-            const file = try std.Io.Dir.path.relative(
-                b.allocator,
-                cwd,
-                &b.graph.environ_map,
-                cwd,
-                try b.cache_root.join(b.allocator, &.{pc}),
-            );
-            const pkgconfig = try std.Io.Dir.cwd().createFile(b.graph.io, file, .{});
-            defer pkgconfig.close(b.graph.io);
-
-            var writer = pkgconfig.writer(b.graph.io, &.{});
-            try writer.interface.writeAll(content);
-
-            b.installFile(file, b.fmt("share/pkgconfig/{s}", .{pc}));
-        }
+        const write_file = b.addWriteFiles();
+        const pkgconfig = write_file.add(pc, content);
+        b.getInstallStep().dependOn(&b.addInstallFileWithDir(
+            pkgconfig,
+            .prefix,
+            b.fmt("share/pkgconfig/{s}", .{pc}),
+        ).step);
     }
 
     const config: Config = .{
@@ -335,7 +316,8 @@ fn buildWasm(
     exe.discard_local_symbols = strip orelse false;
 
     if (@hasDecl(std.Build, "FindProgramOptions")) b.dependOnFileContents(path);
-    var file = try std.Io.Dir.cwd().openFile(b.graph.io, root_src_file, .{});
+    const root = if (@hasField(std.Build, "root")) b.root.root_dir.handle else b.build_root.handle;
+    var file = try root.openFile(b.graph.io, root_src_file, .{});
     defer file.close(b.graph.io);
     var reader = file.reader(b.graph.io, &.{});
     const bytes = try reader.interface.allocRemaining(b.allocator, .unlimited);
@@ -474,7 +456,8 @@ fn tool(b: *std.Build, path: []const u8, config: ToolConfig) !?*std.Build.Step.R
 
 fn exists(b: *std.Build, path: []const u8) !bool {
     if (@hasDecl(std.Build, "FindProgramOptions")) b.dependOnFileMetadata(b.path(path));
-    std.Io.Dir.cwd().access(b.graph.io, path, .{}) catch |err| switch (err) {
+    const root = if (@hasField(std.Build, "root")) b.root.root_dir.handle else b.build_root.handle;
+    root.access(b.graph.io, path, .{}) catch |err| switch (err) {
         error.FileNotFound => return false,
         else => |e| return e,
     };
