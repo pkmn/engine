@@ -68,8 +68,8 @@ pub const Number = struct {
                     var result: i64 = undefined;
                     assert(c.napi_get_value_int64(env, value, &result) == c.napi_ok);
                     return switch (info.signedness) {
-                        .signed => value,
-                        .unsigned => if (0 <= value) @intCast(value) else unreachable,
+                        .signed => if (info.bits == 64) result else @intCast(result),
+                        .unsigned => if (0 <= result) @intCast(result) else unreachable,
                     };
                 },
             },
