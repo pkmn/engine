@@ -245,12 +245,8 @@ pub fn build(b: *std.Build) !void {
 
     const analyze = try tool(b, "src/tools/analyze.zig", tools);
     const dump = try tool(b, "src/tools/dump.zig", tools);
+    const serde = try tool(b, "src/tools/serde.zig", tools);
     const transitions = try tool(b, "src/tools/transitions.zig", tools);
-
-    // FIXME: serde randomly fails to build in some release configurations
-    var hack = tools;
-    if (optimize != Debug) hack.tool.tests = null;
-    const serde = try tool(b, "src/tools/serde.zig", hack);
 
     if (analyze) |t| b.step("analyze", "Run LLVM analysis tool").dependOn(&t.step);
     if (benchmark) |t| b.step("benchmark", "Run benchmark code").dependOn(&t.step);
