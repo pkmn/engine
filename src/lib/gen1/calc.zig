@@ -665,7 +665,7 @@ pub const Rolls = struct {
             .started => &ATK_STARTED,
             else => if (duration.attacking >= 3)
                 &ATK_ENDED
-            else if ((parent == .continuing and parent == .ended) or duration.attacking < 2)
+            else if ((parent == .continuing or parent == .ended) or duration.attacking < 2)
                 &ATK_CONTINUING
             else
                 &ATK,
@@ -696,7 +696,7 @@ pub const Rolls = struct {
                 &CFZ_STARTED,
             else => if (duration.confusion >= 5)
                 &CFZ_ENDED
-            else if ((parent == .continuing and parent == .ended) or duration.confusion < 2)
+            else if ((parent == .continuing or parent == .ended) or duration.confusion < 2)
                 &CFZ_CONTINUING
             else if (tie != .None)
                 &CFZ_TIE
@@ -859,7 +859,7 @@ test "Rolls.confusion" {
     return error.SkipZigTest; // TODO
 }
 
-test "Rolls.atacking" {
+test "Rolls.attacking" {
     return error.SkipZigTest; // TODO
 }
 
