@@ -59,6 +59,7 @@ if (sh('git', ['status', '--porcelain'])) {
 let tmp = '';
 try {
   tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'pkmn-'));
+  process.on('exit', () => fs.rmSync(tmp, {force: true, recursive: true}));
 } catch (err) {
   console.error('Unable to create temporary directory', err);
   process.exit(1);
@@ -169,12 +170,13 @@ const npm = 'The corresponding release of the reference TypeScript driver code c
 const key = 'RWQJbSYgSRvYHXIqYwkOzpuV4eQW6roHp8PqUXcQAUk3suFmclEUZZff';
 const sign = argv.prod
   ? 'These archives have been signed with [Minisign](https://jedisct1.github.io/minisign/) with ' +
-    `https:/pkmn.cc/minisign.pub, reproduced below for convenience:\n\n    ${key}`
+    `https://pkmn.cc/minisign.pub, reproduced below for convenience:\n\n    ${key}`
   : '';
 const notes = `${preamble} version **\`v${version}\`** for` +
   '`libpkmn` and `libpkmn-showdown` (`-Dshowdown`). This release offers only stripped static ' +
-  '`-OReleaseFast` versions of these libraries built for popular architectures and baseline CPU ' +
-  `features with \`-Dlog\`, \`-Dchance\`, and \`-Dcalc\` all enabled. ${npm} ${sign}\n\n` +
+  '`-Doptimize=ReleaseFast` versions of these libraries built for popular architectures and ' +
+  'baseline CPU features with `-Dlog`, `-Dchance`, and `-Dcalc` all enabled. ' +
+  `${npm} ${sign}\n\n` +
   '*[Manually building](https://github.com/pkmn/engine#libpkmn) these libraries from source ' +
   'on your own system is likely to result in better performance when optimized for the native ' +
   'architecture and allows you to tweak exactly which features you need (including support for ' +
