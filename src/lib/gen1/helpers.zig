@@ -5,7 +5,6 @@ const options = @import("../common/options.zig");
 const protocol = @import("../common/protocol.zig");
 const rng = @import("../common/rng.zig");
 const std = @import("std");
-const util = @import("../common/util.zig");
 
 const assert = std.debug.assert;
 const Choice = common.Choice;
@@ -167,13 +166,13 @@ pub const Pokemon = struct {
             @typeInfo(@TypeOf(pokemon.stats)).@"struct".field_names) |field|
         {
             const field_name = if (@hasField(@TypeOf(field), "name")) field.name else field;
-            const hp = comptime std.mem.eql(u8, field_name, "hp");
-            const spc =
-                comptime std.mem.eql(u8, field_name, "spa") or std.mem.eql(u8, field_name, "spd");
             @field(pokemon.stats, field_name) = Stats(u16).calc(
                 field_name,
                 @field(species.stats, field_name),
-                if (hp) p.dvs.hp() else if (spc) p.dvs.spc else @field(p.dvs, field_name),
+                if (comptime std.mem.eql(u8, field_name, "hp"))
+                    p.dvs.hp()
+                else
+                    @field(p.dvs, field_name),
                 @field(p.stats, field_name),
                 p.level,
             );

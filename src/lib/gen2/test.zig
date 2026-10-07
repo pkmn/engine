@@ -11,7 +11,6 @@ const rational = @import("../common/rational.zig");
 const rng = @import("../common/rng.zig");
 const std = @import("std");
 
-const ArgType = protocol.ArgType;
 const assert = std.debug.assert;
 const Battle = helpers.Battle;
 const Calc = calc.Calc;
@@ -33,11 +32,9 @@ const print = std.debug.print;
 const Rational = rational.Rational;
 const Result = common.Result;
 const showdown = pkmn.options.showdown;
-const Side = helpers.Side;
 const Species = data.Species;
 const Status = data.Status;
 const swtch = helpers.swtch;
-const Type = data.Type;
 const Types = data.Types;
 const Writer = protocol.Writer;
 

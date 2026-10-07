@@ -3,12 +3,10 @@
 const common = @import("../common/data.zig");
 const data = @import("data.zig");
 const mechanics = @import("mechanics.zig");
-const std = @import("std");
 
 const adjustDamage = mechanics.adjustDamage;
 const afterMove = mechanics.afterMove;
 const applyDamage = mechanics.applyDamage;
-const buildRage = mechanics.buildRage;
 const calcDamage = mechanics.calcDamage;
 const canCharge = mechanics.canCharge;
 const canMove = mechanics.canMove;
@@ -25,7 +23,6 @@ const Move = data.Move;
 const Player = common.Player;
 const randomizeDamage = mechanics.randomizeDamage;
 const reportOutcome = mechanics.reportOutcome;
-const Result = common.Result;
 const State = mechanics.State;
 
 const SECONDARY = true;

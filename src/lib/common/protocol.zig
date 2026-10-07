@@ -11,7 +11,6 @@ const Player = data.Player;
 const print = std.debug.print;
 
 const endian = builtin.cpu.arch.endian();
-const Endian = std.builtin.Endian;
 
 pub const ArgType = enum(u8) {
     None,

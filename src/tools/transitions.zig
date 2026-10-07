@@ -1,12 +1,8 @@
-const builtin = @import("builtin");
 const pkmn = @import("pkmn");
 const std = @import("std");
 
 const move = pkmn.gen1.helpers.move;
-const showdown = pkmn.options.showdown;
-const swtch = pkmn.gen1.helpers.swtch;
-
-const endian = builtin.cpu.arch.endian();
+// const swtch = pkmn.gen1.helpers.swtch;
 
 pub const pkmn_options = pkmn.Options{ .internal = true };
 

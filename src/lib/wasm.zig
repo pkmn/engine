@@ -1,4 +1,3 @@
-const std = @import("std");
 const wasm = @import("bindings/wasm.zig");
 
 export const SHOWDOWN = wasm.options.showdown;
