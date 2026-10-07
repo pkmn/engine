@@ -186,8 +186,6 @@ pub const gen2 = struct {
     pub const chance = struct {
         pub const Actions = @import("gen2/chance.zig").Actions;
         pub const Action = @import("gen2/chance.zig").Action;
-        pub const Durations = @import("gen2/chance.zig").Durations;
-        pub const Duration = @import("gen2/chance.zig").Duration;
         pub const NULL = @import("gen2/chance.zig").NULL;
     };
     pub const Calc = @import("gen2/calc.zig").Calc;

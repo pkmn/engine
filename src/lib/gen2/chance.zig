@@ -880,6 +880,10 @@ const Null = struct {
         _ = .{ self, player, num };
     }
 
+    pub fn tripleKick(self: Null, player: Player, hits: u2) Error!void {
+        _ = .{ self, player, hits };
+    }
+
     pub fn spite(self: Null, player: Player, pp: u3) Error!void {
         _ = .{ self, player, pp };
     }

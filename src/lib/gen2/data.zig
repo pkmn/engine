@@ -176,7 +176,7 @@ pub const ActivePokemon = extern struct {
     }
 
     pub fn move(self: anytype, mslot: u8) PointerType(@TypeOf(self), MoveSlot) {
-        assert(isPointerTo(self, Pokemon));
+        assert(isPointerTo(self, ActivePokemon));
         assert(mslot > 0 and mslot <= 4);
         assert(self.moves[mslot - 1].id != .None);
         return &self.moves[mslot - 1];
