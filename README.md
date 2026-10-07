@@ -88,34 +88,16 @@ needed to successfully build the addons natively.
 
 ### `pkmn`
 
-To include `pkmn`, add it as a dependency in your project's
-[`build.zig.zon`](https://github.com/ziglang/zig/blob/master/doc/build.zig.zon.md) using [Zig's
-Package Management
-system](https://ziglang.org/download/0.11.0/release-notes.html#Package-Management):
+To include `pkmn`, run `zig fetch --save` to add it as a dependency in your project's
+[`build.zig.zon`](https://codeberg.org/ziglang/zig/src/branch/master/doc/build.zig.zon.md):
 
-```zig
-.dependencies = .{
-    .pkmn = .{
-        .url = "https://github.com/pkmn/engine/archive/RELEASE.tar.gz",
-    },
-},
+```sh
+$ zig fetch --save https://github.com/pkmn/engine/archive/RELEASE.tar.gz
 ```
 
 Replace `RELEASE` with the tag for the [release](https://github.com/pkmn/engine/releases) you wish
-to use (e.g. `0.1.0` or `nightly`) or the specific hash of any commit. Next, run `zig build` and
-copy the expected hash from the error message into your `build.zig.zon` alongside the `.url`:
-
-```sh
-$ zig build
-error: dependency is missing hash field
-            .url = "https://github.com/pkmn/engine/archive/nightly.tar.gz",
-                   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-note: expected .hash = "122056b93b403033cb7d9bed96a02c2eb8cc1275515976167726ada6eb4207e8ef8a",
-```
-
-Note that this hash is **not** going to be the same as the commit hash. After adding the hash to
-your `build.zig.zon` you will be able to import the `pkmn` package's build helpers into your
-`build.zig`:
+to use (e.g. `0.1.0` or `nightly`) or the specific hash of any commit. After adding the dependency
+to your `build.zig.zon` you will be able to import the `pkmn` module into your `build.zig`:
 
 ```zig
 const std = @import("std");
