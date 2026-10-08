@@ -109,7 +109,7 @@ pub const Calc = struct {
     pub fn confusion(self: *Calc, player: Player) void {
         if (!enabled) return;
 
-        if (self.overrides.get(player).confusion == .started) {
+        if (chance.unhaze(self.overrides.get(player).confusion) == .started) {
             self.overrides.get(player).confusion = .None;
         }
     }
@@ -614,7 +614,7 @@ pub const Rolls = struct {
         if (action.sleep == .None) return &SLP_NONE;
         return if (Sleeps.get(duration.sleeps, 0) == 0 and action.speed_tie != .None)
             &SLP_ALL
-        else switch (action.sleep) {
+        else switch (chance.unhaze(action.sleep)) {
             .started => &SLP_STARTED,
             else => if (Sleeps.get(duration.sleeps, 0) >= 7) &SLP_ENDED else &SLP,
         };
@@ -637,12 +637,18 @@ pub const Rolls = struct {
         if (action.disable == .None) return &DIS_NONE;
         return if (duration.disable == 0 and action.speed_tie != .None)
             &DIS_ALL
-        else switch (action.disable) {
-            .started => &DIS_STARTED,
+        else switch (chance.unhaze(action.disable)) {
+            .started => if (duration.disable > 0 and duration.disable < 8 and
+                (parent == .None or parent == .started))
+                &DIS_ALL
+            else
+                &DIS_STARTED,
             else => if (duration.disable >= 8)
                 &DIS_ENDED
             else if (parent != .None and parent != .started)
                 &DIS_CONTINUING
+            else if (action.disable == .haze_continuing and duration.disable > 0)
+                &DIS_ALL
             else
                 &DIS,
         };
@@ -688,7 +694,7 @@ pub const Rolls = struct {
         sibling: Optional(Observation(.attacking)),
         parent: Optional(Observation(.sleep)),
     ) []const Optional(Observation(.confusion)) {
-        return switch (action.confusion) {
+        return switch (chance.unhaze(action.confusion)) {
             .None => &CFZ_NONE,
             .started => if (pkmn.options.overwrite and sibling == .ended and duration.confusion < 5)
                 &CFZ_OVERWRITTEN

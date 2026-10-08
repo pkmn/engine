@@ -499,7 +499,7 @@ fn beforeMove(
         const before = stored.status;
         const slf = Status.is(stored.status, .EXT);
         // Even if the EXT bit is set this will still correctly modify the sleep duration
-        if (options.calc.overridden(player, .sleep)) |obs| switch (obs) {
+        if (options.calc.overridden(player, .sleep)) |obs| switch (chance.unhaze(obs)) {
             .started, .ended => stored.status = 0,
             .continuing => if (Status.duration(stored.status) > 1) {
                 stored.status -= 1;
@@ -574,7 +574,7 @@ fn beforeMove(
 
     if (volatiles.Confusion) {
         assert(volatiles.confusion > 0);
-        if (options.calc.overridden(player, .confusion)) |obs| switch (obs) {
+        if (options.calc.overridden(player, .confusion)) |obs| switch (chance.unhaze(obs)) {
             .started, .ended => volatiles.confusion = 0,
             .continuing => if (volatiles.confusion > 1) {
                 volatiles.confusion -= 1;
@@ -2055,7 +2055,7 @@ pub const Effects = struct {
                 if (p != player and Status.any(s.stored().status)) {
                     try log.curestatus(.{ foe_ident, foe_stored.status, .Silent });
                     s.stored().status = 0;
-                    options.chance.observe(.sleep, p, .None);
+                    options.chance.haze(.sleep, p);
                 } else if (showdown and s.stored().status == Status.TOX) {
                     s.stored().status = Status.init(.PSN);
                     try log.status(.{ battle.active(p), s.stored().status, .None });
@@ -2066,7 +2066,7 @@ pub const Effects = struct {
             if (Status.any(foe_stored.status)) {
                 if (Status.is(foe_stored.status, .FRZ) or Status.is(foe_stored.status, .SLP)) {
                     foe.last_selected_move = .SKIP_TURN;
-                    options.chance.observe(.sleep, player.foe(), .None);
+                    options.chance.haze(.sleep, player.foe());
                 }
                 try log.curestatus(.{ foe_ident, foe_stored.status, .Silent });
                 foe_stored.status = 0;
@@ -2712,13 +2712,13 @@ fn clearVolatiles(battle: anytype, who: Player, options: anytype) !void {
     if (volatiles.disable_move != 0) {
         volatiles.disable_move = 0;
         volatiles.disable_duration = 0;
-        options.chance.observe(.disable, who, .None);
+        options.chance.haze(.disable, who);
         try log.end(.{ ident, .DisableSilent });
     }
     if (volatiles.Confusion) {
         // volatiles.confusion is left unchanged
         volatiles.Confusion = false;
-        options.chance.observe(.confusion, who, .None);
+        options.chance.haze(.confusion, who);
         try log.end(.{ ident, .ConfusionSilent });
     }
     if (volatiles.Mist) {
@@ -2759,11 +2759,14 @@ fn decrement(
     options: anytype,
     n: anytype,
 ) @TypeOf(n) {
-    return if (options.calc.overridden(player, field)) |obs| switch (obs) {
-        .started, .ended => 0,
-        .continuing => if (n > 1) n - 1 else n,
-        else => unreachable,
-    } else n - 1;
+    return if (options.calc.overridden(player, field)) |obs|
+        switch (if (field == .disable) chance.unhaze(obs) else obs) {
+            .started, .ended => 0,
+            .continuing => if (n > 1) n - 1 else n,
+            else => unreachable,
+        }
+    else
+        n - 1;
 }
 
 pub const Rolls = struct {

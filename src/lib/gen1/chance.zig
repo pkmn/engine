@@ -94,10 +94,17 @@ pub const Actions = extern struct {
 
     /// TODO
     pub fn relax(actions: Actions) Actions {
-        if (!options.overwrite) return actions;
         var a = actions;
-        if (a.p1.confusion == .overwritten) a.p1.confusion = .continuing;
-        if (a.p2.confusion == .overwritten) a.p2.confusion = .continuing;
+        a.p1.sleep = unhaze(a.p1.sleep);
+        a.p2.sleep = unhaze(a.p2.sleep);
+        a.p1.disable = unhaze(a.p1.disable);
+        a.p2.disable = unhaze(a.p2.disable);
+        a.p1.confusion = unhaze(a.p1.confusion);
+        a.p2.confusion = unhaze(a.p2.confusion);
+        if (options.overwrite) {
+            if (a.p1.confusion == .overwritten) a.p1.confusion = .continuing;
+            if (a.p2.confusion == .overwritten) a.p2.confusion = .continuing;
+        }
         return a;
     }
 
@@ -144,11 +151,10 @@ pub fn Observation(comptime field: Duration.Field) type {
             started,
             continuing,
             ended,
-            // TODO haze support
-            unused1,
-            unused2,
-            unused3,
-            unused4,
+            unused,
+            haze_started,
+            haze_continuing,
+            haze_ended,
         },
         .confusion => enum(u4) {
             started,
@@ -160,13 +166,57 @@ pub fn Observation(comptime field: Duration.Field) type {
             /// point of view based solely on public information extra work must be done to correct
             /// for the information leak
             overwritten,
-            // TODO haze support
-            unused1,
-            unused2,
-            unused3,
-            unused4,
+            haze_started,
+            haze_continuing,
+            haze_ended,
+            haze_overwritten,
         },
     };
+}
+
+pub fn haze(obs: anytype) @TypeOf(obs) {
+    const start = @intFromEnum(@field(@TypeOf(obs), "started"));
+    const i = @intFromEnum(obs);
+    assert(i >= start and i < start + 4);
+    return @enumFromInt(i + 4);
+}
+
+test haze {
+    try expectEqual(Observation(.sleep).haze_started, haze(Observation(.sleep).started));
+    try expectEqual(Observation(.disable).haze_continuing, haze(Observation(.disable).continuing));
+    try expectEqual(Observation(.sleep).haze_ended, haze(Observation(.sleep).ended));
+    try expectEqual(
+        Optional(Observation(.confusion)).haze_overwritten,
+        haze(Optional(Observation(.confusion)).overwritten),
+    );
+}
+
+pub fn unhaze(obs: anytype) @TypeOf(obs) {
+    const start = @intFromEnum(@field(@TypeOf(obs), "started"));
+    const i = @intFromEnum(obs);
+    return if (i >= start + 4) @enumFromInt(i - 4) else obs;
+}
+
+test unhaze {
+    try expectEqual(Observation(.sleep).started, unhaze(Observation(.sleep).started));
+    try expectEqual(Observation(.sleep).started, unhaze(Observation(.sleep).haze_started));
+    try expectEqual(
+        Observation(.disable).continuing,
+        unhaze(Observation(.disable).haze_continuing),
+    );
+    try expectEqual(Observation(.sleep).ended, unhaze(Observation(.sleep).haze_ended));
+    try expectEqual(
+        Observation(.confusion).overwritten,
+        unhaze(Observation(.confusion).haze_overwritten),
+    );
+    try expectEqual(
+        Optional(Observation(.confusion)).None,
+        unhaze(Optional(Observation(.confusion)).None),
+    );
+    try expectEqual(
+        Optional(Observation(.confusion)).overwritten,
+        unhaze(Optional(Observation(.confusion)).haze_overwritten),
+    );
 }
 
 /// Information about the RNG that was observed during a Generation I battle `update` for a
@@ -225,7 +275,7 @@ pub const Action = packed struct(u64) {
         try fmt(a, w, false);
     }
 
-    const SYMBOLS = [_][]const u8{ "+", "", "-", "#" };
+    const SYMBOLS = [_][]const u8{ "+", "", "-", "#", "%+", "%", "%-", "%#" };
 
     pub fn fmt(self: Action, writer: *std.Io.Writer, shape: bool) !void {
         try writer.writeByte('(');
@@ -605,13 +655,17 @@ pub fn Chance(comptime Rational: type) type {
                     }
                 },
                 .started => {
-                    assert(val == .None or val == .ended);
+                    const hazed = switch (field) {
+                        .sleep, .disable, .confusion => val == .haze_continuing,
+                        else => false,
+                    };
+                    assert(val == .None or val == .ended or hazed);
                     assert(switch (field) {
                         .confusion => a.duration > 0 or self.actions.get(player.foe()).duration > 0,
                         .sleep, .disable => self.actions.get(player.foe()).duration > 0,
                         else => a.duration > 0,
                     });
-                    @field(a, @tagName(field)) = .started;
+                    if (!hazed) @field(a, @tagName(field)) = .started;
                     if (field == .sleep) {
                         var d = self.durations.get(player);
                         d.sleeps = Sleeps.set(d.sleeps, 0, 1);
@@ -620,6 +674,20 @@ pub fn Chance(comptime Rational: type) type {
                     }
                 },
                 else => unreachable,
+            }
+        }
+
+        pub fn haze(self: *Self, comptime field: Action.Field, player: Player) void {
+            if (!enabled) return;
+
+            var a = self.actions.get(player);
+            const val = @field(a, @tagName(field));
+            if (val != .None) @field(a, @tagName(field)) = @import("chance.zig").haze(val);
+            if (field == .sleep) {
+                var d = self.durations.get(player);
+                d.sleeps = Sleeps.set(d.sleeps, 0, 0);
+            } else {
+                @field(self.durations.get(player), @tagName(field)) = 0;
             }
         }
 
@@ -974,6 +1042,29 @@ test "Chance.duration" {
     try expectValue(4, chance.actions.p2.duration);
 }
 
+test "Chance.haze" {
+    var chance: Chance(rational.Rational(u64)) = .{ .probability = .{} };
+
+    chance.durations.p2.sleeps = Sleeps.set(chance.durations.p2.sleeps, 0, 3);
+    chance.haze(.sleep, .P2);
+    try expectValue(Optional(Observation(.sleep)).None, chance.actions.p2.sleep);
+    try expectValue(0, Sleeps.get(chance.durations.p2.sleeps, 0));
+
+    chance.durations.p1.confusion = 2;
+    try chance.confusion(.P1, .continuing);
+    chance.haze(.confusion, .P1);
+    try expectValue(Optional(Observation(.confusion)).haze_continuing, chance.actions.p1.confusion);
+    try expectValue(0, chance.durations.p1.confusion);
+
+    chance.duration(.P2, 3);
+    chance.observe(.confusion, .P1, .started);
+    try expectValue(Optional(Observation(.confusion)).haze_continuing, chance.actions.p1.confusion);
+    try expectValue(1, chance.durations.p1.confusion);
+
+    const relaxed = chance.actions.relax();
+    try expectValue(Optional(Observation(.confusion)).continuing, relaxed.p1.confusion);
+}
+
 test "Chance.sleep" {
     var chance: Chance(rational.Rational(u64)) = .{ .probability = .{} };
 
@@ -1193,6 +1284,10 @@ const Null = struct {
         obs: Optional(Observation(.confusion)),
     ) void {
         _ = .{ self, field, player, obs };
+    }
+
+    pub fn haze(self: Null, comptime field: Action.Field, player: Player) void {
+        _ = .{ self, field, player };
     }
 
     pub fn sleep(self: Null, player: Player, obs: Optional(Observation(.sleep))) Error!void {
