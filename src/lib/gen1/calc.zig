@@ -109,7 +109,7 @@ pub const Calc = struct {
     pub fn confusion(self: *Calc, player: Player) void {
         if (!enabled) return;
 
-        if (self.overrides.get(player).confusion == .started) {
+        if (chance.unhazed(self.overrides.get(player).confusion) == .started) {
             self.overrides.get(player).confusion = .None;
         }
     }
@@ -614,7 +614,7 @@ pub const Rolls = struct {
         if (action.sleep == .None) return &SLP_NONE;
         return if (Sleeps.get(duration.sleeps, 0) == 0 and action.speed_tie != .None)
             &SLP_ALL
-        else switch (action.sleep) {
+        else switch (chance.unhazed(action.sleep)) {
             .started => &SLP_STARTED,
             else => if (Sleeps.get(duration.sleeps, 0) >= 7) &SLP_ENDED else &SLP,
         };
@@ -635,9 +635,12 @@ pub const Rolls = struct {
         parent: Optional(Observation(.sleep)),
     ) []const Optional(Observation(.disable)) {
         if (action.disable == .None) return &DIS_NONE;
-        return if (duration.disable == 0 and action.speed_tie != .None)
+        return if ((duration.disable == 0 and action.speed_tie != .None) or
+            (duration.disable > 0 and duration.disable < 8 and
+                (parent == .None or parent == .started) and
+                (action.disable == .started or action.disable == .haze_continuing)))
             &DIS_ALL
-        else switch (action.disable) {
+        else switch (chance.unhazed(action.disable)) {
             .started => &DIS_STARTED,
             else => if (duration.disable >= 8)
                 &DIS_ENDED
@@ -688,7 +691,7 @@ pub const Rolls = struct {
         sibling: Optional(Observation(.attacking)),
         parent: Optional(Observation(.sleep)),
     ) []const Optional(Observation(.confusion)) {
-        return switch (action.confusion) {
+        return switch (chance.unhazed(action.confusion)) {
             .None => &CFZ_NONE,
             .started => if (pkmn.options.overwrite and sibling == .ended and duration.confusion < 5)
                 &CFZ_OVERWRITTEN
@@ -848,23 +851,214 @@ test "Rolls.speedTie" {
 }
 
 test "Rolls.sleep" {
-    return error.SkipZigTest; // TODO
+    const d1: Duration = .{ .sleeps = Sleeps.set(0, 0, 1) };
+    const d7: Duration = .{ .sleeps = Sleeps.set(0, 0, 7) };
+    try expectEqualSlices(Optional(Observation(.sleep)), &.{.None}, Rolls.sleep(.{}, .{}));
+    try expectEqualSlices(
+        Optional(Observation(.sleep)),
+        &.{ .started, .continuing, .ended },
+        Rolls.sleep(.{ .sleep = .started, .speed_tie = .P1 }, .{}),
+    );
+    try expectEqualSlices(
+        Optional(Observation(.sleep)),
+        &.{.started},
+        Rolls.sleep(.{ .sleep = .started }, .{}),
+    );
+    try expectEqualSlices(
+        Optional(Observation(.sleep)),
+        &.{.started},
+        Rolls.sleep(.{ .sleep = .haze_started, .speed_tie = .P1 }, d1),
+    );
+    try expectEqualSlices(
+        Optional(Observation(.sleep)),
+        &.{ .continuing, .ended },
+        Rolls.sleep(.{ .sleep = .continuing }, d1),
+    );
+    try expectEqualSlices(
+        Optional(Observation(.sleep)),
+        &.{.ended},
+        Rolls.sleep(.{ .sleep = .haze_continuing }, d7),
+    );
 }
 
 test "Rolls.disable" {
-    return error.SkipZigTest; // TODO
+    try expectEqualSlices(
+        Optional(Observation(.disable)),
+        &.{.None},
+        Rolls.disable(.{}, .{}, .None),
+    );
+    try expectEqualSlices(
+        Optional(Observation(.disable)),
+        &.{ .started, .continuing, .ended },
+        Rolls.disable(.{ .disable = .started, .speed_tie = .P1 }, .{}, .None),
+    );
+    try expectEqualSlices(
+        Optional(Observation(.disable)),
+        &.{ .started, .continuing, .ended },
+        Rolls.disable(.{ .disable = .started }, .{ .disable = 1 }, .None),
+    );
+    try expectEqualSlices(
+        Optional(Observation(.disable)),
+        &.{ .started, .continuing, .ended },
+        Rolls.disable(.{ .disable = .haze_continuing }, .{ .disable = 7 }, .started),
+    );
+    try expectEqualSlices(
+        Optional(Observation(.disable)),
+        &.{.started},
+        Rolls.disable(.{ .disable = .started }, .{}, .None),
+    );
+    try expectEqualSlices(
+        Optional(Observation(.disable)),
+        &.{.started},
+        Rolls.disable(.{ .disable = .haze_started }, .{ .disable = 1 }, .None),
+    );
+    try expectEqualSlices(
+        Optional(Observation(.disable)),
+        &.{.ended},
+        Rolls.disable(.{ .disable = .haze_continuing }, .{ .disable = 8 }, .None),
+    );
+    try expectEqualSlices(
+        Optional(Observation(.disable)),
+        &.{.continuing},
+        Rolls.disable(.{ .disable = .haze_continuing }, .{ .disable = 3 }, .continuing),
+    );
+    try expectEqualSlices(
+        Optional(Observation(.disable)),
+        &.{ .continuing, .ended },
+        Rolls.disable(.{ .disable = .continuing }, .{ .disable = 3 }, .None),
+    );
+    try expectEqualSlices(
+        Optional(Observation(.disable)),
+        &.{ .continuing, .ended },
+        Rolls.disable(.{ .disable = .haze_ended }, .{ .disable = 3 }, .started),
+    );
 }
 
 test "Rolls.confusion" {
-    return error.SkipZigTest; // TODO
+    try expectEqualSlices(
+        Optional(Observation(.confusion)),
+        &.{.None},
+        Rolls.confusion(.{}, .{}, .None, .None, .None),
+    );
+    try expectEqualSlices(
+        Optional(Observation(.confusion)),
+        if (pkmn.options.overwrite) &.{ .started, .overwritten } else &.{.started},
+        Rolls.confusion(.{ .confusion = .haze_started }, .{ .confusion = 4 }, .None, .ended, .None),
+    );
+    try expectEqualSlices(
+        Optional(Observation(.confusion)),
+        &.{.started},
+        Rolls.confusion(.{ .confusion = .started }, .{ .confusion = 5 }, .None, .ended, .None),
+    );
+    try expectEqualSlices(
+        Optional(Observation(.confusion)),
+        &.{.started},
+        Rolls.confusion(.{ .confusion = .started }, .{ .confusion = 2 }, .None, .continuing, .None),
+    );
+    try expectEqualSlices(
+        Optional(Observation(.confusion)),
+        &.{.ended},
+        Rolls.confusion(
+            .{ .confusion = .haze_continuing },
+            .{ .confusion = 5 },
+            .None,
+            .None,
+            .None,
+        ),
+    );
+    try expectEqualSlices(
+        Optional(Observation(.confusion)),
+        &.{.continuing},
+        Rolls.confusion(
+            .{ .confusion = .continuing },
+            .{ .confusion = 3 },
+            .P1,
+            .None,
+            .continuing,
+        ),
+    );
+    try expectEqualSlices(
+        Optional(Observation(.confusion)),
+        &.{.continuing},
+        Rolls.confusion(.{ .confusion = .haze_ended }, .{ .confusion = 1 }, .P1, .None, .None),
+    );
+    try expectEqualSlices(
+        Optional(Observation(.confusion)),
+        &.{ .started, .continuing, .ended },
+        Rolls.confusion(.{ .confusion = .continuing }, .{ .confusion = 2 }, .P1, .None, .started),
+    );
+    try expectEqualSlices(
+        Optional(Observation(.confusion)),
+        &.{ .continuing, .ended },
+        Rolls.confusion(
+            .{ .confusion = .haze_overwritten },
+            .{ .confusion = 2 },
+            .None,
+            .None,
+            .None,
+        ),
+    );
 }
 
 test "Rolls.attacking" {
-    return error.SkipZigTest; // TODO
+    try expectEqualSlices(
+        Optional(Observation(.attacking)),
+        &.{.None},
+        Rolls.attacking(.{}, .{}, .None),
+    );
+    try expectEqualSlices(
+        Optional(Observation(.attacking)),
+        &.{.started},
+        Rolls.attacking(.{ .attacking = .started }, .{}, .None),
+    );
+    try expectEqualSlices(
+        Optional(Observation(.attacking)),
+        &.{.ended},
+        Rolls.attacking(.{ .attacking = .continuing }, .{ .attacking = 3 }, .None),
+    );
+    try expectEqualSlices(
+        Optional(Observation(.attacking)),
+        &.{.continuing},
+        Rolls.attacking(.{ .attacking = .continuing }, .{ .attacking = 2 }, .ended),
+    );
+    try expectEqualSlices(
+        Optional(Observation(.attacking)),
+        &.{.continuing},
+        Rolls.attacking(.{ .attacking = .ended }, .{ .attacking = 1 }, .None),
+    );
+    try expectEqualSlices(
+        Optional(Observation(.attacking)),
+        &.{ .continuing, .ended },
+        Rolls.attacking(.{ .attacking = .continuing }, .{ .attacking = 2 }, .started),
+    );
 }
 
 test "Rolls.binding" {
-    return error.SkipZigTest; // TODO
+    try expectEqualSlices(
+        Optional(Observation(.binding)),
+        &.{.None},
+        Rolls.binding(.{ .binding = .continuing }, .{ .binding = 1 }, .true),
+    );
+    try expectEqualSlices(
+        Optional(Observation(.binding)),
+        &.{.None},
+        Rolls.binding(.{}, .{}, .None),
+    );
+    try expectEqualSlices(
+        Optional(Observation(.binding)),
+        &.{.started},
+        Rolls.binding(.{ .binding = .started }, .{}, .false),
+    );
+    try expectEqualSlices(
+        Optional(Observation(.binding)),
+        &.{.ended},
+        Rolls.binding(.{ .binding = .continuing }, .{ .binding = 4 }, .None),
+    );
+    try expectEqualSlices(
+        Optional(Observation(.binding)),
+        &.{ .continuing, .ended },
+        Rolls.binding(.{ .binding = .ended }, .{ .binding = 3 }, .None),
+    );
 }
 
 test "Rolls.damage" {

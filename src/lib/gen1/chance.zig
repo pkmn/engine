@@ -82,7 +82,7 @@ pub const Actions = extern struct {
         return true;
     }
 
-    /// TODO
+    /// Returns true if `a` has the same shape as any entry in `bs` other than `bs[i]`.
     pub fn matchesAny(a: Actions, bs: []Actions, i: usize) bool {
         for (bs, 0..) |b, j| {
             // TODO: is skipping this redundant check worth it?
@@ -92,12 +92,18 @@ pub const Actions = extern struct {
         return false;
     }
 
-    /// TODO
+    /// Strips Haze markers from `actions` and relaxes `.overwritten` confusion
+    /// to `.continuing` when `options.overwrite` is enabled.
     pub fn relax(actions: Actions) Actions {
-        if (!options.overwrite) return actions;
         var a = actions;
-        if (a.p1.confusion == .overwritten) a.p1.confusion = .continuing;
-        if (a.p2.confusion == .overwritten) a.p2.confusion = .continuing;
+        inline for (.{ &a.p1, &a.p2 }) |action| {
+            action.sleep = unhazed(action.sleep);
+            action.disable = unhazed(action.disable);
+            action.confusion = unhazed(action.confusion);
+            if (options.overwrite and action.confusion == .overwritten) {
+                action.confusion = .continuing;
+            }
+        }
         return a;
     }
 
@@ -130,9 +136,25 @@ test Actions {
     try expect(b.matches(a));
     try expect(!a.matches(c));
     try expect(!c.matches(a));
+
+    const d: Actions = .{
+        .p1 = .{ .sleep = .haze_continuing, .disable = .haze_started },
+        .p2 = .{ .confusion = .haze_overwritten },
+    };
+    const relaxed = d.relax();
+    try expectEqual(Optional(Observation(.sleep)).continuing, relaxed.p1.sleep);
+    try expectEqual(Optional(Observation(.disable)).started, relaxed.p1.disable);
+    try expectEqual(
+        if (options.overwrite)
+            Optional(Observation(.confusion)).continuing
+        else
+            Optional(Observation(.confusion)).overwritten,
+        relaxed.p2.confusion,
+    );
 }
 
-/// Observation made about a duration - whether the duration has started, been continued, or ended.
+/// Observation made about a duration - whether the duration has started, been continued, or ended,
+/// and for sleep, disable, and confusion whether it was subsequently cleared by Haze.
 pub fn Observation(comptime field: Duration.Field) type {
     return switch (field) {
         .attacking, .binding => enum(u2) {
@@ -144,11 +166,12 @@ pub fn Observation(comptime field: Duration.Field) type {
             started,
             continuing,
             ended,
-            // TODO haze support
-            unused1,
-            unused2,
-            unused3,
-            unused4,
+            // Padding so haze_* variants align at +4 with .confusion
+            unused,
+            // The corresponding observation occurred before Haze cleared the effect
+            haze_started,
+            haze_continuing,
+            haze_ended,
         },
         .confusion => enum(u4) {
             started,
@@ -160,13 +183,59 @@ pub fn Observation(comptime field: Duration.Field) type {
             /// point of view based solely on public information extra work must be done to correct
             /// for the information leak
             overwritten,
-            // TODO haze support
-            unused1,
-            unused2,
-            unused3,
-            unused4,
+            // The corresponding observation occurred before Haze cleared the effect
+            haze_started,
+            haze_continuing,
+            haze_ended,
+            haze_overwritten,
         },
     };
+}
+
+/// Converts an `Observation` / `Optional(Observation)` into its `haze_*` variant.
+pub fn hazed(obs: anytype) @TypeOf(obs) {
+    const min = @intFromEnum(@field(@TypeOf(obs), "started"));
+    assert(@intFromEnum(obs) >= min and @intFromEnum(obs) < min + 4);
+    return @enumFromInt(@intFromEnum(obs) + 4);
+}
+
+test hazed {
+    try expectEqual(Observation(.sleep).haze_started, hazed(Observation(.sleep).started));
+    try expectEqual(Observation(.disable).haze_continuing, hazed(Observation(.disable).continuing));
+    try expectEqual(Observation(.sleep).haze_ended, hazed(Observation(.sleep).ended));
+    try expectEqual(
+        Optional(Observation(.confusion)).haze_overwritten,
+        hazed(Optional(Observation(.confusion)).overwritten),
+    );
+}
+
+/// Strips any `haze_*` marker from an `Observation` / `Optional(Observation)`.
+pub fn unhazed(obs: anytype) @TypeOf(obs) {
+    if (!@hasField(@TypeOf(obs), "haze_started")) return obs;
+    const min = @intFromEnum(@field(@TypeOf(obs), "haze_started"));
+    return if (@intFromEnum(obs) >= min) @enumFromInt(@intFromEnum(obs) - 4) else obs;
+}
+
+test unhazed {
+    try expectEqual(Observation(.sleep).started, unhazed(Observation(.sleep).started));
+    try expectEqual(Observation(.sleep).started, unhazed(Observation(.sleep).haze_started));
+    try expectEqual(
+        Observation(.disable).continuing,
+        unhazed(Observation(.disable).haze_continuing),
+    );
+    try expectEqual(Observation(.sleep).ended, unhazed(Observation(.sleep).haze_ended));
+    try expectEqual(
+        Observation(.confusion).overwritten,
+        unhazed(Observation(.confusion).haze_overwritten),
+    );
+    try expectEqual(
+        Optional(Observation(.confusion)).None,
+        unhazed(Optional(Observation(.confusion)).None),
+    );
+    try expectEqual(
+        Optional(Observation(.confusion)).overwritten,
+        unhazed(Optional(Observation(.confusion)).haze_overwritten),
+    );
 }
 
 /// Information about the RNG that was observed during a Generation I battle `update` for a
@@ -193,15 +262,15 @@ pub const Action = packed struct(u64) {
     /// or Rolls.{sleepDuration,disableDuration,confusionDuration,attackingDuration} otherwise.
     duration: u4 = 0,
 
-    /// TODO
+    /// If not None, the observed or overridden sleep duration state.
     sleep: Optional(Observation(.sleep)) = .None,
-    /// TODO
+    /// If not None, the observed or overridden confusion duration state.
     confusion: Optional(Observation(.confusion)) = .None,
-    /// TODO
+    /// If not None, the observed or overridden Disable duration state.
     disable: Optional(Observation(.disable)) = .None,
-    /// TODO
+    /// If not None, the observed or overridden attacking (Bide or Thrashing) duration state.
     attacking: Optional(Observation(.attacking)) = .None,
-    /// TODO
+    /// If not None, the observed or overridden binding duration state.
     binding: Optional(Observation(.binding)) = .None,
 
     /// If not 0, the move slot (1-4) to return in Rolls.moveSlot. If present as an override,
@@ -210,7 +279,7 @@ pub const Action = packed struct(u64) {
     /// If not 0, the value (2-5) to return for Rolls.distribution for multi hit.
     multi_hit: u3 = 0,
 
-    /// TODO
+    /// If not 0, the amount of stored PP incremented when using Metronome while Transformed.
     pp: u4 = 0,
 
     /// If not 0, psywave - 1 should be returned as the damage roll for Rolls.psywave.
@@ -225,7 +294,7 @@ pub const Action = packed struct(u64) {
         try fmt(a, w, false);
     }
 
-    const SYMBOLS = [_][]const u8{ "+", "", "-", "#" };
+    const SYMBOLS = [_][]const u8{ "+", "", "-", "#", "%+", "%", "%-", "%#" };
 
     pub fn fmt(self: Action, writer: *std.Io.Writer, shape: bool) !void {
         try writer.writeByte('(');
@@ -270,18 +339,18 @@ pub const Action = packed struct(u64) {
     }
 };
 
-/// TODO
+/// Tracks how many turns duration-based effects have been active during a Generation I battle.
 pub const Durations = extern struct {
-    /// TODO
+    /// Observed durations for Player 1.
     p1: Duration = .{},
-    /// TODO
+    /// Observed durations for Player 2.
     p2: Duration = .{},
 
     comptime {
         assert(@sizeOf(Durations) == 8);
     }
 
-    /// TODO
+    /// Returns the `Duration` for the given `player`.
     pub fn get(self: anytype, player: Player) PointerType(@TypeOf(self), Duration) {
         assert(isPointerTo(self, Durations));
         return if (player == .P1) &self.p1 else &self.p2;
@@ -292,18 +361,25 @@ pub const Durations = extern struct {
     }
 };
 
+/// Bit-packed array of 6 `u3` values tracking observed sleep turns for each party slot.
 pub const Sleeps = Array(6, u3);
 
-/// TODO
+/// Observed turn counts for duration-based effects for a single player.
 pub const Duration = packed struct(u32) {
+    /// Observed sleep turns per party slot (slot 0 is the active Pokémon).
     sleeps: Sleeps.T = 0,
+    /// Observed turns of confusion.
     confusion: u3 = 0,
+    /// Observed turns of Disable.
     disable: u4 = 0,
+    /// Observed turns of Bide or Thrashing (Thrash or Petal Dance).
     attacking: u3 = 0,
+    /// Observed turns of binding moves.
     binding: u3 = 0,
 
     _: u1 = 0,
 
+    /// Duration-based effects tracked by `Duration` and `Observation`.
     pub const Field = enum { attacking, binding, sleep, disable, confusion };
 
     pub fn format(
@@ -341,6 +417,7 @@ pub const Duration = packed struct(u32) {
     }
 };
 
+/// Context in which pending cartridge RNG rolls are committed.
 pub const Commit = enum { hit, miss, binding, err, glitch };
 
 const uN = if (options.miss) u8 else u9;
@@ -356,7 +433,7 @@ pub fn Chance(comptime Rational: type) type {
         /// The actions taken by a hypothetical "chance player" that convey information about which
         /// RNG events were observed during a battle `update`.
         actions: Actions = .{},
-        /// TODO
+        /// Observed turn counts for duration-based effects across battle `update` calls.
         durations: Durations = .{},
 
         // In many cases on both the cartridge and on Pokémon Showdown rolls are made even though
@@ -396,6 +473,8 @@ pub fn Chance(comptime Rational: type) type {
             self.pending = .{};
         }
 
+        /// Commits pending hit, critical hit, and damage rolls on the cartridge once known to be
+        /// relevant.
         pub fn commit(self: *Self, player: Player, kind: Commit) Error!void {
             if (!enabled) return;
 
@@ -605,13 +684,15 @@ pub fn Chance(comptime Rational: type) type {
                     }
                 },
                 .started => {
-                    assert(val == .None or val == .ended);
+                    const haze_continuing = @hasField(@TypeOf(val), "haze_continuing") and
+                        val == .haze_continuing;
+                    assert(val == .None or val == .ended or haze_continuing);
                     assert(switch (field) {
                         .confusion => a.duration > 0 or self.actions.get(player.foe()).duration > 0,
                         .sleep, .disable => self.actions.get(player.foe()).duration > 0,
                         else => a.duration > 0,
                     });
-                    @field(a, @tagName(field)) = .started;
+                    if (!haze_continuing) @field(a, @tagName(field)) = .started;
                     if (field == .sleep) {
                         var d = self.durations.get(player);
                         d.sleeps = Sleeps.set(d.sleeps, 0, 1);
@@ -620,6 +701,20 @@ pub fn Chance(comptime Rational: type) type {
                     }
                 },
                 else => unreachable,
+            }
+        }
+
+        pub fn haze(self: *Self, comptime field: Action.Field, player: Player) void {
+            if (!enabled) return;
+
+            var a = self.actions.get(player);
+            const val = @field(a, @tagName(field));
+            if (val != .None) @field(a, @tagName(field)) = hazed(val);
+            if (field == .sleep) {
+                var d = self.durations.get(player);
+                d.sleeps = Sleeps.set(d.sleeps, 0, 0);
+            } else {
+                @field(self.durations.get(player), @tagName(field)) = 0;
             }
         }
 
@@ -974,6 +1069,29 @@ test "Chance.duration" {
     try expectValue(4, chance.actions.p2.duration);
 }
 
+test "Chance.haze" {
+    var chance: Chance(rational.Rational(u64)) = .{ .probability = .{} };
+
+    chance.durations.p2.sleeps = Sleeps.set(chance.durations.p2.sleeps, 0, 3);
+    chance.haze(.sleep, .P2);
+    try expectValue(Optional(Observation(.sleep)).None, chance.actions.p2.sleep);
+    try expectValue(0, Sleeps.get(chance.durations.p2.sleeps, 0));
+
+    chance.durations.p1.confusion = 2;
+    try chance.confusion(.P1, .continuing);
+    chance.haze(.confusion, .P1);
+    try expectValue(Optional(Observation(.confusion)).haze_continuing, chance.actions.p1.confusion);
+    try expectValue(0, chance.durations.p1.confusion);
+
+    chance.duration(.P2, 3);
+    chance.observe(.confusion, .P1, .started);
+    try expectValue(Optional(Observation(.confusion)).haze_continuing, chance.actions.p1.confusion);
+    try expectValue(1, chance.durations.p1.confusion);
+
+    const relaxed = chance.actions.relax();
+    try expectValue(Optional(Observation(.confusion)).continuing, relaxed.p1.confusion);
+}
+
 test "Chance.sleep" {
     var chance: Chance(rational.Rational(u64)) = .{ .probability = .{} };
 
@@ -1193,6 +1311,10 @@ const Null = struct {
         obs: Optional(Observation(.confusion)),
     ) void {
         _ = .{ self, field, player, obs };
+    }
+
+    pub fn haze(self: Null, comptime field: Action.Field, player: Player) void {
+        _ = .{ self, field, player };
     }
 
     pub fn sleep(self: Null, player: Player, obs: Optional(Observation(.sleep))) Error!void {
