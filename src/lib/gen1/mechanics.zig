@@ -499,7 +499,7 @@ fn beforeMove(
         const before = stored.status;
         const slf = Status.is(stored.status, .EXT);
         // Even if the EXT bit is set this will still correctly modify the sleep duration
-        if (options.calc.overridden(player, .sleep)) |obs| switch (chance.unhaze(obs)) {
+        if (options.calc.overridden(player, .sleep)) |obs| switch (chance.unhazed(obs)) {
             .started, .ended => stored.status = 0,
             .continuing => if (Status.duration(stored.status) > 1) {
                 stored.status -= 1;
@@ -574,7 +574,7 @@ fn beforeMove(
 
     if (volatiles.Confusion) {
         assert(volatiles.confusion > 0);
-        if (options.calc.overridden(player, .confusion)) |obs| switch (chance.unhaze(obs)) {
+        if (options.calc.overridden(player, .confusion)) |obs| switch (chance.unhazed(obs)) {
             .started, .ended => volatiles.confusion = 0,
             .continuing => if (volatiles.confusion > 1) {
                 volatiles.confusion -= 1;
@@ -2759,14 +2759,11 @@ fn decrement(
     options: anytype,
     n: anytype,
 ) @TypeOf(n) {
-    return if (options.calc.overridden(player, field)) |obs|
-        switch (if (field == .disable) chance.unhaze(obs) else obs) {
-            .started, .ended => 0,
-            .continuing => if (n > 1) n - 1 else n,
-            else => unreachable,
-        }
-    else
-        n - 1;
+    return if (options.calc.overridden(player, field)) |obs| switch (chance.unhazed(obs)) {
+        .started, .ended => 0,
+        .continuing => if (n > 1) n - 1 else n,
+        else => unreachable,
+    } else n - 1;
 }
 
 pub const Rolls = struct {
