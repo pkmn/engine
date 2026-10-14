@@ -11,7 +11,8 @@ const ReleaseSmall: std.builtin.OptimizeMode =
 
 pub fn build(b: *std.Build) !void {
     const target = b.standardTargetOptions(.{});
-    const optimize = b.standardOptimizeOption(.{});
+    // TODO: workaround for ziglang/zig#36108
+    const optimize = @as(?std.builtin.OptimizeMode, b.standardOptimizeOption(.{})) orelse Debug;
 
     const node_headers = b.option([]const u8, "node-headers", "Path to node-headers");
     const node_import_lib =
