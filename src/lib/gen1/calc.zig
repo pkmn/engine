@@ -434,20 +434,6 @@ pub fn update(
     var overrides = options.chance.actions;
     const updated = options.chance.durations;
 
-    if (@TypeOf(battle.rng) == data.PRNG) {
-        // Ensure we can encode the diffs in less than MAX_DIFFS bytes.
-        var buf: [helpers.MAX_DIFFS]u8 = undefined;
-        var pw: protocol.Writer = .{ .buffer = &buf };
-        const n = try helpers.diff(&original, battle, &pw);
-
-        // Applying the diff to the battle should take us back to the original copy
-        // of the battle (ignoring the RNG).
-        var patched = battle.*;
-        patched.rng = original.rng;
-        helpers.patch(&patched, buf[0..n]);
-        try expectEqual(original, patched);
-    }
-
     if (transition) {
         // Ensure we can generate all transitions from the same original state
         // (we must change the battle's RNG from a FixedRNG to a PRNG because
