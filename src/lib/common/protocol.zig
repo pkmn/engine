@@ -975,15 +975,15 @@ pub fn format(
                 printc(" L{d}", .{a[i]}, a, b, &i, 1, color);
                 switch (endian) {
                     .big => {
-                        var hp = @as(u16, a[i]) << 8 | @as(u16, a[i + 1]);
+                        var hp = (@as(u16, a[i]) << 8) | @as(u16, a[i + 1]);
                         printc(" {d}", .{hp}, a, b, &i, 2, color);
-                        hp = @as(u16, a[i]) << 8 | @as(u16, a[i + 1]);
+                        hp = (@as(u16, a[i]) << 8) | @as(u16, a[i + 1]);
                         printc("/{d}", .{hp}, a, b, &i, 2, color);
                     },
                     .little => {
-                        var hp = @as(u16, a[i + 1]) << 8 | @as(u16, a[i]);
+                        var hp = (@as(u16, a[i + 1]) << 8) | @as(u16, a[i]);
                         printc(" {d}", .{hp}, a, b, &i, 2, color);
-                        hp = @as(u16, a[i + 1]) << 8 | @as(u16, a[i]);
+                        hp = (@as(u16, a[i + 1]) << 8) | @as(u16, a[i]);
                         printc("/{d}", .{hp}, a, b, &i, 2, color);
                     },
                 }
@@ -1011,8 +1011,8 @@ pub fn format(
             },
             .Turn => {
                 const turn = switch (endian) {
-                    .big => @as(u16, a[i]) << 8 | @as(u16, a[i + 1]),
-                    .little => @as(u16, a[i + 1]) << 8 | @as(u16, a[i]),
+                    .big => (@as(u16, a[i]) << 8) | @as(u16, a[i + 1]),
+                    .little => (@as(u16, a[i + 1]) << 8) | @as(u16, a[i]),
                 };
                 printc(" {d}", .{turn}, a, b, &i, 2, color);
             },
@@ -1024,15 +1024,15 @@ pub fn format(
                 printc(" {s}({d})", .{ @tagName(id.player), id.id }, a, b, &i, 1, color);
                 switch (endian) {
                     .big => {
-                        var hp = @as(u16, a[i]) << 8 | @as(u16, a[i + 1]);
+                        var hp = (@as(u16, a[i]) << 8) | @as(u16, a[i + 1]);
                         printc(" {d}", .{hp}, a, b, &i, 2, color);
-                        hp = @as(u16, a[i]) << 8 | @as(u16, a[i + 1]);
+                        hp = (@as(u16, a[i]) << 8) | @as(u16, a[i + 1]);
                         printc("/{d}", .{hp}, a, b, &i, 2, color);
                     },
                     .little => {
-                        var hp = @as(u16, a[i + 1]) << 8 | @as(u16, a[i]);
+                        var hp = (@as(u16, a[i + 1]) << 8) | @as(u16, a[i]);
                         printc(" {d}", .{hp}, a, b, &i, 2, color);
-                        hp = @as(u16, a[i + 1]) << 8 | @as(u16, a[i]);
+                        hp = (@as(u16, a[i + 1]) << 8) | @as(u16, a[i]);
                         printc("/{d}", .{hp}, a, b, &i, 2, color);
                     },
                 }
@@ -1152,15 +1152,15 @@ pub fn format(
                 printc(" {s}({d})", .{ @tagName(id.player), id.id }, a, b, &i, 1, color);
                 switch (endian) {
                     .big => {
-                        var hp = @as(u16, a[i]) << 8 | @as(u16, a[i + 1]);
+                        var hp = (@as(u16, a[i]) << 8) | @as(u16, a[i + 1]);
                         printc(" {d}", .{hp}, a, b, &i, 2, color);
-                        hp = @as(u16, a[i]) << 8 | @as(u16, a[i + 1]);
+                        hp = (@as(u16, a[i]) << 8) | @as(u16, a[i + 1]);
                         printc("/{d}", .{hp}, a, b, &i, 2, color);
                     },
                     .little => {
-                        var hp = @as(u16, a[i + 1]) << 8 | @as(u16, a[i]);
+                        var hp = (@as(u16, a[i + 1]) << 8) | @as(u16, a[i]);
                         printc(" {d}", .{hp}, a, b, &i, 2, color);
-                        hp = @as(u16, a[i + 1]) << 8 | @as(u16, a[i]);
+                        hp = (@as(u16, a[i + 1]) << 8) | @as(u16, a[i]);
                         printc("/{d}", .{hp}, a, b, &i, 2, color);
                     },
                 }

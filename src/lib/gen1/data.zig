@@ -601,7 +601,8 @@ pub const DVs = struct {
 
     /// The computed HP DV.
     pub fn hp(self: DVs) u4 {
-        return (self.atk & 1) << 3 | (self.def & 1) << 2 | (self.spe & 1) << 1 | (self.spc & 1);
+        return ((self.atk & 1) << 3) | ((self.def & 1) << 2) |
+            ((self.spe & 1) << 1) | (self.spc & 1);
     }
 
     /// Produces a random set of DVs given `rand`.

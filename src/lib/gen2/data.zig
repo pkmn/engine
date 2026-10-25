@@ -235,10 +235,10 @@ pub const DVs = packed struct(u16) {
             0x00 => .Male,
             0xFE => .Female,
             0xFF => .Unknown,
-            else => if ((@as(u8, dvs.atk) << 4 | dvs.spe) < ratio) Gender.Female else Gender.Male,
+            else => if (((@as(u8, dvs.atk) << 4) | dvs.spe) < ratio) Gender.Female else Gender.Male,
         };
-        const p: u6 = @intCast(1 + ((5 * @as(u8, (dvs.atk & 0b1000) | ((dvs.def & 0b1000)) >> 1 |
-            ((dvs.spe & 0b1000)) >> 2 | ((dvs.spc & 0b1000)) >> 3) + (dvs.spc & 0b0011)) >> 1));
+        const p: u6 = @intCast(1 + ((5 * @as(u8, (dvs.atk & 0b1000) | ((dvs.def & 0b1000) >> 1) |
+            ((dvs.spe & 0b1000) >> 2) | ((dvs.spc & 0b1000) >> 3)) + (dvs.spc & 0b0011)) >> 1));
         const t = @as(u8, dvs.def & 0b0011) + (@as(u8, dvs.atk & 0b0011) << 2);
         return .{ .gender = g, .pow = p, .type = Type.hiddenPower(t) };
     }

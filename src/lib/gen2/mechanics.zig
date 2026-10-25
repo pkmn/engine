@@ -3380,7 +3380,7 @@ pub const Rolls = struct {
             // TODO: PS does range(3, 6) here which after subtracting 1 is actually 2-4 not 2-5!
             battle.rng.range(u3, 2, 5)
         else
-            @intCast(battle.rng.next() & 3 + 2));
+            @intCast((battle.rng.next() & 3) + 2));
 
         assert(duration >= 2 and duration <= 5);
         options.chance.duration(player, duration);
@@ -3394,7 +3394,7 @@ pub const Rolls = struct {
         else if (showdown)
             battle.rng.range(u3, 2, 6)
         else
-            @intCast(battle.rng.next() & 3 + 2));
+            @intCast((battle.rng.next() & 3) + 2));
 
         assert(duration >= 2 and duration <= 5);
         options.chance.duration(player, duration);

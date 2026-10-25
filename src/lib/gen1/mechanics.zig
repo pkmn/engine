@@ -1668,13 +1668,13 @@ fn checkEBC(battle: anytype) bool {
             const ghost = pokemon.hp == 0 or
                 (if (active) foe.active.types else pokemon.types).includes(.Ghost);
             foe_all_ghosts = foe_all_ghosts and ghost;
-            foe_all_transform = foe_all_transform and pokemon.hp == 0 or transform: {
+            foe_all_transform = foe_all_transform and (pokemon.hp == 0 or transform: {
                 for (if (active) foe.active.moves else pokemon.moves) |m| {
                     if (m.id == .None) break :transform true;
                     if (m.id != .Transform) break :transform false;
                 }
                 break :transform true;
-            };
+            });
         }
 
         for (side.order, 0..) |id, j| {
