@@ -10,7 +10,11 @@ const ReleaseSmall: std.builtin.OptimizeMode =
     if (@hasDecl(std.builtin.OptimizeMode, "ReleaseSmall")) .small else .ReleaseSmall;
 
 pub fn build(b: *std.Build) !void {
-    const target = b.standardTargetOptions(.{});
+    var target = b.standardTargetOptions(.{});
+    // TODO: workaround for ziglang/zig@373ae07113
+    if (std.mem.indexOfScalar(u8, target.result.cpu.model.llvm_name orelse "", '_') != null) {
+        target = b.resolveTargetQuery(.{ .cpu_model = .baseline });
+    }
     // TODO: workaround for ziglang/zig#36108
     const optimize = @as(?std.builtin.OptimizeMode, b.standardOptimizeOption(.{})) orelse Debug;
 
