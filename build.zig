@@ -16,7 +16,7 @@ pub fn build(b: *std.Build) !void {
         b.option(u64, "wasm-stack-size", "The size of WASM stack") orelse std.wasm.page_size;
     const dynamic = b.option(bool, "dynamic", "Build a dynamic library") orelse false;
     const strip = b.option(bool, "strip", "Strip debugging symbols from binary");
-    const unwind_tables: ?std.builtin.UnwindTables =
+    const unwind_tables: ?std.lang.UnwindTables =
         if ((strip orelse false) and target.result.os.tag != .windows) .none else null;
     const pic = b.option(bool, "pic", "Force position independent code");
     const emit_asm = b.option(bool, "emit-asm", "Output .s (assembly code)") orelse false;
@@ -176,7 +176,7 @@ pub fn build(b: *std.Build) !void {
         const header = b.addInstallFileWithDir(path, .header, "pkmn.h");
         b.getInstallStep().dependOn(&header.step);
 
-        const content = try std.fmt.allocPrint(b.allocator,
+        const content = b.fmt(
             \\prefix=${{pcfiledir}}/../..
             \\includedir=${{prefix}}/include
             \\libdir=${{prefix}}/lib
@@ -255,7 +255,7 @@ fn buildWasm(
     b: *std.Build,
     name: []const u8,
     root_src_file: []const u8,
-    optimize: std.builtin.OptimizeMode,
+    optimize: std.lang.Optimize,
     strip: ?bool,
     pic: ?bool,
     wasm_stack_size: u64,
@@ -347,10 +347,10 @@ fn buildWasm(
 
 const Config = struct {
     target: std.Build.ResolvedTarget,
-    optimize: std.builtin.OptimizeMode,
+    optimize: std.lang.Optimize,
     pic: ?bool,
     strip: ?bool,
-    unwind_tables: ?std.builtin.UnwindTables,
+    unwind_tables: ?std.lang.UnwindTables,
 };
 
 const TestStep = struct {

@@ -34,12 +34,12 @@ fn log(
     js.log(line.ptr, line.len);
 }
 
-pub fn panic(msg: []const u8, st: ?*std.builtin.StackTrace, addr: ?usize) noreturn {
-    _ = st;
-    _ = addr;
-    std.log.err("panic: {s}", .{msg});
-    @trap();
-}
+pub const panic = std.debug.FullPanic(struct {
+    pub fn call(msg: []const u8, _: ?usize) noreturn {
+        std.log.err("panic: {s}", .{msg});
+        @trap();
+    }
+}.call);
 
 pub const pkmn_options = pkmn.Options{
     .advance = false,

@@ -846,7 +846,7 @@ pub const Writer = struct {
         self.pos = npos;
     }
 
-    pub fn writeInt(self: *Writer, comptime T: type, v: T, end: std.builtin.Endian) Error!void {
+    pub fn writeInt(self: *Writer, comptime T: type, v: T, end: std.lang.Endian) Error!void {
         const bytes = @divExact(@typeInfo(T).int.bits, 8);
         const npos = self.pos + bytes;
         if (npos > self.buffer.len) return error.NoSpaceLeft;
@@ -874,7 +874,7 @@ const NullWriter = struct {
         _ = .{ self, bytes };
     }
 
-    pub fn writeInt(self: NullWriter, comptime T: type, v: T, end: std.builtin.Endian) Error!void {
+    pub fn writeInt(self: NullWriter, comptime T: type, v: T, end: std.lang.Endian) Error!void {
         _ = .{ self, T, v, end };
     }
 };
