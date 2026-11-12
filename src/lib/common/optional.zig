@@ -10,11 +10,7 @@ pub fn Optional(comptime T: type) type {
         .bool => enum { false, true },
         else => T,
     }).@"enum";
-    const names = if (@hasField(@TypeOf(info), "fields")) blk: {
-        var ns: [info.fields.len][:0]const u8 = undefined;
-        inline for (info.fields, 0..) |f, i| ns[i] = f.name;
-        break :blk &ns;
-    } else info.field_names;
+    const names = info.field_names;
 
     const TagType = std.math.IntFittingRange(0, names.len);
     var fieldNames: [names.len + 1][]const u8 = undefined;

@@ -1,22 +1,8 @@
 const std = @import("std");
 
-const Debug: std.builtin.OptimizeMode =
-    if (@hasDecl(std.builtin.OptimizeMode, "Debug")) .debug else .Debug;
-const ReleaseSafe: std.builtin.OptimizeMode =
-    if (@hasDecl(std.builtin.OptimizeMode, "ReleaseSafe")) .safe else .ReleaseSafe;
-const ReleaseFast: std.builtin.OptimizeMode =
-    if (@hasDecl(std.builtin.OptimizeMode, "ReleaseFast")) .fast else .ReleaseFast;
-const ReleaseSmall: std.builtin.OptimizeMode =
-    if (@hasDecl(std.builtin.OptimizeMode, "ReleaseSmall")) .small else .ReleaseSmall;
-
 pub fn build(b: *std.Build) !void {
-    var target = b.standardTargetOptions(.{});
-    // TODO: workaround for ziglang/zig@373ae07113
-    if (std.mem.indexOfScalar(u8, target.result.cpu.model.llvm_name orelse "", '_') != null) {
-        target = b.resolveTargetQuery(.{ .cpu_model = .baseline });
-    }
-    // TODO: workaround for ziglang/zig#36108
-    const optimize = @as(?std.builtin.OptimizeMode, b.standardOptimizeOption(.{})) orelse Debug;
+    const target = b.standardTargetOptions(.{});
+    const optimize = b.standardOptimizeOption(.{});
 
     const node_headers = b.option([]const u8, "node-headers", "Path to node-headers");
     const node_import_lib =
@@ -86,8 +72,7 @@ pub fn build(b: *std.Build) !void {
         const translate_c = b.addTranslateC(.{
             .root_source_file = b.path("src/lib/napi.h"),
             .target = target,
-            // TODO: workaround for ziglang/zig#35515
-            .optimize = Debug,
+            .optimize = optimize,
         });
         translate_c.addSystemIncludePath(b.path(headers));
         const addon = b.fmt("{s}.node", .{name});
@@ -237,7 +222,7 @@ pub fn build(b: *std.Build) !void {
     };
 
     var benchmark_config = tools;
-    benchmark_config.general.optimize = ReleaseFast;
+    benchmark_config.general.optimize = .fast;
     benchmark_config.general.strip = true;
     benchmark_config.general.unwind_tables = if (target.result.os.tag != .windows) .none else null;
     const benchmark = try tool(b, "src/test/benchmark.zig", benchmark_config);
@@ -278,7 +263,7 @@ fn buildWasm(
     options: *std.Build.Step.Options,
 ) !void {
     const mode = switch (optimize) {
-        ReleaseFast, ReleaseSafe => ReleaseSmall,
+        .fast, .safe => .small,
         else => optimize,
     };
     // https://webassembly.org/features/
@@ -317,9 +302,8 @@ fn buildWasm(
     });
     exe.discard_local_symbols = strip orelse false;
 
-    if (@hasDecl(std.Build, "FindProgramOptions")) b.dependOnFileContents(path);
-    const root = if (@hasField(std.Build, "root")) b.root.root_dir.handle else b.build_root.handle;
-    var file = try root.openFile(b.graph.io, root_src_file, .{});
+    b.dependOnFileContents(path);
+    var file = try b.root.root_dir.handle.openFile(b.graph.io, root_src_file, .{});
     defer file.close(b.graph.io);
     var reader = file.reader(b.graph.io, &.{});
     const bytes = try reader.interface.allocRemaining(b.allocator, .unlimited);
@@ -333,14 +317,12 @@ fn buildWasm(
     }
     exe.stack_size = wasm_stack_size;
 
-    const opt = if (optimize == Debug)
+    const opt = if (optimize == .debug)
         null
-    else if (@hasDecl(std.Build, "FindProgramOptions")) blk: {
-        if (exists(b, "./node_modules/.bin/wasm-opt") catch false) {
-            break :blk "./node_modules/.bin/wasm-opt";
-        }
-        break :blk b.findProgram(.{ .names = &.{"wasm-opt"} });
-    } else b.findProgram(&.{"wasm-opt"}, &.{"./node_modules/.bin"}) catch null;
+    else if (exists(b, "./node_modules/.bin/wasm-opt") catch false)
+        "./node_modules/.bin/wasm-opt"
+    else
+        b.findProgram(.{ .names = &.{"wasm-opt"} });
     if (opt) |wasm_opt| {
         const out = b.fmt("{s}.wasm", .{name});
         const sh = b.addSystemCommand(&.{
@@ -445,22 +427,17 @@ fn tool(b: *std.Build, path: []const u8, config: ToolConfig) !?*std.Build.Step.R
     config.tool.exes.append(b.allocator, exe) catch @panic("OOM");
 
     const run = b.addRunArtifact(exe);
-    if (@hasDecl(std.Build, "FindProgramOptions")) {
-        run.addPassthruArgs();
-    } else {
-        if (b.args) |args| run.addArgs(args);
-    }
+    run.addPassthruArgs();
 
     return run;
 }
 
 fn exists(b: *std.Build, path: []const u8) !bool {
-    const root = if (@hasField(std.Build, "root")) b.root.root_dir.handle else b.build_root.handle;
-    root.access(b.graph.io, path, .{}) catch |err| switch (err) {
+    b.root.root_dir.handle.access(b.graph.io, path, .{}) catch |err| switch (err) {
         error.FileNotFound => return false,
         else => |e| return e,
     };
-    if (@hasDecl(std.Build, "FindProgramOptions")) b.dependOnFileMetadata(b.path(path));
+    b.dependOnFileMetadata(b.path(path));
     return true;
 }
 

@@ -2,9 +2,6 @@ const builtin = @import("builtin");
 const pkmn = @import("pkmn");
 const std = @import("std");
 
-const Debug: std.builtin.OptimizeMode =
-    if (@hasDecl(std.builtin.OptimizeMode, "Debug")) .debug else .Debug;
-
 pub const pkmn_options = pkmn.Options{ .internal = true };
 
 const Frame = struct {
@@ -120,7 +117,7 @@ pub fn main(init: std.process.Init) !void {
 pub fn fuzz(io: std.Io, allocator: std.mem.Allocator, seed: u64, duration: usize) !void {
     std.debug.assert(gen >= 1 and gen <= 9);
 
-    const save = pkmn.options.log and builtin.mode == Debug;
+    const save = pkmn.options.log and builtin.mode == .debug;
 
     var random = pkmn.PSRNG.init(seed);
 
@@ -279,7 +276,7 @@ fn dump(seed: u64) !void {
     var buf: [4096]u8 = undefined;
     var stdout = std.Io.File.stdout().writer(io, &buf);
 
-    if (try std.Io.File.stdout().isTty(io) or builtin.mode != Debug) {
+    if (try std.Io.File.stdout().isTty(io) or builtin.mode != .debug) {
         try stdout.interface.print("0x{X}\n", .{seed});
     } else {
         try stdout.interface.writeInt(u64, seed, endian);

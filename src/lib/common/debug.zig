@@ -24,19 +24,10 @@ pub fn print(value: anytype) void {
             switch (@typeInfo(@TypeOf(value))) {
                 .@"struct" => |info| {
                     if (info.is_tuple) {
-                        if (@hasField(@TypeOf(info), "fields")) {
-                            inline for (info.fields, 0..) |f, i| {
-                                inspect(fw, @field(value, f.name));
-                                if (i < info.fields.len - 1) {
-                                    fw.interface.writeAll(" ") catch return;
-                                }
-                            }
-                        } else {
-                            inline for (info.field_names, 0..) |name, i| {
-                                inspect(fw, @field(value, name));
-                                if (i < info.field_names.len - 1) {
-                                    fw.interface.writeAll(" ") catch return;
-                                }
+                        inline for (info.field_names, 0..) |name, i| {
+                            inspect(fw, @field(value, name));
+                            if (i < info.field_names.len - 1) {
+                                fw.interface.writeAll(" ") catch return;
                             }
                         }
                     } else {

@@ -140,12 +140,7 @@ pub const Pokemon = struct {
         var pokemon = data.Pokemon{};
         pokemon.species = p.species;
         const species = Species.get(p.species);
-        inline for (if (@hasField(@TypeOf(@typeInfo(@TypeOf(pokemon.stats)).@"struct"), "fields"))
-            @typeInfo(@TypeOf(pokemon.stats)).@"struct".fields
-        else
-            @typeInfo(@TypeOf(pokemon.stats)).@"struct".field_names) |field|
-        {
-            const field_name = if (@hasField(@TypeOf(field), "name")) field.name else field;
+        inline for (@typeInfo(@TypeOf(pokemon.stats)).@"struct".field_names) |field_name| {
             const hp = comptime std.mem.eql(u8, field_name, "hp");
             const spc =
                 comptime std.mem.eql(u8, field_name, "spa") or std.mem.eql(u8, field_name, "spd");
@@ -186,12 +181,7 @@ pub const Pokemon = struct {
 
         var stats: Stats(u16) = .{};
         const dvs = gen1.DVs.random(rand);
-        inline for (if (@hasField(@TypeOf(@typeInfo(@TypeOf(stats)).@"struct"), "fields"))
-            @typeInfo(@TypeOf(stats)).@"struct".fields
-        else
-            @typeInfo(@TypeOf(stats)).@"struct".field_names) |field|
-        {
-            const field_name = if (@hasField(@TypeOf(field), "name")) field.name else field;
+        inline for (@typeInfo(@TypeOf(stats)).@"struct".field_names) |field_name| {
             const hp = std.mem.eql(u8, field_name, "hp");
             const spc = std.mem.eql(u8, field_name, "spa") or std.mem.eql(u8, field_name, "spd");
             @field(stats, field_name) = Stats(u16).calc(

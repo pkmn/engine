@@ -158,12 +158,7 @@ pub const Pokemon = struct {
         var pokemon = data.Pokemon{};
         pokemon.species = p.species;
         const species = Species.get(p.species);
-        inline for (if (@hasField(@TypeOf(@typeInfo(@TypeOf(pokemon.stats)).@"struct"), "fields"))
-            @typeInfo(@TypeOf(pokemon.stats)).@"struct".fields
-        else
-            @typeInfo(@TypeOf(pokemon.stats)).@"struct".field_names) |field|
-        {
-            const field_name = if (@hasField(@TypeOf(field), "name")) field.name else field;
+        inline for (@typeInfo(@TypeOf(pokemon.stats)).@"struct".field_names) |field_name| {
             @field(pokemon.stats, field_name) = Stats(u16).calc(
                 field_name,
                 @field(species.stats, field_name),
@@ -199,12 +194,7 @@ pub const Pokemon = struct {
         const lvl = if (rand.chance(u8, 1, 20)) rand.range(u8, 1, 99 + 1) else 100;
         var stats: Stats(u16) = .{};
         const dvs = DVs.random(rand);
-        inline for (if (@hasField(@TypeOf(@typeInfo(@TypeOf(stats)).@"struct"), "fields"))
-            @typeInfo(@TypeOf(stats)).@"struct".fields
-        else
-            @typeInfo(@TypeOf(stats)).@"struct".field_names) |field|
-        {
-            const field_name = if (@hasField(@TypeOf(field), "name")) field.name else field;
+        inline for (@typeInfo(@TypeOf(stats)).@"struct".field_names) |field_name| {
             @field(stats, field_name) = Stats(u16).calc(
                 field_name,
                 @field(species.stats, field_name),
