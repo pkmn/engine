@@ -177,7 +177,7 @@ to indicate `null`.
 ### `Type` / `Types` / `Effectiveness`
 
 The [Pokémon types](https://pkmn.cc/bulba/Type) are enumerated by `Type`. `Types` represents a tuple
-of 2 types, which takes the form of a packed struct instead of `[2]Type` for symmetry with
+of 2 types, which takes the form of a `bitpack struct` instead of `[2]Type` for symmetry with
 Generation I. `Effectiveness` serves as an enum for tracking a moves effectiveness - like the
 cartridge, effectiveness is stored as `0`, `5`, `10`, and `20` (technically only a 4-bit value is
 required, but Zig only allows a minimum of a byte to be stored at each address of an array).

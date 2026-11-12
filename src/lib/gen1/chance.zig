@@ -227,7 +227,7 @@ test unhazed {
 
 /// Information about the RNG that was observed during a Generation I battle `update` for a
 /// single player.
-pub const Action = packed struct(u64) {
+pub const Action = bitpack struct(u64) {
     /// If not 0, the roll to be returned Rolls.damage.
     damage: u8 = 0,
 
@@ -347,7 +347,7 @@ pub const Durations = extern struct {
 pub const Sleeps = Array(6, u3);
 
 /// Observed turn counts for duration-based effects for a single player.
-pub const Duration = packed struct(u32) {
+pub const Duration = bitpack struct(u32) {
     /// Observed sleep turns per party slot (slot 0 is the active Pokémon).
     sleeps: Sleeps.T = 0,
     /// Observed turns of confusion.

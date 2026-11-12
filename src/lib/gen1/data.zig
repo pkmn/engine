@@ -224,7 +224,7 @@ pub const MoveSlot = extern struct {
 };
 
 /// Details required to detect desyncs based on the move last selected/executed by players.
-pub const MoveDetails = packed struct(if (showdown) u16 else u8) {
+pub const MoveDetails = bitpack struct(if (showdown) u16 else u8) {
     /// The move slot index of the last move selected in the battle menu.
     index: if (showdown) u8 else u4 = 0,
     /// Whether the last move executed was counterable.
@@ -322,7 +322,7 @@ test Status {
 }
 
 /// Bitfield representation of volatile statuses and associated data in Generation I.
-pub const Volatiles = packed struct(u64) {
+pub const Volatiles = bitpack struct(u64) {
     /// Whether the "Bide" volatile status is present.
     Bide: bool = false,
     /// Whether the "Thrashing" volatile status is present.
@@ -445,7 +445,7 @@ test Stats {
 }
 
 /// Representation of a Pokémon's boosts in Generation I.
-pub const Boosts = packed struct(u32) {
+pub const Boosts = bitpack struct(u32) {
     /// A Pokémon's Attack boosts.
     atk: i4 = 0,
     /// A Pokémon's Defense boosts.

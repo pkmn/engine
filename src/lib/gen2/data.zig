@@ -87,7 +87,7 @@ test Battle {
     try expectEqual(512, @sizeOf(Battle(PRNG)));
 }
 
-pub const Field = packed struct(u8) {
+pub const Field = bitpack struct(u8) {
     weather: Weather = .None,
     weather_duration: u4 = 0,
 };
@@ -108,7 +108,7 @@ pub const Side = extern struct {
 
     _: [7]u8 = @splat(0),
 
-    const Conditions = packed struct(u32) {
+    const Conditions = bitpack struct(u32) {
         Spikes: bool = false,
         Safeguard: bool = false,
         LightScreen: bool = false,
@@ -120,7 +120,7 @@ pub const Side = extern struct {
 
         future_sight: FutureSight = .{},
 
-        const FutureSight = packed struct(u16) {
+        const FutureSight = bitpack struct(u16) {
             damage: u12 = 0,
             count: u4 = 0,
         };
@@ -211,7 +211,7 @@ pub const Gender = enum(u2) {
     Unknown,
 };
 
-pub const DVs = packed struct(u16) {
+pub const DVs = bitpack struct(u16) {
     gender: Gender = .Male,
     pow: u6 = 40,
     type: Type = .Dark,
@@ -279,7 +279,7 @@ pub const Status = gen1.Status;
 /// TODO
 pub const TriAttack = enum(u2) { PAR, FRZ, BRN };
 
-pub const Volatiles = packed struct(u128) {
+pub const Volatiles = bitpack struct(u128) {
     Bide: bool = false,
     Thrashing: bool = false,
     BeatUp: bool = false,
@@ -339,12 +339,12 @@ pub const Volatiles = packed struct(u128) {
     protect: u4 = 0,
     attacks: u4 = 0, // bide/thrashing/rollout turns
 
-    const Bind = packed struct(u8) {
+    const Bind = bitpack struct(u8) {
         duration: u4 = 0,
         reason: u4 = 0,
     };
 
-    const Disable = packed struct(u8) {
+    const Disable = bitpack struct(u8) {
         move: u4 = 0,
         duration: u4 = 0,
     };
@@ -382,7 +382,7 @@ test Stats {
     try expectEqual(279, Stats(u16).calc("spe", base.spe, 15, 63001, 100));
 }
 
-pub const Boosts = packed struct(u32) {
+pub const Boosts = bitpack struct(u32) {
     atk: i4 = 0,
     def: i4 = 0,
     spe: i4 = 0,

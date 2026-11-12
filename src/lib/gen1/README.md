@@ -232,7 +232,7 @@ species is necessary for computing critical hit probability.
 
 The [Pokémon types](https://pkmn.cc/bulba/Type) are enumerated by `Type`. `Types` represents a tuple
 of 2 types, but due to limitations in Zig this can't be represented as a `[2]Type` array and thus
-instead takes the form of a packed struct. `Effectiveness` serves as an enum for tracking a moves
+instead takes the form of a `bitpack struct`. `Effectiveness` serves as an enum for tracking a moves
 effectiveness - like the cartridge, effectiveness is stored as `0`, `5`, `10`, and `20`
 (technically only a 2-bit value is required, but as with `Types` Zig only allows a minimum of a byte
 to be stored at each address of an array).

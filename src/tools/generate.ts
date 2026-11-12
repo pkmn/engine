@@ -818,7 +818,7 @@ const GEN: {[gen in GenerationNum]?: GenerateFn} = {
       DATA[0].moves[move.name] = move.pp;
     }
     let Data = `/// Data associated with a Pokémon move.
-    pub const Data = packed struct(u32) {
+    pub const Data = bitpack struct(u32) {
         effect: Effect,
         /// The move's base PP.
         bp: u8,
@@ -1075,7 +1075,7 @@ const GEN: {[gen in GenerationNum]?: GenerateFn} = {
         precedenceFn,
       },
       Types: {
-        keyword: 'packed struct(u8)',
+        keyword: 'bitpack struct(u8)',
         size: 1,
       },
     });
@@ -1340,7 +1340,7 @@ const GEN: {[gen in GenerationNum]?: GenerateFn} = {
       PP.push(`${move.pp}, // ${name}`);
       DATA[1].moves[move.name] = move.pp;
     }
-    // accuracy/target/chance/priority could all be u4, but packed struct needs to be power of 2
+    // accuracy/target/chance/priority could all be u4, but bitpack struct needs to be power of 2
     let Data = `/// Data associated with a Pokémon move.
     pub const Data = extern struct {
         /// The move's effect.
@@ -1361,7 +1361,7 @@ const GEN: {[gen in GenerationNum]?: GenerateFn} = {
         extra: Extra = .{},
 
         /// Miscellaneous extra move related data/flags.
-        const Extra = packed struct(u8) {
+        const Extra = bitpack struct(u8) {
             /// Whether this move can be called via Metronome.
             metronome: bool = true,
             /// Whether this move can be called via Sleep Talk.

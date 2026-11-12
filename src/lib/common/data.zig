@@ -27,7 +27,7 @@ test Player {
 }
 
 /// An identifier for a specific Pokémon in battle.
-pub const ID = packed struct(u8) {
+pub const ID = bitpack struct(u8) {
     /// The one-indexed team slot of the Pokémon
     id: u3 = 0,
     /// The Pokémon's trainer.
@@ -53,7 +53,7 @@ test ID {
 }
 
 /// A choice made by a player during battle.
-pub const Choice = packed struct(u8) {
+pub const Choice = bitpack struct(u8) {
     /// The choice type.
     type: Choice.Type = .Pass,
     /// The choice data:
@@ -81,7 +81,7 @@ test Choice {
 }
 
 /// The result of the battle - all results other than 'None' should be considered terminal.
-pub const Result = packed struct(u8) {
+pub const Result = bitpack struct(u8) {
     /// The type of result from the perspective of Player 1.
     /// `Error` is not possible when in Pokémon Showdown compatibility mode.
     type: Result.Type = .None,

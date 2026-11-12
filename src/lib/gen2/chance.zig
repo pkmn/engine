@@ -108,7 +108,7 @@ pub const Criticals = Array(5, Optional(bool));
 
 /// Information about the RNG that was observed during a Generation II battle `update` for a
 /// single player.
-pub const Action = packed struct(u128) {
+pub const Action = bitpack struct(u128) {
     /// TODO
     damages: Damages.T = 0,
     // TODO

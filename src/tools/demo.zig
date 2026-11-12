@@ -187,7 +187,7 @@ const gen1 = struct {
 };
 
 fn Slice(T: type) type {
-    return packed struct(u64) {
+    return bitpack struct(u64) {
         ptr: u32,
         len: u32,
 

@@ -283,7 +283,7 @@ pub const Move = enum(u8) {
         extra: Extra = .{},
 
         /// Miscellaneous extra move related data/flags.
-        const Extra = packed struct(u8) {
+        const Extra = bitpack struct(u8) {
             /// Whether this move can be called via Metronome.
             metronome: bool = true,
             /// Whether this move can be called via Sleep Talk.
