@@ -20,6 +20,8 @@ jobs:
           registry-url: 'https://registry.npmjs.org'
           scope: '@pkmn'
       - uses: mlugg/setup-zig@v2
+        with:
+          version: master
       - run: npm install --ignore-scripts
       - run: npm run release
         env:

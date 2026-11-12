@@ -2,7 +2,7 @@
     .name = .example,
     .version = "0.0.1",
     .fingerprint = 0x6eec9b9ff9b9cee6,
-    .minimum_zig_version = "0.16.0",
+    .minimum_zig_version = "0.18.0-dev.1005+75d48dfff",
     .paths = .{"."},
     .dependencies = .{
         .pkmn = .{ .path = "../.." },

@@ -2,7 +2,7 @@
     .name = .pkmn,
     .version = "0.1.0-dev",
     .fingerprint = 0x74a002f44f200a47,
-    .minimum_zig_version = "0.16.0",
+    .minimum_zig_version = "0.18.0-dev.1005+75d48dfff",
     .paths = .{
         "build.zig",
         "docs",

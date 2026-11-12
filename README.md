@@ -18,6 +18,10 @@
 > changes which may not work and which are not fully documented. Please **wait for the forthcoming
 > initial v0.1 release** before depending on this project.
 
+> [!IMPORTANT]
+> While this project aims to support the most recent stable Zig release and the Zig master branch,
+> **only the Zig master branch is currently supported** due to breaking changes upstream.
+
 <hr />
 
 A minimal, complete, Pokémon battle simulation engine optimized for performance and
@@ -55,9 +59,10 @@ $ zig build --prefix /usr/local -Doptimize=ReleaseFast
 ```
 
 The Zig website has [installation instructions](https://ziglang.org/learn/getting-started/) which
-walk through how to install Zig on each platform - the engine code should work on Zig v0.16.0 or
+walk through how to install Zig on each platform - ~~the engine code should work on Zig v0.16.0 or
 greater, though tracks Zig's master branch so this may change in the future if breaking language
-changes are introduced.
+changes are introduced~~ the engine code currently only works on the Zig master branch due to
+breaking language changes that have been introduced.
 
 `libpkmn` can be built with `-Dshowdown` to instead produce the Pokémon Showdown compatible
 `libpkmn-showdown` library. Furthermore, protocol message logging can be enabled through `-Dlog`.
