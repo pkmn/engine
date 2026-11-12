@@ -17,7 +17,7 @@ pub fn Array(comptime n: comptime_int, comptime U: type) type {
             const mask: T = (1 << size) - 1;
             const result = (a >> @intCast(shift)) & mask;
             return switch (@typeInfo(U)) {
-                .@"enum" => @enumFromInt(result),
+                .@"enum" => @fromBackingInt(@intCast(result)),
                 .int => @intCast(result),
                 else => unreachable,
             };
@@ -27,7 +27,7 @@ pub fn Array(comptime n: comptime_int, comptime U: type) type {
         pub fn set(a: T, i: usize, val: U) T {
             assert(i < n);
             const v: T = switch (@typeInfo(U)) {
-                .@"enum" => @intFromEnum(val),
+                .@"enum" => @backingInt(val),
                 .int => @intCast(val),
                 else => unreachable,
             };

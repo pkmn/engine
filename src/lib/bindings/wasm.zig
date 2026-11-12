@@ -40,7 +40,11 @@ pub fn gen(comptime num: comptime_int) type {
             assert(request <= @typeInfo(pkmn.Choice.Type).@"enum".field_names.len);
 
             const n = CHOICES_SIZE;
-            return battle.choices(@enumFromInt(player), @enumFromInt(request), @ptrCast(buf[0..n]));
+            return battle.choices(
+                @fromBackingInt(@intCast(player)),
+                @fromBackingInt(@intCast(request)),
+                @ptrCast(buf[0..n]),
+            );
         }
     };
 }

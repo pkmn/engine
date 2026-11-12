@@ -866,44 +866,44 @@ const GEN: {[gen in GenerationNum]?: GenerateFn} = {
 
         /// Whether this effect activates during the "begin" step of move execution.
         pub fn onBegin(effect: Effect) bool {
-            return @intFromEnum(effect) > 0 and @intFromEnum(effect) <= ${begin};
+            return @backingInt(effect) > 0 and @backingInt(effect) <= ${begin};
         }
 
         /// Whether this effect lowers stats.
         pub fn isStatDown(effect: Effect) bool {
-            return @intFromEnum(effect) > ${begin} and @intFromEnum(effect) <= ${sd};
+            return @backingInt(effect) > ${begin} and @backingInt(effect) <= ${sd};
         }
 
         /// Whether this effect activates during the "end" step of move execution.
         pub fn onEnd(effect: Effect) bool {
-            return @intFromEnum(effect) > ${begin} and @intFromEnum(effect) <= ${end};
+            return @backingInt(effect) > ${begin} and @backingInt(effect) <= ${end};
         }
 
         /// Whether this effect is considered to "always happen".
         pub fn alwaysHappens(effect: Effect) bool {
-            return @intFromEnum(effect) > ${end} and @intFromEnum(effect) <= ${ahs};
+            return @backingInt(effect) > ${end} and @backingInt(effect) <= ${ahs};
         }
 
         /// Whether this effect is handled specially by the engine.
         pub fn isSpecial(effect: Effect) bool {
             // NB: isSpecial includes isMulti up to Twineedle
-            return @intFromEnum(effect) > ${end} and @intFromEnum(effect) <= ${multi - 1};
+            return @backingInt(effect) > ${end} and @backingInt(effect) <= ${multi - 1};
         }
 
         /// Whether this effect is a multi-hit effect.
         pub fn isMulti(effect: Effect) bool {
-            return @intFromEnum(effect) > ${special} and @intFromEnum(effect) <= ${multi};
+            return @backingInt(effect) > ${special} and @backingInt(effect) <= ${multi};
         }
 
         /// Whether this effect is has chance of lowering stats.
         pub fn isStatDownChance(effect: Effect) bool {
-            return @intFromEnum(effect) > ${multi} and @intFromEnum(effect) <= ${sdc};
+            return @backingInt(effect) > ${multi} and @backingInt(effect) <= ${sdc};
         }
 
         /// Whether this effect has a secondary chance.
         pub fn isSecondaryChance(effect: Effect) bool {
             // NB: isSecondaryChance includes isStatDownChance as well as Twineedle
-            return (@intFromEnum(effect) > ${multi - 1} and @intFromEnum(effect) <= ${sec});
+            return (@backingInt(effect) > ${multi - 1} and @backingInt(effect) <= ${sec});
         }
     };\n`;
 
@@ -915,8 +915,8 @@ const GEN: {[gen in GenerationNum]?: GenerateFn} = {
         var num = 0;
         var moves: [${moves.length - 2}]Move = undefined;
         for (1..Move.size) |i| {
-            if (i != @intFromEnum(Move.Metronome)) {
-                moves[num] = @enumFromInt(i);
+            if (i != @backingInt(Move.Metronome)) {
+                moves[num] = @fromBackingInt(@intCast(i));
                 num += 1;
             }
         }
@@ -1003,7 +1003,7 @@ const GEN: {[gen in GenerationNum]?: GenerateFn} = {
     /// The Pokémon's critical hit ratio out of 256.
     pub fn chance(id: Species) u8 {
         assert(id != .None);
-        return CHANCES[@intFromEnum(id) - 1];
+        return CHANCES[@backingInt(id) - 1];
     }`;
     template('species', dirs.out, {
       gen: gen.num,
@@ -1114,14 +1114,14 @@ const GEN: {[gen in GenerationNum]?: GenerateFn} = {
         // The Ice vs. Fire matchup is out of order - return a higher
         // number than anything else so that it sorts last correctly
         if (t1 == .Ice and t2 == .Fire) return ${precedence.length};
-        return PRECEDENCE[@intFromEnum(t2)];
+        return PRECEDENCE[@backingInt(t2)];
     }`;
 
     const extraFns = `
 
     /// The internal index of this Type used by Present.
     pub fn present(self: Type) u8 {
-        return INDEXES[@intFromEnum(self)];
+        return INDEXES[@backingInt(self)];
     }
 
     /// The Type corresponding to a random roll of \`num\` for Conversion 2.
@@ -1129,7 +1129,7 @@ const GEN: {[gen in GenerationNum]?: GenerateFn} = {
         assert(num != 6);
         assert(num < 10 or num >= 20);
         assert(num <= 27);
-        return if (num < 10) CONVERSION_2[num] else @enumFromInt(num - 10);
+        return if (num < 10) CONVERSION_2[num] else @fromBackingInt(num - 10);
     }
 
     /// The Type corresponding to a Hidden Power \`index\`.
@@ -1140,8 +1140,8 @@ const GEN: {[gen in GenerationNum]?: GenerateFn} = {
     const sandstormFn = `\n
     /// Whether this typing is immune to damage from Sandstorm.
     pub fn sandstormImmune(self: Types) bool {
-        return @intFromEnum(self.type1) <= @intFromEnum(Type.Steel) or
-            @intFromEnum(self.type2) <= @intFromEnum(Type.Steel);
+        return @backingInt(self.type1) <= @backingInt(Type.Steel) or
+            @backingInt(self.type2) <= @backingInt(Type.Steel);
     }`;
 
     template('types', dirs.out, {
@@ -1401,8 +1401,8 @@ const GEN: {[gen in GenerationNum]?: GenerateFn} = {
         var num = 0;
         var moves: [${moves.length - NO_METRONOME.length}]Move = undefined;
         for (1..Move.size + 1) |i| {
-            if (Move.get(@enumFromInt(i)).extra.metronome) {
-                moves[num] = @enumFromInt(i);
+            if (Move.get(@fromBackingInt(@intCast(i))).extra.metronome) {
+                moves[num] = @fromBackingInt(@intCast(i));
                 num += 1;
             }
         }

@@ -69,13 +69,13 @@ pub fn Battle(comptime RNG: anytype) type {
         /// Returns the `Side` for the given `player`.
         pub fn side(self: anytype, player: Player) PointerType(@TypeOf(self), Side) {
             assert(isPointerTo(self, Self));
-            return &self.sides[@intFromEnum(player)];
+            return &self.sides[@backingInt(player)];
         }
 
         /// Returns the `Side` of the opponent for the given `player`
         pub fn foe(self: anytype, player: Player) PointerType(@TypeOf(self), Side) {
             assert(isPointerTo(self, Self));
-            return &self.sides[@intFromEnum(player.foe())];
+            return &self.sides[@backingInt(player.foe())];
         }
 
         /// Returns an identifier for the active Pokémon of `player`.
@@ -89,7 +89,7 @@ pub fn Battle(comptime RNG: anytype) type {
             player: Player,
         ) PointerType(@TypeOf(self), MoveDetails) {
             assert(isPointerTo(self, Self));
-            return &self.last_moves[@intFromEnum(player)];
+            return &self.last_moves[@backingInt(player)];
         }
 
         /// Returns the result of applying Player 1's choice `c1` and Player 2's choice `c2` to the
@@ -257,13 +257,13 @@ pub const Status = enum(u8) {
     /// Whether or not the status `num` is the same as `status`.
     pub fn is(num: u8, status: Status) bool {
         if (status == .SLP) return Status.duration(num) > 0;
-        return ((num >> @intCast(@intFromEnum(status))) & 1) != 0;
+        return ((num >> @intCast(@backingInt(status))) & 1) != 0;
     }
 
     /// Initializes a non-sleep `status`. Use `slp` or `slf` to initialize a sleep status.
     pub fn init(status: Status) u8 {
         assert(status != .SLP and status != .EXT);
-        return @as(u8, 1) << @intCast(@intFromEnum(status));
+        return @as(u8, 1) << @intCast(@backingInt(status));
     }
 
     /// Initializes a non self-inflicted sleep status with duration `dur`.
@@ -472,7 +472,7 @@ test Boosts {
 pub const Move = moves.Move;
 
 test Move {
-    try expectEqual(2, @intFromEnum(Move.KarateChop));
+    try expectEqual(2, @backingInt(Move.KarateChop));
     const move = Move.get(.Fissure);
     try expectEqual(Move.Effect.OHKO, move.effect);
     try expectEqual(rng.Gen12.percent(30), move.accuracy);
@@ -533,7 +533,7 @@ test Move {
 pub const Species = species.Species;
 
 test Species {
-    try expectEqual(2, @intFromEnum(Species.Ivysaur));
+    try expectEqual(2, @backingInt(Species.Ivysaur));
     try expectEqual(100, Species.get(.Mew).stats.def);
 }
 
@@ -551,10 +551,10 @@ pub const Effectiveness = enum(u8) {
 
     /// Used to determine the effectiness of a neutral damage hit.
     pub const neutral: u16 =
-        @intFromEnum(Effectiveness.Neutral) * @intFromEnum(Effectiveness.Neutral);
+        @backingInt(Effectiveness.Neutral) * @backingInt(Effectiveness.Neutral);
     /// Used to detect whether there is a mismatch in type effectivness (relevant for precedence).
     pub const mismatch: u16 =
-        @intFromEnum(Effectiveness.Resisted) + @intFromEnum(Effectiveness.Super);
+        @backingInt(Effectiveness.Resisted) + @backingInt(Effectiveness.Super);
 
     comptime {
         assert(@sizeOf(Effectiveness) == 1);
@@ -562,8 +562,8 @@ pub const Effectiveness = enum(u8) {
 };
 
 test Types {
-    try expectEqual(14, @intFromEnum(Type.Dragon));
-    try expectEqual(20, @intFromEnum(Effectiveness.Super));
+    try expectEqual(14, @backingInt(Type.Dragon));
+    try expectEqual(20, @backingInt(Effectiveness.Super));
 
     try expect(!Type.Ghost.special());
     try expect(Type.Dragon.special());

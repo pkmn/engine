@@ -22,12 +22,12 @@ pub const Item = enum({{{ Item.type }}}) {
     pub fn boost(item: Item) ?Type {
         assert(item != .None);
         if (item == .PolkadotBow) return .Normal;
-        return if (@intFromEnum(item) <= {{{ Item.boosts }}}) @enumFromInt(@intFromEnum(item) - 1) else null;
+        return if (@backingInt(item) <= {{{ Item.boosts }}}) @fromBackingInt(@backingInt(item) - 1) else null;
     }
 
     /// Whether or not this item is Mail.
     pub fn isMail(item: Item) bool {
         assert(item != .None);
-        return @intFromEnum(item) > {{{ Item.present }}} and @intFromEnum(item) <= {{{ Item.mail }}};
+        return @backingInt(item) > {{{ Item.present }}} and @backingInt(item) <= {{{ Item.mail }}};
     }
 };

@@ -1134,7 +1134,7 @@ test "Rolls.multiHit" {
 test "Rolls.metronome" {
     const actions: Actions = .{ .p2 = .{ .metronome = .Surf } };
     try expectEqualSlices(data.Move, &.{.None}, Rolls.metronome(actions.p1));
-    try expectEqual(@as(data.Move, @enumFromInt(24)), Rolls.metronome(actions.p2)[23]);
+    try expectEqual(@as(data.Move, @fromBackingInt(24)), Rolls.metronome(actions.p2)[23]);
 }
 
 test "Rolls.psywave" {

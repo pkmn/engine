@@ -338,15 +338,15 @@ pub fn Log(comptime WriterT: type) type {
 
             assert(args[1] != .None);
             try self.writer.writeAll(&.{
-                @intFromEnum(ArgType.Move),
-                @as(u8, @bitCast(args[0])),
-                @intFromEnum(args[1]),
-                @as(u8, @bitCast(args[2])),
+                @backingInt(ArgType.Move),
+                @backingInt(args[0]),
+                @backingInt(args[1]),
+                @backingInt(args[2]),
             });
-            try self.writer.writeAll(if (args.len < 4 or @intFromEnum(args[3]) == 0)
-                &.{@intFromEnum(Move.None)}
+            try self.writer.writeAll(if (args.len < 4 or @backingInt(args[3]) == 0)
+                &.{@backingInt(Move.None)}
             else
-                &.{ @intFromEnum(Move.From), @intFromEnum(args[3]) });
+                &.{ @backingInt(Move.From), @backingInt(args[3]) });
         }
 
         // ident: ID, pokemon: <Pokemon>
@@ -358,15 +358,15 @@ pub fn Log(comptime WriterT: type) type {
         fn switchDrag(self: Self, arg: ArgType, args: anytype) Error!void {
             if (!enabled) return;
 
-            try self.writer.writeAll(&.{ @intFromEnum(arg), @as(u8, @bitCast(args[0])) });
+            try self.writer.writeAll(&.{ @backingInt(arg), @backingInt(args[0]) });
             if (@hasField(@TypeOf(args[1].*), "dvs")) {
                 try self.writer.writeAll(&.{
-                    @intFromEnum(args[1].species),
-                    @intFromEnum(args[1].dvs.gender),
+                    @backingInt(args[1].species),
+                    @backingInt(args[1].dvs.gender),
                     args[1].level,
                 });
             } else {
-                try self.writer.writeAll(&.{ @intFromEnum(args[1].species), args[1].level });
+                try self.writer.writeAll(&.{ @backingInt(args[1].species), args[1].level });
             }
             try self.writer.writeInt(u16, args[1].hp, endian);
             try self.writer.writeInt(u16, args[1].stats.hp, endian);
@@ -380,28 +380,28 @@ pub fn Log(comptime WriterT: type) type {
 
             assert(args[1] != .Disable or args.len == 3);
             try self.writer.writeAll(&.{
-                @intFromEnum(ArgType.Cant),
-                @as(u8, @bitCast(args[0])),
-                @intFromEnum(@as(Cant, args[1])),
+                @backingInt(ArgType.Cant),
+                @backingInt(args[0]),
+                @backingInt(@as(Cant, args[1])),
             });
-            if (args.len == 3) try self.writer.writeByte(@intFromEnum(args[2]));
+            if (args.len == 3) try self.writer.writeByte(@backingInt(args[2]));
         }
 
         // ident: ID, done: bool
         pub fn faint(self: Self, args: anytype) Error!void {
             if (!enabled) return;
 
-            try self.writer.writeAll(&.{ @intFromEnum(ArgType.Faint), @as(u8, @bitCast(args[0])) });
-            if (args[1]) try self.writer.writeByte(@intFromEnum(ArgType.None));
+            try self.writer.writeAll(&.{ @backingInt(ArgType.Faint), @backingInt(args[0]) });
+            if (args[1]) try self.writer.writeByte(@backingInt(ArgType.None));
         }
 
         // num: u16
         pub fn turn(self: Self, args: anytype) Error!void {
             if (!enabled) return;
 
-            try self.writer.writeByte(@intFromEnum(ArgType.Turn));
+            try self.writer.writeByte(@backingInt(ArgType.Turn));
             try self.writer.writeInt(u16, args[0], endian);
-            try self.writer.writeByte(@intFromEnum(ArgType.None));
+            try self.writer.writeByte(@backingInt(ArgType.None));
         }
 
         // player: Player
@@ -409,9 +409,9 @@ pub fn Log(comptime WriterT: type) type {
             if (!enabled) return;
 
             try self.writer.writeAll(&.{
-                @intFromEnum(ArgType.Win),
-                @intFromEnum(@as(Player, args[0])),
-                @intFromEnum(ArgType.None),
+                @backingInt(ArgType.Win),
+                @backingInt(@as(Player, args[0])),
+                @backingInt(ArgType.None),
             });
         }
 
@@ -419,7 +419,7 @@ pub fn Log(comptime WriterT: type) type {
         pub fn tie(self: Self, _: anytype) Error!void {
             if (!enabled) return;
 
-            try self.writer.writeAll(&.{ @intFromEnum(ArgType.Tie), @intFromEnum(ArgType.None) });
+            try self.writer.writeAll(&.{ @backingInt(ArgType.Tie), @backingInt(ArgType.None) });
         }
 
         // ident: ID, pokemon: <Pokemon>, reason: Damage
@@ -429,13 +429,13 @@ pub fn Log(comptime WriterT: type) type {
 
             assert(args[2] != .RecoilOf or args.len == 4);
             try self.writer.writeAll(&.{
-                @intFromEnum(ArgType.Damage),
-                @as(u8, @bitCast(args[0])),
+                @backingInt(ArgType.Damage),
+                @backingInt(args[0]),
             });
             try self.writer.writeInt(u16, args[1].hp, endian);
             try self.writer.writeInt(u16, args[1].stats.hp, endian);
-            try self.writer.writeAll(&.{ args[1].status, @intFromEnum(@as(Damage, args[2])) });
-            if (args.len == 4) try self.writer.writeByte(@as(u8, @bitCast(args[3])));
+            try self.writer.writeAll(&.{ args[1].status, @backingInt(@as(Damage, args[2])) });
+            if (args.len == 4) try self.writer.writeByte(@backingInt(args[3]));
         }
 
         // ident: ID, pokemon: <Pokemon>, reason: Heal
@@ -444,11 +444,11 @@ pub fn Log(comptime WriterT: type) type {
             if (!enabled) return;
 
             assert(args[2] != .Drain or args.len == 4);
-            try self.writer.writeAll(&.{ @intFromEnum(ArgType.Heal), @as(u8, @bitCast(args[0])) });
+            try self.writer.writeAll(&.{ @backingInt(ArgType.Heal), @backingInt(args[0]) });
             try self.writer.writeInt(u16, args[1].hp, endian);
             try self.writer.writeInt(u16, args[1].stats.hp, endian);
-            try self.writer.writeAll(&.{ args[1].status, @intFromEnum(@as(Heal, args[2])) });
-            if (args.len == 4) try self.writer.writeByte(@as(u8, @bitCast(args[3])));
+            try self.writer.writeAll(&.{ args[1].status, @backingInt(@as(Heal, args[2])) });
+            if (args.len == 4) try self.writer.writeByte(@backingInt(args[3]));
         }
 
         // ident: ID, value: u8, reason: Status
@@ -458,12 +458,12 @@ pub fn Log(comptime WriterT: type) type {
 
             assert(args[2] != .From or args.len == 4);
             try self.writer.writeAll(&.{
-                @intFromEnum(ArgType.Status),
-                @as(u8, @bitCast(args[0])),
+                @backingInt(ArgType.Status),
+                @backingInt(args[0]),
                 args[1],
-                @intFromEnum(@as(Status, args[2])),
+                @backingInt(@as(Status, args[2])),
             });
-            if (args.len == 4) try self.writer.writeByte(@intFromEnum(args[3]));
+            if (args.len == 4) try self.writer.writeByte(@backingInt(args[3]));
         }
 
         // ident: ID, value: u8, reason: CureStatus
@@ -471,10 +471,10 @@ pub fn Log(comptime WriterT: type) type {
             if (!enabled) return;
 
             try self.writer.writeAll(&.{
-                @intFromEnum(ArgType.CureStatus),
-                @as(u8, @bitCast(args[0])),
+                @backingInt(ArgType.CureStatus),
+                @backingInt(args[0]),
                 args[1],
-                @intFromEnum(@as(CureStatus, args[2])),
+                @backingInt(@as(CureStatus, args[2])),
             });
         }
 
@@ -484,9 +484,9 @@ pub fn Log(comptime WriterT: type) type {
 
             assert(args[2] != 0 and (args[1] != .Rage or args[2] > 0));
             try self.writer.writeAll(&.{
-                @intFromEnum(ArgType.Boost),
-                @as(u8, @bitCast(args[0])),
-                @intFromEnum(@as(Boost, args[1])),
+                @backingInt(ArgType.Boost),
+                @backingInt(args[0]),
+                @backingInt(@as(Boost, args[1])),
                 @as(u8, @intCast(@as(i8, args[2]) + 6)),
             });
         }
@@ -495,7 +495,7 @@ pub fn Log(comptime WriterT: type) type {
         pub fn clearallboost(self: Self, _: anytype) Error!void {
             if (!enabled) return;
 
-            try self.writer.writeAll(&.{@intFromEnum(ArgType.ClearAllBoost)});
+            try self.writer.writeAll(&.{@backingInt(ArgType.ClearAllBoost)});
         }
 
         // ident: ID, reason: Fail
@@ -503,9 +503,9 @@ pub fn Log(comptime WriterT: type) type {
             if (!enabled) return;
 
             try self.writer.writeAll(&.{
-                @intFromEnum(ArgType.Fail),
-                @as(u8, @bitCast(args[0])),
-                @intFromEnum(@as(Fail, args[1])),
+                @backingInt(ArgType.Fail),
+                @backingInt(args[0]),
+                @backingInt(@as(Fail, args[1])),
             });
         }
 
@@ -513,7 +513,7 @@ pub fn Log(comptime WriterT: type) type {
         pub fn miss(self: Self, args: anytype) Error!void {
             if (!enabled) return;
 
-            try self.writer.writeAll(&.{ @intFromEnum(ArgType.Miss), @as(u8, @bitCast(args[0])) });
+            try self.writer.writeAll(&.{ @backingInt(ArgType.Miss), @backingInt(args[0]) });
         }
 
         // ident: ID, num: u8
@@ -521,8 +521,8 @@ pub fn Log(comptime WriterT: type) type {
             if (!enabled) return;
 
             try self.writer.writeAll(&.{
-                @intFromEnum(ArgType.HitCount),
-                @as(u8, @bitCast(args[0])),
+                @backingInt(ArgType.HitCount),
+                @backingInt(args[0]),
                 args[1],
             });
         }
@@ -532,9 +532,9 @@ pub fn Log(comptime WriterT: type) type {
             if (!enabled) return;
 
             try self.writer.writeAll(&.{
-                @intFromEnum(ArgType.Prepare),
-                @as(u8, @bitCast(args[0])),
-                @intFromEnum(args[1]),
+                @backingInt(ArgType.Prepare),
+                @backingInt(args[0]),
+                @backingInt(args[1]),
             });
         }
 
@@ -543,8 +543,8 @@ pub fn Log(comptime WriterT: type) type {
             if (!enabled) return;
 
             try self.writer.writeAll(&.{
-                @intFromEnum(ArgType.MustRecharge),
-                @as(u8, @bitCast(args[0])),
+                @backingInt(ArgType.MustRecharge),
+                @backingInt(args[0]),
             });
         }
 
@@ -558,20 +558,20 @@ pub fn Log(comptime WriterT: type) type {
             assert(args.len <= 4);
             const reason: Activate = args[1];
             try self.writer.writeAll(&.{
-                @intFromEnum(ArgType.Activate),
-                @as(u8, @bitCast(args[0])),
-                @intFromEnum(reason),
+                @backingInt(ArgType.Activate),
+                @backingInt(args[0]),
+                @backingInt(reason),
             });
             if (args.len == 3) {
                 if (reason == .SubstituteBlock) {
-                    try self.writer.writeByte(@intFromEnum(args[2]));
+                    try self.writer.writeByte(@backingInt(args[2]));
                 } else {
                     assert(reason == .Magnitude);
                     try self.writer.writeByte(args[2]);
                 }
             } else if (args.len == 4) {
                 assert(reason == .Spite);
-                try self.writer.writeAll(&.{ @intFromEnum(args[2]), args[3] });
+                try self.writer.writeAll(&.{ @backingInt(args[2]), args[3] });
             }
         }
 
@@ -579,7 +579,7 @@ pub fn Log(comptime WriterT: type) type {
         pub fn fieldactivate(self: Self, _: anytype) Error!void {
             if (!enabled) return;
 
-            try self.writer.writeAll(&.{@intFromEnum(ArgType.FieldActivate)});
+            try self.writer.writeAll(&.{@backingInt(ArgType.FieldActivate)});
         }
 
         // ident: ID, reason: Start
@@ -591,19 +591,19 @@ pub fn Log(comptime WriterT: type) type {
             assert(args.len <= 4);
             const reason: Start = args[1];
             try self.writer.writeAll(&.{
-                @intFromEnum(ArgType.Start),
-                @as(u8, @bitCast(args[0])),
-                @intFromEnum(reason),
+                @backingInt(ArgType.Start),
+                @backingInt(args[0]),
+                @backingInt(reason),
             });
             if (args.len == 3) {
                 assert(reason == .Disable or reason == .Mimic or reason == .Encore);
-                try self.writer.writeByte(@intFromEnum(args[2]));
+                try self.writer.writeByte(@backingInt(args[2]));
             } else if (args.len == 4) {
                 assert(reason == .TypeChange);
                 // FIXME: u16 types in Generation II
                 try self.writer.writeAll(&.{
-                    @as(u8, @bitCast(args[2])),
-                    @as(u8, @bitCast(args[3])),
+                    @backingInt(args[2]),
+                    @backingInt(args[3]),
                 });
             }
         }
@@ -613,9 +613,9 @@ pub fn Log(comptime WriterT: type) type {
             if (!enabled) return;
 
             try self.writer.writeAll(&.{
-                @intFromEnum(ArgType.End),
-                @as(u8, @bitCast(args[0])),
-                @intFromEnum(@as(End, args[1])),
+                @backingInt(ArgType.End),
+                @backingInt(args[0]),
+                @backingInt(@as(End, args[1])),
             });
         }
 
@@ -623,14 +623,14 @@ pub fn Log(comptime WriterT: type) type {
         pub fn ohko(self: Self, _: anytype) Error!void {
             if (!enabled) return;
 
-            try self.writer.writeAll(&.{@intFromEnum(ArgType.OHKO)});
+            try self.writer.writeAll(&.{@backingInt(ArgType.OHKO)});
         }
 
         // ident: ID
         pub fn crit(self: Self, args: anytype) Error!void {
             if (!enabled) return;
 
-            try self.writer.writeAll(&.{ @intFromEnum(ArgType.Crit), @as(u8, @bitCast(args[0])) });
+            try self.writer.writeAll(&.{ @backingInt(ArgType.Crit), @backingInt(args[0]) });
         }
 
         // ident: ID
@@ -638,8 +638,8 @@ pub fn Log(comptime WriterT: type) type {
             if (!enabled) return;
 
             try self.writer.writeAll(&.{
-                @intFromEnum(ArgType.SuperEffective),
-                @as(u8, @bitCast(args[0])),
+                @backingInt(ArgType.SuperEffective),
+                @backingInt(args[0]),
             });
         }
 
@@ -648,8 +648,8 @@ pub fn Log(comptime WriterT: type) type {
             if (!enabled) return;
 
             try self.writer.writeAll(&.{
-                @intFromEnum(ArgType.Resisted),
-                @as(u8, @bitCast(args[0])),
+                @backingInt(ArgType.Resisted),
+                @backingInt(args[0]),
             });
         }
 
@@ -658,9 +658,9 @@ pub fn Log(comptime WriterT: type) type {
             if (!enabled) return;
 
             try self.writer.writeAll(&.{
-                @intFromEnum(ArgType.Immune),
-                @as(u8, @bitCast(args[0])),
-                @intFromEnum(@as(Immune, args[1])),
+                @backingInt(ArgType.Immune),
+                @backingInt(args[0]),
+                @backingInt(@as(Immune, args[1])),
             });
         }
 
@@ -669,9 +669,9 @@ pub fn Log(comptime WriterT: type) type {
             if (!enabled) return;
 
             try self.writer.writeAll(&.{
-                @intFromEnum(ArgType.Transform),
-                @as(u8, @bitCast(args[0])),
-                @as(u8, @bitCast(args[1])),
+                @backingInt(ArgType.Transform),
+                @backingInt(args[0]),
+                @backingInt(args[1]),
             });
         }
 
@@ -685,10 +685,10 @@ pub fn Log(comptime WriterT: type) type {
             if (!enabled) return;
 
             try self.writer.writeAll(&.{
-                @intFromEnum(ArgType.Item),
-                @as(u8, @bitCast(args[0])),
-                @intFromEnum(args[1]),
-                @as(u8, @bitCast(args[2])),
+                @backingInt(ArgType.Item),
+                @backingInt(args[0]),
+                @backingInt(args[1]),
+                @backingInt(args[2]),
             });
         }
 
@@ -697,10 +697,10 @@ pub fn Log(comptime WriterT: type) type {
             if (!enabled) return;
 
             try self.writer.writeAll(&.{
-                @intFromEnum(ArgType.EndItem),
-                @as(u8, @bitCast(args[0])),
-                @intFromEnum(args[1]),
-                @intFromEnum(@as(EndItem, args[2])),
+                @backingInt(ArgType.EndItem),
+                @backingInt(args[0]),
+                @backingInt(args[1]),
+                @backingInt(@as(EndItem, args[2])),
             });
         }
 
@@ -709,8 +709,8 @@ pub fn Log(comptime WriterT: type) type {
             if (!enabled) return;
 
             try self.writer.writeAll(&.{
-                @intFromEnum(ArgType.CureTeam),
-                @as(u8, @bitCast(args[0])),
+                @backingInt(ArgType.CureTeam),
+                @backingInt(args[0]),
             });
         }
 
@@ -718,11 +718,11 @@ pub fn Log(comptime WriterT: type) type {
         pub fn sethp(self: Self, args: anytype) Error!void {
             if (!enabled) return;
 
-            try self.writer.writeAll(&.{ @intFromEnum(ArgType.SetHP), @as(u8, @bitCast(args[0])) });
+            try self.writer.writeAll(&.{ @backingInt(ArgType.SetHP), @backingInt(args[0]) });
             try self.writer.writeInt(u16, args[1].hp, endian);
             try self.writer.writeInt(u16, args[1].stats.hp, endian);
             try self.writer.writeAll(&.{args[1].status});
-            try self.writer.writeByte(@intFromEnum(@as(SetHP, args[2])));
+            try self.writer.writeByte(@backingInt(@as(SetHP, args[2])));
         }
 
         // ident: ID, num: i8
@@ -730,8 +730,8 @@ pub fn Log(comptime WriterT: type) type {
             if (!enabled) return;
 
             try self.writer.writeAll(&.{
-                @intFromEnum(ArgType.SetBoost),
-                @as(u8, @bitCast(args[0])),
+                @backingInt(ArgType.SetBoost),
+                @backingInt(args[0]),
                 @as(u8, @intCast(args[1] + 6)),
             });
         }
@@ -741,9 +741,9 @@ pub fn Log(comptime WriterT: type) type {
             if (!enabled) return;
 
             try self.writer.writeAll(&.{
-                @intFromEnum(ArgType.CopyBoost),
-                @as(u8, @bitCast(args[0])),
-                @as(u8, @bitCast(args[1])),
+                @backingInt(ArgType.CopyBoost),
+                @backingInt(args[0]),
+                @backingInt(args[1]),
             });
         }
 
@@ -752,9 +752,9 @@ pub fn Log(comptime WriterT: type) type {
             if (!enabled) return;
 
             try self.writer.writeAll(&.{
-                @intFromEnum(ArgType.SideStart),
-                @intFromEnum(@as(Player, args[0])),
-                @intFromEnum(@as(Side, args[1])),
+                @backingInt(ArgType.SideStart),
+                @backingInt(@as(Player, args[0])),
+                @backingInt(@as(Side, args[1])),
             });
         }
 
@@ -765,11 +765,11 @@ pub fn Log(comptime WriterT: type) type {
 
             assert(args[1] != .Spikes or args.len == 3);
             try self.writer.writeAll(&.{
-                @intFromEnum(ArgType.SideEnd),
-                @intFromEnum(@as(Player, args[0])),
-                @intFromEnum(@as(Side, args[1])),
+                @backingInt(ArgType.SideEnd),
+                @backingInt(@as(Player, args[0])),
+                @backingInt(@as(Side, args[1])),
             });
-            if (args.len == 3) try self.writer.writeByte(@as(u8, @bitCast(args[2])));
+            if (args.len == 3) try self.writer.writeByte(@backingInt(args[2]));
         }
 
         // ident: ID, move: <Move>
@@ -787,9 +787,9 @@ pub fn Log(comptime WriterT: type) type {
             if (!enabled) return;
 
             try self.writer.writeAll(&.{
-                @intFromEnum(arg),
-                @as(u8, @bitCast(args[0])),
-                @intFromEnum(args[1]),
+                @backingInt(arg),
+                @backingInt(args[0]),
+                @backingInt(args[1]),
             });
         }
 
@@ -799,9 +799,9 @@ pub fn Log(comptime WriterT: type) type {
 
             assert(!(args[0] == .None and args[1] == .Upkeep));
             try self.writer.writeAll(&.{
-                @intFromEnum(ArgType.Weather),
-                @intFromEnum(args[0]),
-                @intFromEnum(@as(Weather, args[1])),
+                @backingInt(ArgType.Weather),
+                @backingInt(args[0]),
+                @backingInt(@as(Weather, args[1])),
             });
         }
 
@@ -809,14 +809,14 @@ pub fn Log(comptime WriterT: type) type {
         pub fn laststill(self: Self, _: anytype) Error!void {
             if (!enabled) return;
 
-            try self.writer.writeAll(&.{@intFromEnum(ArgType.LastStill)});
+            try self.writer.writeAll(&.{@backingInt(ArgType.LastStill)});
         }
 
         // -
         pub fn lastmiss(self: Self, _: anytype) Error!void {
             if (!enabled) return;
 
-            try self.writer.writeAll(&.{@intFromEnum(ArgType.LastMiss)});
+            try self.writer.writeAll(&.{@backingInt(ArgType.LastMiss)});
         }
     };
 }
@@ -891,7 +891,7 @@ pub fn format(
 
     var i: usize = 0;
     while (i < a.len) {
-        const arg: ArgType = @enumFromInt(a[i]);
+        const arg: ArgType = @fromBackingInt(a[i]);
         const name = switch (arg) {
             .None => if (color) "\x1b[2m-\x1b[0m" else "-",
             .LastStill => "|[still]",
@@ -954,7 +954,7 @@ pub fn format(
                 printc(" {s}", .{formatter(gen, .Move, a[i])}, a, b, &i, 1, color);
                 const target: ID = .from(@intCast(a[i]));
                 printc(" {s}({d})", .{ @tagName(target.player), target.id }, a, b, &i, 1, color);
-                const reason: Move = @enumFromInt(a[i]);
+                const reason: Move = @fromBackingInt(a[i]);
                 printc(" {s}", .{@tagName(reason)}, a, b, &i, 1, color);
                 if (reason == .From) {
                     printc(" {s}", .{formatter(gen, .Move, a[i])}, a, b, &i, 1, color);
@@ -992,7 +992,7 @@ pub fn format(
             .Cant => {
                 const id: ID = .from(@intCast(a[i]));
                 printc(" {s}({d})", .{ @tagName(id.player), id.id }, a, b, &i, 1, color);
-                const reason: Cant = @enumFromInt(a[i]);
+                const reason: Cant = @fromBackingInt(a[i]);
                 printc(" {s}", .{@tagName(reason)}, a, b, &i, 1, color);
                 if (reason == .Disable) {
                     printc(" {s}", .{formatter(gen, .Move, a[i])}, a, b, &i, 1, color);
@@ -1017,7 +1017,8 @@ pub fn format(
                 printc(" {d}", .{turn}, a, b, &i, 2, color);
             },
             .Win => {
-                printc(" {s}", .{@tagName(@as(Player, @enumFromInt(a[i])))}, a, b, &i, 1, color);
+                const winner: Player = @fromBackingInt(@intCast(a[i]));
+                printc(" {s}", .{@tagName(winner)}, a, b, &i, 1, color);
             },
             .Damage, .Heal => {
                 var id: ID = .from(@intCast(a[i]));
@@ -1038,14 +1039,14 @@ pub fn format(
                 }
                 printc(" {s}", .{formatter(gen, .Status, a[i])}, a, b, &i, 1, color);
                 if (arg == .Damage) {
-                    const reason: Damage = @enumFromInt(a[i]);
+                    const reason: Damage = @fromBackingInt(a[i]);
                     printc(" {s}", .{@tagName(reason)}, a, b, &i, 1, color);
                     if (reason == .RecoilOf) {
                         id = .from(@intCast(a[i]));
                         printc(" {s}({d})", .{ @tagName(id.player), id.id }, a, b, &i, 1, color);
                     }
                 } else {
-                    const reason: Heal = @enumFromInt(a[i]);
+                    const reason: Heal = @fromBackingInt(a[i]);
                     printc(" {s}", .{@tagName(reason)}, a, b, &i, 1, color);
                     if (reason == .Drain) {
                         id = .from(@intCast(a[i]));
@@ -1057,7 +1058,7 @@ pub fn format(
                 const id: ID = .from(@intCast(a[i]));
                 printc(" {s}({d})", .{ @tagName(id.player), id.id }, a, b, &i, 1, color);
                 printc(" {s}", .{formatter(gen, .Status, a[i])}, a, b, &i, 1, color);
-                const reason: Status = @enumFromInt(a[i]);
+                const reason: Status = @fromBackingInt(a[i]);
                 printc(" {s}", .{@tagName(reason)}, a, b, &i, 1, color);
                 if (reason == .From) {
                     printc(" {s}", .{formatter(gen, .Move, a[i])}, a, b, &i, 1, color);
@@ -1067,19 +1068,19 @@ pub fn format(
                 const id: ID = .from(@intCast(a[i]));
                 printc(" {s}({d})", .{ @tagName(id.player), id.id }, a, b, &i, 1, color);
                 printc(" {s}", .{formatter(gen, .Status, a[i])}, a, b, &i, 1, color);
-                const reason: CureStatus = @enumFromInt(a[i]);
+                const reason: CureStatus = @fromBackingInt(a[i]);
                 printc(" {s}", .{@tagName(reason)}, a, b, &i, 1, color);
             },
             .Boost => {
                 const id: ID = .from(@intCast(a[i]));
                 printc(" {s}({d})", .{ @tagName(id.player), id.id }, a, b, &i, 1, color);
-                printc(" {s}", .{@tagName(@as(Boost, @enumFromInt(a[i])))}, a, b, &i, 1, color);
+                printc(" {s}", .{@tagName(@as(Boost, @fromBackingInt(a[i])))}, a, b, &i, 1, color);
                 printc(" {d}", .{a[i]}, a, b, &i, 1, color);
             },
             .Fail => {
                 const id: ID = .from(@intCast(a[i]));
                 printc(" {s}({d})", .{ @tagName(id.player), id.id }, a, b, &i, 1, color);
-                printc(" {s}", .{@tagName(@as(Fail, @enumFromInt(a[i])))}, a, b, &i, 1, color);
+                printc(" {s}", .{@tagName(@as(Fail, @fromBackingInt(a[i])))}, a, b, &i, 1, color);
             },
             .HitCount, .SetBoost => {
                 const id: ID = .from(@intCast(a[i]));
@@ -1094,7 +1095,7 @@ pub fn format(
             .Activate => {
                 const id: ID = .from(@intCast(a[i]));
                 printc(" {s}({d})", .{ @tagName(id.player), id.id }, a, b, &i, 1, color);
-                const reason: Activate = @enumFromInt(a[i]);
+                const reason: Activate = @fromBackingInt(a[i]);
                 printc(" {s}", .{@tagName(reason)}, a, b, &i, 1, color);
                 if (reason == .SubstituteBlock) {
                     printc(" {s}", .{formatter(gen, .Move, a[i])}, a, b, &i, 1, color);
@@ -1105,29 +1106,29 @@ pub fn format(
             .Start => {
                 const id: ID = .from(@intCast(a[i]));
                 printc(" {s}({d})", .{ @tagName(id.player), id.id }, a, b, &i, 1, color);
-                const reason = a[i];
-                printc(" {s}", .{@tagName(@as(Start, @enumFromInt(reason)))}, a, b, &i, 1, color);
-                if (@as(Start, @enumFromInt(reason)) == .TypeChange) {
+                const reason: Start = @fromBackingInt(a[i]);
+                printc(" {s}", .{@tagName(reason)}, a, b, &i, 1, color);
+                if (reason == .TypeChange) {
                     // FIXME
-                    const types = @as(gen1.Types, @bitCast(a[i]));
+                    const types: gen1.Types = @fromBackingInt(a[i]);
                     const args = .{
-                        formatter(gen, .Type, @intFromEnum(types.type1)),
-                        formatter(gen, .Type, @intFromEnum(types.type2)),
+                        formatter(gen, .Type, @backingInt(types.type1)),
+                        formatter(gen, .Type, @backingInt(types.type2)),
                     };
                     printc(" {s}/{s}", args, a, b, &i, 1, color);
-                } else if (reason >= @intFromEnum(Start.Disable)) {
+                } else if (@backingInt(reason) >= @backingInt(Start.Disable)) {
                     printc(" {s}", .{formatter(gen, .Move, a[i])}, a, b, &i, 1, color);
                 }
             },
             .End => {
                 const id: ID = .from(@intCast(a[i]));
                 printc(" {s}({d})", .{ @tagName(id.player), id.id }, a, b, &i, 1, color);
-                printc(" {s}", .{@tagName(@as(End, @enumFromInt(a[i])))}, a, b, &i, 1, color);
+                printc(" {s}", .{@tagName(@as(End, @fromBackingInt(a[i])))}, a, b, &i, 1, color);
             },
             .Immune => {
                 const id: ID = .from(@intCast(a[i]));
                 printc(" {s}({d})", .{ @tagName(id.player), id.id }, a, b, &i, 1, color);
-                printc(" {s}", .{@tagName(@as(Immune, @enumFromInt(a[i])))}, a, b, &i, 1, color);
+                printc(" {s}", .{@tagName(@as(Immune, @fromBackingInt(a[i])))}, a, b, &i, 1, color);
             },
             .Transform, .CopyBoost => {
                 const source: ID = .from(@intCast(a[i]));
@@ -1143,7 +1144,7 @@ pub fn format(
                     id = .from(@intCast(a[i]));
                     printc(" {s}({d})", .{ @tagName(id.player), id.id }, a, b, &i, 1, color);
                 } else {
-                    const reason: EndItem = @enumFromInt(a[i]);
+                    const reason: EndItem = @fromBackingInt(a[i]);
                     printc(" {s}", .{@tagName(reason)}, a, b, &i, 1, color);
                 }
             },
@@ -1165,17 +1166,17 @@ pub fn format(
                     },
                 }
                 printc(" {s}", .{formatter(gen, .Status, a[i])}, a, b, &i, 1, color);
-                printc(" {s}", .{@tagName(@as(SetHP, @enumFromInt(a[i])))}, a, b, &i, 1, color);
+                printc(" {s}", .{@tagName(@as(SetHP, @fromBackingInt(a[i])))}, a, b, &i, 1, color);
             },
             .SideStart => {
                 const id: ID = .from(@intCast(a[i]));
                 printc(" {s}({d})", .{ @tagName(id.player), id.id }, a, b, &i, 1, color);
-                printc(" {s}", .{@tagName(@as(Side, @enumFromInt(a[i])))}, a, b, &i, 1, color);
+                printc(" {s}", .{@tagName(@as(Side, @fromBackingInt(a[i])))}, a, b, &i, 1, color);
             },
             .SideEnd => {
                 var id: ID = .from(@intCast(a[i]));
                 printc(" {s}({d})", .{ @tagName(id.player), id.id }, a, b, &i, 1, color);
-                const reason: Side = @enumFromInt(a[i]);
+                const reason: Side = @fromBackingInt(a[i]);
                 printc(" {s}", .{@tagName(reason)}, a, b, &i, 1, color);
                 if (reason == .Spikes) {
                     printc(" {s}", .{formatter(gen, .Move, a[i])}, a, b, &i, 1, color);
@@ -1185,7 +1186,8 @@ pub fn format(
             },
             .Weather => {
                 printc(" {s}", .{formatter(gen, .Weather, a[i])}, a, b, &i, 1, color);
-                printc(" {s}", .{@tagName(@as(Weather, @enumFromInt(a[i])))}, a, b, &i, 1, color);
+                const reason: Weather = @fromBackingInt(a[i]);
+                printc(" {s}", .{@tagName(reason)}, a, b, &i, 1, color);
             },
             else => unreachable,
         }
@@ -1279,7 +1281,7 @@ fn expectEqualBytes(expected: []const u8, actual: []const u8, offset: usize) !vo
 }
 
 fn N(e: anytype) u8 {
-    return @intFromEnum(e);
+    return @backingInt(e);
 }
 
 const p1 = Player.P1;
@@ -1310,16 +1312,16 @@ fn expectLog2(expected: []const u8, actual: []const u8) !void {
 
 fn formatter(comptime gen: anytype, kind: Kind, byte: u8) []const u8 {
     return switch (kind) {
-        .Move => @tagName(@as(gen.Move, @enumFromInt(byte))),
-        .Species => @tagName(@as(gen.Species, @enumFromInt(byte))),
-        .Type => @tagName(@as(gen.Type, @enumFromInt(byte))),
+        .Move => @tagName(@as(gen.Move, @fromBackingInt(byte))),
+        .Species => @tagName(@as(gen.Species, @fromBackingInt(byte))),
+        .Type => @tagName(@as(gen.Type, @fromBackingInt(@intCast(byte)))),
         .Status => gen.Status.name(byte),
         .Item => if (@hasDecl(gen, "Item"))
-            @tagName(@as(gen.Item, @enumFromInt(byte)))
+            @tagName(@as(gen.Item, @fromBackingInt(byte)))
         else
             unreachable,
         .Weather => if (@hasDecl(gen, "Weather"))
-            @tagName(@as(gen.Weather, @enumFromInt(byte)))
+            @tagName(@as(gen.Weather, @fromBackingInt(@intCast(byte))))
         else
             unreachable,
     };

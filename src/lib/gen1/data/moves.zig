@@ -1598,44 +1598,44 @@ pub const Move = enum(u8) {
 
         /// Whether this effect activates during the "begin" step of move execution.
         pub fn onBegin(effect: Effect) bool {
-            return @intFromEnum(effect) > 0 and @intFromEnum(effect) <= 16;
+            return @backingInt(effect) > 0 and @backingInt(effect) <= 16;
         }
 
         /// Whether this effect lowers stats.
         pub fn isStatDown(effect: Effect) bool {
-            return @intFromEnum(effect) > 16 and @intFromEnum(effect) <= 21;
+            return @backingInt(effect) > 16 and @backingInt(effect) <= 21;
         }
 
         /// Whether this effect activates during the "end" step of move execution.
         pub fn onEnd(effect: Effect) bool {
-            return @intFromEnum(effect) > 16 and @intFromEnum(effect) <= 31;
+            return @backingInt(effect) > 16 and @backingInt(effect) <= 31;
         }
 
         /// Whether this effect is considered to "always happen".
         pub fn alwaysHappens(effect: Effect) bool {
-            return @intFromEnum(effect) > 31 and @intFromEnum(effect) <= 38;
+            return @backingInt(effect) > 31 and @backingInt(effect) <= 38;
         }
 
         /// Whether this effect is handled specially by the engine.
         pub fn isSpecial(effect: Effect) bool {
             // NB: isSpecial includes isMulti up to Twineedle
-            return @intFromEnum(effect) > 31 and @intFromEnum(effect) <= 46;
+            return @backingInt(effect) > 31 and @backingInt(effect) <= 46;
         }
 
         /// Whether this effect is a multi-hit effect.
         pub fn isMulti(effect: Effect) bool {
-            return @intFromEnum(effect) > 44 and @intFromEnum(effect) <= 47;
+            return @backingInt(effect) > 44 and @backingInt(effect) <= 47;
         }
 
         /// Whether this effect is has chance of lowering stats.
         pub fn isStatDownChance(effect: Effect) bool {
-            return @intFromEnum(effect) > 47 and @intFromEnum(effect) <= 51;
+            return @backingInt(effect) > 47 and @backingInt(effect) <= 51;
         }
 
         /// Whether this effect has a secondary chance.
         pub fn isSecondaryChance(effect: Effect) bool {
             // NB: isSecondaryChance includes isStatDownChance as well as Twineedle
-            return (@intFromEnum(effect) > 46 and @intFromEnum(effect) <= 61);
+            return (@backingInt(effect) > 46 and @backingInt(effect) <= 61);
         }
     };
 
@@ -1841,8 +1841,8 @@ pub const Move = enum(u8) {
         var num = 0;
         var moves: [163]Move = undefined;
         for (1..Move.size) |i| {
-            if (i != @intFromEnum(Move.Metronome)) {
-                moves[num] = @enumFromInt(i);
+            if (i != @backingInt(Move.Metronome)) {
+                moves[num] = @fromBackingInt(@intCast(i));
                 num += 1;
             }
         }
@@ -1853,12 +1853,12 @@ pub const Move = enum(u8) {
     /// Returns the `Data` corresponding to the move.
     pub fn get(id: Move) Data {
         assert(id != .None and id != .SKIP_TURN);
-        return DATA[@intFromEnum(id) - 1];
+        return DATA[@backingInt(id) - 1];
     }
 
     /// Returns the base PP of the move.
     pub fn pp(id: Move) u8 {
         assert(id != .None);
-        return PP[@intFromEnum(id) - 1];
+        return PP[@backingInt(id) - 1];
     }
 };

@@ -217,12 +217,12 @@ pub const Item = enum(u8) {
     pub fn boost(item: Item) ?Type {
         assert(item != .None);
         if (item == .PolkadotBow) return .Normal;
-        return if (@intFromEnum(item) <= 18) @enumFromInt(@intFromEnum(item) - 1) else null;
+        return if (@backingInt(item) <= 18) @fromBackingInt(@backingInt(item) - 1) else null;
     }
 
     /// Whether or not this item is Mail.
     pub fn isMail(item: Item) bool {
         assert(item != .None);
-        return @intFromEnum(item) > 60 and @intFromEnum(item) <= 70;
+        return @backingInt(item) > 60 and @backingInt(item) <= 70;
     }
 };

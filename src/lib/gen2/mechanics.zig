@@ -659,25 +659,25 @@ pub fn adjustDamage(battle: anytype, player: Player, state: *State, _: anytype) 
     if ((state.type == .Water and battle.field.weather == .Rain) or
         (state.type == .Fire and battle.field.weather == .Sun))
     {
-        d = d *% @intFromEnum(Effectiveness.Super) / 10;
+        d = d *% @backingInt(Effectiveness.Super) / 10;
     } else if ((state.type == .Water and battle.field.weather == .Sun) or
         ((state.type == .Fire or state.move == .SolarBeam) and battle.field.weather == .Rain))
     {
-        d = d *% @intFromEnum(Effectiveness.Resisted) / 10;
+        d = d *% @backingInt(Effectiveness.Resisted) / 10;
     }
 
     if (side.active.types.includes(state.type)) d +%= d / 2;
 
-    const neutral = @intFromEnum(Effectiveness.Neutral);
+    const neutral = @backingInt(Effectiveness.Neutral);
     const foresight = foe.active.volatiles.Foresight and FORESIGHT.includes(state.type);
     const eff1: u16 = if (foresight and types.type1 == .Ghost)
         neutral
     else
-        @intFromEnum(state.type.effectiveness(types.type1));
+        @backingInt(state.type.effectiveness(types.type1));
     const eff2: u16 = if (foresight and types.type2 == .Ghost)
         neutral
     else
-        @intFromEnum(state.type.effectiveness(types.type2));
+        @backingInt(state.type.effectiveness(types.type2));
 
     // Type effectiveness matchup precedence only matters with (NVE, SE)
     if (!showdown and (eff1 + eff2) == Effectiveness.mismatch and
@@ -999,18 +999,18 @@ fn betweenTurns(battle: anytype, mslot: u4, options: anytype) !?Result {
         if (volatiles.bind.duration > 0 and !volatiles.Substitute) {
             volatiles.bind.duration -= 1;
             if (volatiles.bind.duration == 0) {
-                const reason = @intFromEnum(End.Bind) + volatiles.bind.reason - 1;
-                try options.log.end(.{ ident, @as(End, @enumFromInt(reason)) });
+                const reason = @backingInt(End.Bind) + volatiles.bind.reason - 1;
+                try options.log.end(.{ ident, @as(End, @fromBackingInt(reason)) });
             } else {
-                var reason = @intFromEnum(Activate.Bind) + volatiles.bind.reason - 1;
-                try options.log.activate(.{ ident, @as(Activate, @enumFromInt(reason)) });
+                var reason = @backingInt(Activate.Bind) + volatiles.bind.reason - 1;
+                try options.log.activate(.{ ident, @as(Activate, @fromBackingInt(reason)) });
 
-                reason = @intFromEnum(Damage.Bind) + volatiles.bind.reason - 1;
+                reason = @backingInt(Damage.Bind) + volatiles.bind.reason - 1;
                 side.stored().hp -|= @max(side.stored().stats.hp / 16, 1);
                 try options.log.damage(.{
                     ident,
                     side.stored(),
-                    @as(Damage, @enumFromInt(reason)),
+                    @as(Damage, @fromBackingInt(reason)),
                 });
             }
         }
@@ -1026,8 +1026,8 @@ fn betweenTurns(battle: anytype, mslot: u4, options: anytype) !?Result {
             volatiles.perish_song -= 1;
 
             assert(volatiles.perish_song < 3);
-            const reason = @intFromEnum(Start.PerishSong0) + volatiles.perish_song;
-            try options.log.start(.{ battle.active(player), @as(Start, @enumFromInt(reason)) });
+            const reason = @backingInt(Start.PerishSong0) + volatiles.perish_song;
+            try options.log.start(.{ battle.active(player), @as(Start, @fromBackingInt(reason)) });
 
             if (volatiles.perish_song == 0) {
                 volatiles.PerishSong = false;
@@ -1099,9 +1099,9 @@ fn betweenTurns(battle: anytype, mslot: u4, options: anytype) !?Result {
         var stored = side.stored();
         const ident = battle.active(player);
 
-        const num = @intFromEnum(stored.item);
-        if (num > @intFromEnum(Item.Berry)) {
-            if (num <= @intFromEnum(Item.GoldBerry)) {
+        const num = @backingInt(stored.item);
+        if (num > @backingInt(Item.Berry)) {
+            if (num <= @backingInt(Item.GoldBerry)) {
                 const proc = if (showdown)
                     stored.hp <= stored.stats.hp
                 else
@@ -1111,17 +1111,20 @@ fn betweenTurns(battle: anytype, mslot: u4, options: anytype) !?Result {
                     try options.log.enditem(.{ ident, stored.item, .Eat });
                     stored.item = .None;
 
-                    const offset = num - @intFromEnum(Item.Berry);
+                    const offset = num - @backingInt(Item.Berry);
                     assert(offset < 3);
                     stored.hp = @min(stored.hp + ((offset + 1) * 10), stored.stats.hp);
-                    const reason: Heal = @enumFromInt(@intFromEnum(Heal.Berry) + offset);
+                    const reason: Heal = @fromBackingInt(@backingInt(Heal.Berry) + offset);
                     try options.log.heal(.{ ident, stored, reason });
                 }
-            } else if (num < @intFromEnum(Item.BitterBerry)) {
+            } else if (num < @backingInt(Item.BitterBerry)) {
                 const proc = if (stored.item == .MiracleBerry)
                     Status.any(stored.status)
                 else
-                    Status.is(stored.status, @enumFromInt(num - @intFromEnum(Item.MintBerry) + 2));
+                    Status.is(
+                        stored.status,
+                        @fromBackingInt(@intCast(num - @backingInt(Item.MintBerry) + 2)),
+                    );
 
                 if (proc) {
                     assert(Status.any(stored.status));
@@ -1141,7 +1144,7 @@ fn betweenTurns(battle: anytype, mslot: u4, options: anytype) !?Result {
 
                     try options.log.curestatus(.{ ident, stored.status, .Message });
                 }
-            } else if (num == @intFromEnum(Item.BitterBerry)) {
+            } else if (num == @backingInt(Item.BitterBerry)) {
                 if (side.active.volatiles.Confusion) {
                     try options.log.enditem(.{ ident, stored.item, .Eat });
                     stored.item = .None;
@@ -1248,8 +1251,8 @@ pub const Effects = struct {
         const side = battle.side(player);
         var foe = battle.foe(player);
 
-        const gender: u8 = @intFromEnum(side.stored().dvs.gender);
-        const foe_gender: u8 = @intFromEnum(foe.stored().dvs.gender);
+        const gender: u8 = @backingInt(side.stored().dvs.gender);
+        const foe_gender: u8 = @backingInt(foe.stored().dvs.gender);
         if (gender + foe_gender != 1) {
             return options.log.immune(.{ battle.active(player.foe()), .None });
         } else if (foe.active.volatiles.Flying or foe.active.volatiles.Underground) {
@@ -2188,7 +2191,7 @@ pub const Effects = struct {
         const foe = battle.foe(player);
 
         // Pokémon Showdown should fail when the enemy has no boosts/unboosts but doesn't
-        if (!showdown and @as(u32, @bitCast(foe.active.boosts)) == 0) {
+        if (!showdown and @backingInt(foe.active.boosts) == 0) {
             return options.log.fail(.{ battle.active(player), .None });
         }
 
@@ -2233,8 +2236,8 @@ pub const Effects = struct {
         }
 
         if (side.active.volatiles.bind.duration > 0) {
-            const reason = @intFromEnum(End.Bind) + side.active.volatiles.bind.reason - 1;
-            try options.log.end(.{ battle.active(player), @as(End, @enumFromInt(reason)) });
+            const reason = @backingInt(End.Bind) + side.active.volatiles.bind.reason - 1;
+            try options.log.end(.{ battle.active(player), @as(End, @fromBackingInt(reason)) });
             side.active.volatiles.bind = .{};
         }
     }
@@ -2976,13 +2979,13 @@ pub const Rolls = struct {
 
     fn triAttack(battle: anytype, player: Player, options: anytype) !TriAttack {
         const status: TriAttack = if (options.calc.overridden(player, 0, .tri_attack)) |val|
-            @enumFromInt(@intFromEnum(val) - 1)
+            @fromBackingInt(@backingInt(val) - 1)
         else if (showdown)
-            @enumFromInt(battle.rng.range(u2, 0, 2))
+            @fromBackingInt(battle.rng.range(u2, 0, 2))
         else loop: {
             while (true) {
                 const r = std.math.rotr(u8, battle.rng.next(), 4) & 3;
-                if (r != 0) break :loop @enumFromInt(r - 1);
+                if (r != 0) break :loop @fromBackingInt(@intCast(r - 1));
             }
         };
 
@@ -3074,13 +3077,13 @@ pub const Rolls = struct {
 
     fn conversion2(battle: anytype, player: Player, mtype: Type, options: anytype) !Type {
         var i: u8 = 0;
-        const neutral = @intFromEnum(Effectiveness.Neutral);
+        const neutral = @backingInt(Effectiveness.Neutral);
         assert(mtype != .@"???");
         const ty: Type = if (options.calc.overridden(player, 0, .conversion_2)) |val|
-            @enumFromInt(@intFromEnum(val) - 1)
+            @fromBackingInt(@backingInt(val) - 1)
         else if (showdown) ty: {
             for (Type.SHOWDOWN) |t| {
-                if (@intFromEnum(mtype.effectiveness(t)) < neutral) {
+                if (@backingInt(mtype.effectiveness(t)) < neutral) {
                     CONVERSION_2[i] = t;
                     i += 1;
                 }
@@ -3095,7 +3098,7 @@ pub const Rolls = struct {
                 if (r > 27) continue; // TYPES_END
 
                 const t = Type.conversion2(r);
-                if (@intFromEnum(mtype.effectiveness(t)) < neutral) {
+                if (@backingInt(mtype.effectiveness(t)) < neutral) {
                     break :ty t;
                 }
             }
@@ -3290,7 +3293,7 @@ pub const Rolls = struct {
                 var r = battle.rng.range(u8, 0, @as(u8, @intCast(Move.METRONOME.len - n)));
                 for (moves) |m| {
                     if (m.id == .None) break;
-                    if (@intFromEnum(m.id) > @intFromEnum(Move.METRONOME[r])) break;
+                    if (@backingInt(m.id) > @backingInt(Move.METRONOME[r])) break;
                     if (Move.get(m.id).extra.metronome) r -= 1;
                 }
                 break :move Move.METRONOME[r];
@@ -3298,7 +3301,7 @@ pub const Rolls = struct {
                 outer: while (true) {
                     const r = battle.rng.next();
                     if (r == 0 or r >= Move.size) continue;
-                    const selected: Move = @enumFromInt(r);
+                    const selected: Move = @fromBackingInt(r);
                     if (!Move.get(selected).extra.metronome) continue;
                     for (moves) |m| if (m.id == selected) continue :outer;
                     break :move selected;
@@ -3469,19 +3472,19 @@ test "Reasons" {
     for (moves) |move| {
         const reason = Move.get(move).extra.protocol - 1;
 
-        const activate: Activate = @enumFromInt(@intFromEnum(Activate.Bind) + reason);
+        const activate: Activate = @fromBackingInt(@backingInt(Activate.Bind) + reason);
         try expectEqualStrings(@tagName(move), @tagName(activate));
 
-        const damage: Damage = @enumFromInt(@intFromEnum(Damage.Bind) + reason);
+        const damage: Damage = @fromBackingInt(@backingInt(Damage.Bind) + reason);
         try expectEqualStrings(@tagName(move), @tagName(damage));
 
-        const end: End = @enumFromInt(@intFromEnum(End.Bind) + reason);
+        const end: End = @fromBackingInt(@backingInt(End.Bind) + reason);
         try expectEqualStrings(@tagName(move), @tagName(end));
     }
 
     const perish_song = [_]Start{ .PerishSong0, .PerishSong1, .PerishSong2, .PerishSong3 };
     for (perish_song, 0..) |ps, i| {
-        const reason: Start = @enumFromInt(@intFromEnum(Start.PerishSong0) + i);
+        const reason: Start = @fromBackingInt(@intCast(@backingInt(Start.PerishSong0) + i));
         try expectEqualStrings(@tagName(ps), @tagName(reason));
     }
 }

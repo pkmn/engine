@@ -10558,10 +10558,10 @@ fn expectLog(expected: []const u8, actual: []const u8) !void {
 }
 
 fn metronome(comptime m: Move) U {
-    const param = @intFromEnum(m);
+    const param = @backingInt(m);
     if (!showdown) return param;
-    const range: u64 = @intFromEnum(Move.Struggle) - 2;
-    const mod: u2 = if (param < @intFromEnum(Move.Metronome) - 1) 1 else 2;
+    const range: u64 = @backingInt(Move.Struggle) - 2;
+    const mod: u2 = if (param < @backingInt(Move.Metronome) - 1) 1 else 2;
     return comptime ranged((param - mod) + 1, range) - 1;
 }
 

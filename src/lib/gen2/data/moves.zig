@@ -2853,8 +2853,8 @@ pub const Move = enum(u8) {
         var num = 0;
         var moves: [239]Move = undefined;
         for (1..Move.size + 1) |i| {
-            if (Move.get(@enumFromInt(i)).extra.metronome) {
-                moves[num] = @enumFromInt(i);
+            if (Move.get(@fromBackingInt(@intCast(i))).extra.metronome) {
+                moves[num] = @fromBackingInt(@intCast(i));
                 num += 1;
             }
         }
@@ -2865,12 +2865,12 @@ pub const Move = enum(u8) {
     /// Returns the `Data` corresponding to the move.
     pub fn get(id: Move) Data {
         assert(id != .None);
-        return DATA[@intFromEnum(id) - 1];
+        return DATA[@backingInt(id) - 1];
     }
 
     /// Returns the base PP of the move.
     pub fn pp(id: Move) u8 {
         assert(id != .None);
-        return PP[@intFromEnum(id) - 1];
+        return PP[@backingInt(id) - 1];
     }
 };

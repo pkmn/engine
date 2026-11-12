@@ -61,8 +61,8 @@ fn update(gen: anytype) c.napi_callback {
             assert(len == @sizeOf(gen.Battle(gen.PRNG)));
 
             var battle: *gen.Battle(gen.PRNG) = @ptrCast(@alignCast(data.?));
-            const c1: pkmn.Choice = @bitCast(js.Number.get(env, argv[1], u8));
-            const c2: pkmn.Choice = @bitCast(js.Number.get(env, argv[2], u8));
+            const c1: pkmn.Choice = @fromBackingInt(js.Number.get(env, argv[1], u8));
+            const c2: pkmn.Choice = @fromBackingInt(js.Number.get(env, argv[2], u8));
 
             var vtype: c.napi_valuetype = undefined;
             assert(c.napi_typeof(env, argv[3], &vtype) == c.napi_ok);
@@ -84,7 +84,7 @@ fn update(gen: anytype) c.napi_callback {
                 },
             } catch unreachable;
 
-            return js.Number.init(env, @as(u8, @bitCast(result)));
+            return js.Number.init(env, @backingInt(result));
         }
     }.call;
 }
@@ -103,15 +103,15 @@ fn choices(gen: anytype) c.napi_callback {
             assert(len == @sizeOf(gen.Battle(gen.PRNG)));
 
             var battle: *gen.Battle(gen.PRNG) = @ptrCast(@alignCast(data.?));
-            const player: pkmn.Player = @enumFromInt(js.Number.get(env, argv[1], u8));
-            const request: pkmn.Choice.Type = @enumFromInt(js.Number.get(env, argv[2], u8));
+            const player: pkmn.Player = @fromBackingInt(js.Number.get(env, argv[1], u1));
+            const request: pkmn.Choice.Type = @fromBackingInt(js.Number.get(env, argv[2], u2));
 
             assert(c.napi_get_arraybuffer_info(env, argv[3], &data, &len) == c.napi_ok);
             assert(len == gen.CHOICES_SIZE);
 
             const out = @as([*]pkmn.Choice, @ptrCast(data.?))[0..gen.CHOICES_SIZE];
             const n = battle.choices(player, request, out);
-            return js.Number.init(env, @as(u8, @bitCast(n)));
+            return js.Number.init(env, n);
         }
     }.call;
 }

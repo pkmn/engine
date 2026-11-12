@@ -45,8 +45,7 @@ pub const Actions = extern struct {
 
     /// Returns true if `a` is equal to `b`.
     pub fn eql(a: Actions, b: Actions) bool {
-        return @as(u128, @bitCast(a.p1)) == @as(u128, @bitCast(b.p1)) and
-            @as(u128, @bitCast(a.p2)) == @as(u128, @bitCast(b.p2));
+        return @backingInt(a.p1) == @backingInt(b.p1) and @backingInt(a.p2) == @backingInt(b.p2);
     }
 
     /// Returns true if `a` has the same "shape" as `b`, where `Actions` are defined to have the
@@ -59,7 +58,7 @@ pub const Actions = extern struct {
                 const b_val = @field(@field(b, player_name), field_name);
 
                 switch (@typeInfo(@TypeOf(a_val))) {
-                    .@"enum" => if ((@intFromEnum(a_val) > 0) != (@intFromEnum(b_val) > 0))
+                    .@"enum" => if ((@backingInt(a_val) > 0) != (@backingInt(b_val) > 0))
                         return false,
                     .int => if ((a_val > 0) != (b_val > 0)) return false,
                     else => unreachable,
@@ -338,7 +337,7 @@ pub fn Chance(comptime Rational: type) type {
             if (!enabled) return;
 
             try self.probability.update(1, 3);
-            self.actions.get(player).tri_attack = @enumFromInt(@intFromEnum(status) + 1);
+            self.actions.get(player).tri_attack = @fromBackingInt(@backingInt(status) + 1);
         }
 
         const PRESENT: [4]u8 = if (showdown) .{ 2, 4, 3, 1 } else .{ 51, 103, 77, 25 };
@@ -385,17 +384,18 @@ pub fn Chance(comptime Rational: type) type {
             const n = if (num != 0)
                 num
             else n: {
-                const neutral = @intFromEnum(Effectiveness.Neutral);
+                const neutral = @backingInt(Effectiveness.Neutral);
                 var i: u8 = 0;
                 for (0..Type.size) |t| {
-                    if (@intFromEnum(mtype.effectiveness(@enumFromInt(t))) < neutral) i += 1;
+                    const eff = mtype.effectiveness(@fromBackingInt(@intCast(t)));
+                    if (@backingInt(eff) < neutral) i += 1;
                 }
                 assert(i > 0 and i <= 7);
                 break :n i;
             };
 
             try self.probability.update(1, n);
-            self.actions.get(player).conversion_2 = @enumFromInt(@intFromEnum(ty) + 1);
+            self.actions.get(player).conversion_2 = @fromBackingInt(@intCast(@backingInt(ty) + 1));
         }
 
         pub fn moveSlot(self: *Self, player: Player, slot: u4, n: u4) Error!void {

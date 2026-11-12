@@ -25,29 +25,32 @@ pub const LOGS_SIZE = pkmn.LOGS_SIZE;
 pub fn choice_init(choice: u8, data: u8) callconv(.c) u8 {
     assert(choice <= @typeInfo(pkmn.Choice.Type).@"enum".field_names.len);
     assert(data <= 6);
-    return @bitCast(pkmn.Choice{ .type = @enumFromInt(choice), .data = @intCast(data) });
+    return @backingInt(pkmn.Choice{
+        .type = @fromBackingInt(@intCast(choice)),
+        .data = @intCast(data),
+    });
 }
 
 pub fn choice_type(choice: u8) callconv(.c) u8 {
-    return @intFromEnum(@as(pkmn.Choice, @bitCast(choice)).type);
+    return @backingInt(@as(pkmn.Choice, @fromBackingInt(choice)).type);
 }
 
 pub fn choice_data(choice: u8) callconv(.c) u8 {
-    return @as(u8, @as(pkmn.Choice, @bitCast(choice)).data);
+    return @as(u8, @as(pkmn.Choice, @fromBackingInt(choice)).data);
 }
 
 pub fn result_type(result: u8) callconv(.c) u8 {
-    return @intFromEnum(@as(pkmn.Result, @bitCast(result)).type);
+    return @backingInt(@as(pkmn.Result, @fromBackingInt(result)).type);
 }
 
 pub fn result_p1(result: u8) callconv(.c) u8 {
     assert(!err(result));
-    return @intFromEnum(@as(pkmn.Result, @bitCast(result)).p1);
+    return @backingInt(@as(pkmn.Result, @fromBackingInt(result)).p1);
 }
 
 pub fn result_p2(result: u8) callconv(.c) u8 {
     assert(!err(result));
-    return @intFromEnum(@as(pkmn.Result, @bitCast(result)).p2);
+    return @backingInt(@as(pkmn.Result, @fromBackingInt(result)).p2);
 }
 
 pub fn err(result: u8) callconv(.c) bool {
@@ -178,7 +181,7 @@ pub fn gen(comptime num: comptime_int) type {
             opts: ?*battle_options,
         ) callconv(.c) pkmn.Result {
             if ((pkmn.options.log or pkmn.options.chance or pkmn.options.calc) and opts != null) {
-                return battle.update(c1, c2, opts.?) catch return @bitCast(ERROR);
+                return battle.update(c1, c2, opts.?) catch return @fromBackingInt(ERROR);
             }
             return battle.update(c1, c2, &g.NULL) catch unreachable;
         }
@@ -194,7 +197,11 @@ pub fn gen(comptime num: comptime_int) type {
             assert(request <= @typeInfo(pkmn.Choice.Type).@"enum".field_names.len);
 
             assert(!pkmn.options.showdown or n > 0);
-            return battle.choices(@enumFromInt(player), @enumFromInt(request), @ptrCast(out[0..n]));
+            return battle.choices(
+                @fromBackingInt(@intCast(player)),
+                @fromBackingInt(@intCast(request)),
+                @ptrCast(out[0..n]),
+            );
         }
     };
 }

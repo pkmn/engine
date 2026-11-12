@@ -57,12 +57,12 @@ pub const Move = enum({{{ Move.type }}}) {
     /// Returns the `Data` corresponding to the move.
     pub fn get(id: Move) Data {
         {{{ Move.assert }}}
-        return DATA[@intFromEnum(id) - 1];
+        return DATA[@backingInt(id) - 1];
     }
 
     /// Returns the base PP of the move.
     pub fn pp(id: Move) u8 {
         assert(id != .None);
-        return PP[@intFromEnum(id) - 1];
+        return PP[@backingInt(id) - 1];
     }
 };

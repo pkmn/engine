@@ -45,8 +45,7 @@ pub const Actions = extern struct {
 
     /// Returns true if `a` is equal to `b`.
     pub fn eql(a: Actions, b: Actions) bool {
-        return @as(u64, @bitCast(a.p1)) == @as(u64, @bitCast(b.p1)) and
-            @as(u64, @bitCast(a.p2)) == @as(u64, @bitCast(b.p2));
+        return @backingInt(a.p1) == @backingInt(b.p1) and @backingInt(a.p2) == @backingInt(b.p2);
     }
 
     /// Returns true if `a` has the same "shape" as `b`, where `Actions` are defined to have the
@@ -59,7 +58,7 @@ pub const Actions = extern struct {
                 const b_val = @field(@field(b, player_name), field_name);
 
                 switch (@typeInfo(@TypeOf(a_val))) {
-                    .@"enum" => if ((@intFromEnum(a_val) > 0) != (@intFromEnum(b_val) > 0))
+                    .@"enum" => if ((@backingInt(a_val) > 0) != (@backingInt(b_val) > 0))
                         return false,
                     .int => if ((a_val > 0) != (b_val > 0)) return false,
                     else => unreachable,
@@ -181,9 +180,9 @@ pub fn Observation(comptime field: Duration.Field) type {
 
 /// Converts an `Observation` / `Optional(Observation)` into its `haze_*` variant.
 pub fn hazed(obs: anytype) @TypeOf(obs) {
-    const min = @intFromEnum(@field(@TypeOf(obs), "started"));
-    assert(@intFromEnum(obs) >= min and @intFromEnum(obs) < min + 4);
-    return @enumFromInt(@intFromEnum(obs) + 4);
+    const min = @backingInt(@field(@TypeOf(obs), "started"));
+    assert(@backingInt(obs) >= min and @backingInt(obs) < min + 4);
+    return @fromBackingInt(@backingInt(obs) + 4);
 }
 
 test hazed {
@@ -199,8 +198,8 @@ test hazed {
 /// Strips any `haze_*` marker from an `Observation` / `Optional(Observation)`.
 pub fn unhazed(obs: anytype) @TypeOf(obs) {
     if (!@hasField(@TypeOf(obs), "haze_started")) return obs;
-    const min = @intFromEnum(@field(@TypeOf(obs), "haze_started"));
-    return if (@intFromEnum(obs) >= min) @enumFromInt(@intFromEnum(obs) - 4) else obs;
+    const min = @backingInt(@field(@TypeOf(obs), "haze_started"));
+    return if (@backingInt(obs) >= min) @fromBackingInt(@backingInt(obs) - 4) else obs;
 }
 
 test unhazed {
@@ -299,7 +298,7 @@ pub const Action = bitpack struct(u64) {
                             field_name,
                         });
                     } else if (@TypeOf(val) != Move and @TypeOf(val) != Optional(Player)) {
-                        try writer.print("{s}{s}", .{ SYMBOLS[@intFromEnum(val) - 1], field_name });
+                        try writer.print("{s}{s}", .{ SYMBOLS[@backingInt(val) - 1], field_name });
                     } else {
                         try writer.print("{s}:{s}", .{ field_name, @tagName(val) });
                     }

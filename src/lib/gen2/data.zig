@@ -61,12 +61,12 @@ pub fn Battle(comptime RNG: anytype) type {
 
         pub fn side(self: anytype, player: Player) PointerType(@TypeOf(self), Side) {
             assert(isPointerTo(self, Self));
-            return &self.sides[@intFromEnum(player)];
+            return &self.sides[@backingInt(player)];
         }
 
         pub fn foe(self: anytype, player: Player) PointerType(@TypeOf(self), Side) {
             assert(isPointerTo(self, Self));
-            return &self.sides[@intFromEnum(player.foe())];
+            return &self.sides[@backingInt(player.foe())];
         }
 
         pub fn active(self: *const Self, player: Player) ID {
@@ -420,7 +420,7 @@ test Item {
 pub const Move = moves.Move;
 
 test Move {
-    try expectEqual(251, @intFromEnum(Move.BeatUp));
+    try expectEqual(251, @backingInt(Move.BeatUp));
     const move = Move.get(.DynamicPunch);
     try expectEqual(Move.Effect.ConfusionChance, move.effect);
     try expectEqual(rng.Gen12.percent(50), move.accuracy);
@@ -435,7 +435,7 @@ test Move {
 pub const Species = species.Species;
 
 test Species {
-    try expectEqual(152, @intFromEnum(Species.Chikorita));
+    try expectEqual(152, @backingInt(Species.Chikorita));
     try expectEqual(100, Species.get(.Celebi).stats.spd);
 }
 
@@ -444,7 +444,7 @@ pub const Types = types.Types;
 pub const Effectiveness = gen1.Effectiveness;
 
 test Types {
-    try expectEqual(13, @intFromEnum(Type.Electric));
+    try expectEqual(13, @backingInt(Type.Electric));
 
     try expect(!Type.Steel.special());
     try expect(Type.Dark.special());

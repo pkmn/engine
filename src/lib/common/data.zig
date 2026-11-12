@@ -10,7 +10,7 @@ pub const Player = enum(u1) {
 
     /// Returns a player's opponent.
     pub fn foe(self: Player) Player {
-        return @enumFromInt(~@intFromEnum(self));
+        return @fromBackingInt(~@backingInt(self));
     }
 
     /// Return's an identifier for the player's Pokémon at the one-indexed `id`.
@@ -22,8 +22,8 @@ pub const Player = enum(u1) {
 
 test Player {
     try expectEqual(Player.P2, Player.P1.foe());
-    try expectEqual(0b0001, @as(u8, @bitCast(Player.P1.ident(1))));
-    try expectEqual(0b1101, @as(u8, @bitCast(Player.P2.ident(5))));
+    try expectEqual(0b0001, @backingInt(Player.P1.ident(1)));
+    try expectEqual(0b1101, @backingInt(Player.P2.ident(5)));
 }
 
 /// An identifier for a specific Pokémon in battle.
@@ -36,18 +36,18 @@ pub const ID = bitpack struct(u8) {
 
     /// Converts the identifier into a number.
     pub fn int(self: ID) u4 {
-        return @intCast(@as(u8, @bitCast(self)));
+        return @intCast(@backingInt(self));
     }
 
     /// Decodes the identifier from a number.
     pub fn from(id: u4) ID {
-        return @bitCast(@as(u8, id));
+        return @fromBackingInt(id);
     }
 };
 
 test ID {
-    try expectEqual(0b0001, @as(u8, @bitCast(ID{ .player = .P1, .id = 1 })));
-    try expectEqual(0b1101, @as(u8, @bitCast(ID{ .player = .P2, .id = 5 })));
+    try expectEqual(0b0001, @backingInt(ID{ .player = .P1, .id = 1 }));
+    try expectEqual(0b1101, @backingInt(ID{ .player = .P2, .id = 5 }));
     const id: ID = .{ .player = .P2, .id = 4 };
     try expectEqual(id, ID.from(id.int()));
 }
@@ -76,8 +76,8 @@ test Choice {
     const p2: Choice = .{ .type = .Switch, .data = 5 };
     try expectEqual(5, p2.data);
     try expectEqual(Choice.Type.Move, p1.type);
-    try expectEqual(0b0001_0001, @as(u8, @bitCast(p1)));
-    try expectEqual(0b0001_0110, @as(u8, @bitCast(p2)));
+    try expectEqual(0b0001_0001, @backingInt(p1));
+    try expectEqual(0b0001_0110, @backingInt(p2));
 }
 
 /// The result of the battle - all results other than 'None' should be considered terminal.
@@ -112,6 +112,6 @@ pub const Result = bitpack struct(u8) {
 };
 
 test Result {
-    try expectEqual(0b0101_0000, @as(u8, @bitCast(Result.Default)));
-    try expectEqual(0b1000_0000, @as(u8, @bitCast(Result{ .p2 = .Switch })));
+    try expectEqual(0b0101_0000, @backingInt(Result.Default));
+    try expectEqual(0b1000_0000, @backingInt(Result{ .p2 = .Switch }));
 }

@@ -1791,6 +1791,6 @@ pub const Species = enum(u8) {
     /// Returns the `Data` corresponding to the species.
     pub fn get(id: Species) Data {
         assert(id != .None);
-        return DATA[@intFromEnum(id) - 1];
+        return DATA[@backingInt(id) - 1];
     }
 };

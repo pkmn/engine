@@ -164,12 +164,12 @@ pub const Type = enum(u8) {
 
     /// Whether or not this type is considered to be special as opposed to physical.
     pub fn special(self: Type) bool {
-        return @intFromEnum(self) >= @intFromEnum(Type.Fire);
+        return @backingInt(self) >= @backingInt(Type.Fire);
     }
 
     /// The `Effectiveness` of type `t2` vs. type `t1`.
     pub fn effectiveness(t1: Type, t2: Type) Effectiveness {
-        return CHART[@intFromEnum(t1)][@intFromEnum(t2)];
+        return CHART[@backingInt(t1)][@backingInt(t2)];
     }
 
     /// The precedence order of Type `t1` vs. Type `t2`.
@@ -177,12 +177,12 @@ pub const Type = enum(u8) {
         // The Ice vs. Fire matchup is out of order - return a higher
         // number than anything else so that it sorts last correctly
         if (t1 == .Ice and t2 == .Fire) return 18;
-        return PRECEDENCE[@intFromEnum(t2)];
+        return PRECEDENCE[@backingInt(t2)];
     }
 
     /// The internal index of this Type used by Present.
     pub fn present(self: Type) u8 {
-        return INDEXES[@intFromEnum(self)];
+        return INDEXES[@backingInt(self)];
     }
 
     /// The Type corresponding to a random roll of `num` for Conversion 2.
@@ -190,7 +190,7 @@ pub const Type = enum(u8) {
         assert(num != 6);
         assert(num < 10 or num >= 20);
         assert(num <= 27);
-        return if (num < 10) CONVERSION_2[num] else @enumFromInt(num - 10);
+        return if (num < 10) CONVERSION_2[num] else @fromBackingInt(num - 10);
     }
 
     /// The Type corresponding to a Hidden Power `index`.
@@ -222,7 +222,7 @@ pub const Types = extern struct {
 
     /// Whether this typing is immune to damage from Sandstorm.
     pub fn sandstormImmune(self: Types) bool {
-        return @intFromEnum(self.type1) <= @intFromEnum(Type.Steel) or
-            @intFromEnum(self.type2) <= @intFromEnum(Type.Steel);
+        return @backingInt(self.type1) <= @backingInt(Type.Steel) or
+            @backingInt(self.type2) <= @backingInt(Type.Steel);
     }
 };
