@@ -122,8 +122,9 @@ export const Options = new class {
 
 interface Configuration {
   warmup?: boolean;
-  run(gen: Generation, format: ID, prng: PRNG, battles: number):
-  Promise<readonly [bigint, number, string]>;
+  run(
+    gen: Generation, format: ID, prng: PRNG, battles: number
+  ): Promise<readonly [bigint, number, string]>;
 }
 
 class DirectBattle extends Battle {
