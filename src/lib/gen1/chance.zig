@@ -632,6 +632,13 @@ pub fn Chance(comptime Rational: type) type {
             self.actions.get(player).duration = if (options.key) 2 else turns;
         }
 
+        pub fn observed(self: *const Self, comptime field: Duration.Field, player: Player) u4 {
+            if (!enabled) return 0;
+
+            const d = self.durations.get(player);
+            return if (field == .sleep) Sleeps.get(d.sleeps, 0) else @field(d, @tagName(field));
+        }
+
         pub fn observe(
             self: *Self,
             comptime field: Action.Field,
@@ -1045,6 +1052,23 @@ test "Chance.duration" {
     try expectValue(4, chance.actions.p2.duration);
 }
 
+test "Chance.observed" {
+    var chance: Chance(rational.Rational(u64)) = .{ .probability = .{} };
+
+    chance.durations.p1.sleeps = Sleeps.set(chance.durations.p1.sleeps, 0, 3);
+    chance.durations.p2.confusion = 1;
+    chance.durations.p2.disable = 4;
+    chance.durations.p1.attacking = 2;
+    chance.durations.p1.binding = 3;
+
+    try expectValue(3, chance.observed(.sleep, .P1));
+    try expectValue(0, chance.observed(.sleep, .P2));
+    try expectValue(1, chance.observed(.confusion, .P2));
+    try expectValue(4, chance.observed(.disable, .P2));
+    try expectValue(2, chance.observed(.attacking, .P1));
+    try expectValue(3, chance.observed(.binding, .P1));
+}
+
 test "Chance.haze" {
     var chance: Chance(rational.Rational(u64)) = .{ .probability = .{} };
 
@@ -1278,6 +1302,11 @@ const Null = struct {
 
     pub fn duration(self: Null, player: Player, turns: u4) void {
         _ = .{ self, player, turns };
+    }
+
+    pub fn observed(self: Null, comptime field: Duration.Field, player: Player) u4 {
+        _ = .{ self, field, player };
+        return 0;
     }
 
     pub fn observe(
